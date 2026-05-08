@@ -21,6 +21,11 @@ yarn-error.log*
 # Prisma
 /prisma/migrations/
 
-# OS
-.DS_Store
-Thumbs.db
+# Secrets & Keys
+*.json
+!package.json
+!tsconfig.json
+!package-lock.json
+!composer.json
+.env
+secret.key

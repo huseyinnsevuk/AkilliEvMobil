@@ -10,7 +10,7 @@ import fetch from 'node-fetch';
 dotenv.config();
 
 const app = express();
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_51TUSvkH26N3dwkr7OM70pizE7ywDIVCqnIUEFkYY1CTUYWcpffGI7UD0Od5mV4UGNBYywpjsEyC3DhagHSgds2uW003j6YgSz3', {
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
   apiVersion: '2025-01-27.acacia' as any
 });
 
