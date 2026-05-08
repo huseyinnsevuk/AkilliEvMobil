@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:local="clr-namespace:AkilliEvMobil.Views"
+             x:Class="AkilliEvMobil.Views.AutomationPage"
+             Title="Otomasyon Sistemleri"
+             Shell.NavBarIsVisible="False"
+             Shell.TabBarIsVisible="False"
+             BackgroundColor="#F5F7FA">
+    
+    <Grid RowDefinitions="*, Auto">
+        <!-- İÇERİK: OTOMASYON -->
+        <VerticalStackLayout Grid.Row="0" VerticalOptions="Center" HorizontalOptions="Center" Spacing="20">
+            <Label Text="Zamanlanmış Görevler &amp; Senaryolar" FontSize="20" FontAttributes="Bold" HorizontalOptions="Center" TextColor="#1E293B" />
+            <Label Text="Burada otomasyon ayarları yer alacak." FontSize="14" HorizontalOptions="Center" TextColor="#A0AABF" />
+        </VerticalStackLayout>
+
+        <!-- YENİ MODÜLER CUSTOM TAB BAR KONTROLÜ (TÜM SAYFALAR İÇİN ORTAK) -->
+        <local:CustomTabBar Grid.Row="1" ActiveTab="Automation" />
+    </Grid>
+</ContentPage>

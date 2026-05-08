@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="AkilliEvMobil.Views.VerifyCodePage"
+             Shell.NavBarIsVisible="False"
+             BackgroundColor="#F5F7FA">
+
+    <Grid RowDefinitions="Auto, *, Auto" Padding="30, 20">
+        
+        <!-- Üst Kısım: Geri Butonu -->
+        <ImageButton Grid.Row="0"
+                     Source="dotnet_bot.png" 
+                     HorizontalOptions="Start"
+                     HeightRequest="40"
+                     WidthRequest="40"
+                     BackgroundColor="#F0F0F0"
+                     CornerRadius="20"
+                     Clicked="OnBackClicked" />
+
+        <!-- Orta Kısım: Başlık ve Kod Girişi -->
+        <VerticalStackLayout Grid.Row="1" 
+                             Spacing="30" 
+                             VerticalOptions="Center"
+                             HorizontalOptions="Center">
+            
+            <Label Text="Kodu Doğrula"
+                   FontSize="28"
+                   FontAttributes="Bold"
+                   HorizontalOptions="Center"
+                   TextColor="Black" />
+
+            <VerticalStackLayout Spacing="5" HorizontalOptions="Center">
+                <Label Text="Size gönderdiğimiz kodu girin"
+                       FontSize="16"
+                       TextColor="Gray"
+                       HorizontalOptions="Center" />
+                <HorizontalStackLayout Spacing="10" HorizontalOptions="Center">
+                    <Label x:Name="TargetIdentifierLabel"
+                           Text=""
+                           FontSize="18"
+                           TextColor="Black"
+                           FontAttributes="Bold"
+                           VerticalOptions="Center" />
+                    <Button Text="Düzenle" 
+                            FontSize="12" 
+                            Padding="5,0"
+                            HeightRequest="30"
+                            BackgroundColor="Transparent" 
+                            TextColor="#4A90E2"
+                            Clicked="OnEditPhoneClicked" />
+                </HorizontalStackLayout>
+            </VerticalStackLayout>
+
+            <!-- OTP Giriş Kutuları (6 Haneli Firebase Uyumlu) -->
+            <HorizontalStackLayout Spacing="8" HorizontalOptions="Center">
+                <Border Stroke="#F0F0F0" StrokeThickness="1" HeightRequest="50" WidthRequest="50">
+                    <Border.StrokeShape><RoundRectangle CornerRadius="12" /></Border.StrokeShape>
+                    <Entry x:Name="Digit1" Text="-" VerticalOptions="Center" HorizontalTextAlignment="Center" FontSize="20" TextColor="Black" Keyboard="Numeric" MaxLength="1" />
+                </Border>
+                <Border Stroke="#F0F0F0" StrokeThickness="1" HeightRequest="50" WidthRequest="50">
+                    <Border.StrokeShape><RoundRectangle CornerRadius="12" /></Border.StrokeShape>
+                    <Entry x:Name="Digit2" Text="-" VerticalOptions="Center" HorizontalTextAlignment="Center" FontSize="20" TextColor="Black" Keyboard="Numeric" MaxLength="1" />
+                </Border>
+                <Border Stroke="#F0F0F0" StrokeThickness="1" HeightRequest="50" WidthRequest="50">
+                    <Border.StrokeShape><RoundRectangle CornerRadius="12" /></Border.StrokeShape>
+                    <Entry x:Name="Digit3" Text="-" VerticalOptions="Center" HorizontalTextAlignment="Center" FontSize="20" TextColor="Black" Keyboard="Numeric" MaxLength="1" />
+                </Border>
+                <Border Stroke="#F0F0F0" StrokeThickness="1" HeightRequest="50" WidthRequest="50">
+                    <Border.StrokeShape><RoundRectangle CornerRadius="12" /></Border.StrokeShape>
+                    <Entry x:Name="Digit4" Text="-" VerticalOptions="Center" HorizontalTextAlignment="Center" FontSize="20" TextColor="Black" Keyboard="Numeric" MaxLength="1" />
+                </Border>
+                <Border Stroke="#F0F0F0" StrokeThickness="1" HeightRequest="50" WidthRequest="50">
+                    <Border.StrokeShape><RoundRectangle CornerRadius="12" /></Border.StrokeShape>
+                    <Entry x:Name="Digit5" Text="-" VerticalOptions="Center" HorizontalTextAlignment="Center" FontSize="20" TextColor="Black" Keyboard="Numeric" MaxLength="1" />
+                </Border>
+                <Border Stroke="#F0F0F0" StrokeThickness="1" HeightRequest="50" WidthRequest="50">
+                    <Border.StrokeShape><RoundRectangle CornerRadius="12" /></Border.StrokeShape>
+                    <Entry x:Name="Digit6" Text="-" VerticalOptions="Center" HorizontalTextAlignment="Center" FontSize="20" TextColor="Black" Keyboard="Numeric" MaxLength="1" />
+                </Border>
+            </HorizontalStackLayout>
+
+            <!-- Yeniden Gönder -->
+            <VerticalStackLayout Spacing="5" HorizontalOptions="Center">
+                <Label Text="Kod gelmedi mi?"
+                       TextColor="Gray"
+                       HorizontalOptions="Center" />
+                <Label Text="Kodu tekrar gönder"
+                       TextColor="#4A90E2"
+                       FontAttributes="Bold"
+                       HorizontalOptions="Center">
+                    <Label.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnResendCodeTapped" />
+                    </Label.GestureRecognizers>
+                </Label>
+            </VerticalStackLayout>
+        </VerticalStackLayout>
+
+        <!-- Alt Kısım: Doğrula Butonu -->
+        <Button Grid.Row="2"
+                Text="Doğrula"
+                BackgroundColor="#4A90E2"
+                TextColor="White"
+                HeightRequest="55"
+                CornerRadius="25"
+                FontAttributes="Bold"
+                FontSize="18"
+                Margin="0,0,0,20"
+                Clicked="OnVerifyClicked" />
+
+    </Grid>
+
+</ContentPage>

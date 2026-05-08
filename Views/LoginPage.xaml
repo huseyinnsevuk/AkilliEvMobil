@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:ios="clr-namespace:Microsoft.Maui.Controls.PlatformConfiguration.iOSSpecific;assembly=Microsoft.Maui.Controls"
+             x:Class="AkilliEvMobil.Views.LoginPage"
+             NavigationPage.HasNavigationBar="False"
+             ios:Page.UseSafeArea="False"
+             BackgroundColor="#F5F7FA">
+
+    <!-- 
+        Sayfa yapısı bir Grid kullanılarak katmanlandırılmıştır. 
+        En alt katmanda arka plan resmi, üst katmanda ise giriş formu yer alır.
+    -->
+    <Grid RowDefinitions="*,Auto" BackgroundColor="#F5F7FA">
+        <Grid.GestureRecognizers>
+            <TapGestureRecognizer Tapped="OnBackgroundTapped" />
+        </Grid.GestureRecognizers>
+        
+        <!-- Arka Plan Resmi Alanı -->
+        <Image Grid.RowSpan="2"
+               Aspect="AspectFill"
+               Margin="0"
+               VerticalOptions="Fill"
+               Source="logregbg1.jpg" />
+
+        <!-- Üst Kısım: Karşılama Metni -->
+        <VerticalStackLayout Grid.Row="0"
+                             Padding="30, 15, 30, 0"
+                             Spacing="10"
+                             VerticalOptions="Start">
+            
+            <Label Text="Merhaba!"
+                   TextColor="White"
+                   FontSize="36"
+                   FontAttributes="Bold" />
+            
+            <Label Text="Email ve şifreniz ile güvenli bir şekilde giriş yapın."
+                   TextColor="White"
+                   FontSize="16"
+                   Opacity="0.8" />
+        </VerticalStackLayout>
+
+        <!-- Alt Kısım: Giriş Paneli (Card Design) -->
+        <Border Grid.Row="1"
+                StrokeThickness="0"
+                BackgroundColor="White"
+                Padding="30, 40"
+                HeightRequest="490"
+                VerticalOptions="End">
+            
+            <!-- Panelin üst köşelerini yuvarlatmak için StrokeShape kullanılır -->
+            <Border.StrokeShape>
+                <RoundRectangle CornerRadius="40,40,0,0" />
+            </Border.StrokeShape>
+            
+            <Border.GestureRecognizers>
+                <TapGestureRecognizer Tapped="OnBackgroundTapped" />
+            </Border.GestureRecognizers>
+
+            <VerticalStackLayout Spacing="20">
+                
+                <Label Text="Giriş Yap"
+                       TextColor="#1A1A1A"
+                       FontSize="24"
+                       FontAttributes="Bold"
+                       Margin="0,0,0,10" />
+
+                <!-- Email / Telefon Girişi -->
+                <Border Stroke="#F0F0F0"
+                        StrokeThickness="1"
+                        BackgroundColor="#F8F8F8"
+                        Padding="15,0">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="12" />
+                    </Border.StrokeShape>
+                    
+                    <Grid ColumnDefinitions="Auto, *">
+                        <Image Source="email.png" 
+                               HeightRequest="20" 
+                               WidthRequest="20" 
+                               VerticalOptions="Center" 
+                               Margin="0,0,10,0" />
+                        <Entry x:Name="EmailEntry"
+                               Grid.Column="1"
+                               Placeholder="Email veya Telefon"
+                               Keyboard="Email"
+                               TextColor="Black"
+                               PlaceholderColor="Gray" />
+                    </Grid>
+                </Border>
+
+                <!-- Şifre Girişi -->
+                <Border Stroke="#F0F0F0"
+                        StrokeThickness="1"
+                        BackgroundColor="#F8F8F8"
+                        Padding="15,0">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="12" />
+                    </Border.StrokeShape>
+                    
+                    <Grid ColumnDefinitions="Auto, *, Auto">
+                        <Image Source="password.png" 
+                               HeightRequest="20" 
+                               WidthRequest="20" 
+                               VerticalOptions="Center" 
+                               Margin="0,0,10,0" />
+                        <Entry x:Name="PasswordEntry"
+                               Grid.Column="1"
+                               Placeholder="Şifre"
+                               IsPassword="True"
+                               TextColor="Black"
+                               PlaceholderColor="Gray" />
+                        <ImageButton Grid.Column="2" 
+                                     Source="hide.png" 
+                                     HeightRequest="20" 
+                                     WidthRequest="20" 
+                                     VerticalOptions="Center"
+                                     Clicked="OnTogglePasswordClicked" />
+                    </Grid>
+                </Border>
+
+                <!-- Beni Hatırla & Şifremi Unuttum -->
+                <Grid ColumnDefinitions="*, Auto">
+                    <HorizontalStackLayout Spacing="5">
+                        <CheckBox Color="#4A90E2" IsChecked="True" />
+                        <Label Text="Beni Hatırla" 
+                               VerticalOptions="Center" 
+                               TextColor="Gray" 
+                               FontSize="13" />
+                    </HorizontalStackLayout>
+                    
+                    <Label Grid.Column="1"
+                           Text="Şifremi Unuttum?" 
+                           TextColor="#4A90E2" 
+                           VerticalOptions="Center"
+                           FontSize="13">
+                        <Label.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnForgotPasswordTapped" />
+                        </Label.GestureRecognizers>
+                    </Label>
+                </Grid>
+
+                <!-- Giriş Butonu -->
+                <Button Text="Giriş Yap"
+                        BackgroundColor="#4A90E2"
+                        TextColor="White"
+                        HeightRequest="55"
+                        CornerRadius="15"
+                        FontAttributes="Bold"
+                        FontSize="18"
+                        Margin="0,20,0,0"
+                        Clicked="OnLoginClicked" />
+
+                <!-- Kayıt Ol Yönlendirmesi -->
+                <HorizontalStackLayout HorizontalOptions="Center" Spacing="5" Margin="0,15">
+                    <Label Text="Hesabınız yok mu?" TextColor="Gray" />
+                    <Label Text="Kayıt Ol" 
+                           TextColor="#4A90E2" 
+                           FontAttributes="Bold">
+                        <Label.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnRegisterTapped" />
+                        </Label.GestureRecognizers>
+                    </Label>
+                </HorizontalStackLayout>
+
+            </VerticalStackLayout>
+        </Border>
+    </Grid>
+
+</ContentPage>

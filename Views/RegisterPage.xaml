@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="AkilliEvMobil.Views.RegisterPage"
+             Shell.NavBarIsVisible="False"
+             BackgroundColor="#F5F7FA"
+             Background="#F5F7FA">
+
+    <!-- Kayıt sayfası yapısı -->
+    <Grid RowDefinitions="*,Auto" BackgroundColor="#F5F7FA">
+        
+        <!-- Arka Plan Resmi (ZIndex ile en arkaya itildi) -->
+        <Image Grid.RowSpan="2"
+               Source="logregbg1.jpg"
+               Aspect="AspectFill"
+               ZIndex="-1" />
+
+        <!-- Üst Kısım: Karşılama Metni -->
+        <VerticalStackLayout Grid.Row="0"
+                             Padding="30, 15, 30, 0"
+                             Spacing="10"
+                             VerticalOptions="Start">
+            <Label Text="Hesap Oluştur"
+                   TextColor="White"
+                   FontSize="36"
+                   FontAttributes="Bold" />
+            <Label Text="Yeni bir hesap oluşturarak akıllı evinizi hemen yönetmeye başlayın."
+                   TextColor="White"
+                   FontSize="16"
+                   Opacity="0.8" />
+        </VerticalStackLayout>
+
+        <!-- Kayıt Paneli (Kaydırılabilir içerik için ScrollView kullanıldı) -->
+        <Border Grid.Row="1"
+                StrokeThickness="0"
+                BackgroundColor="White"
+                Padding="30, 40"
+                HeightRequest="490"
+                VerticalOptions="End">
+            
+            <Border.StrokeShape>
+                <RoundRectangle CornerRadius="40,40,0,0" />
+            </Border.StrokeShape>
+
+            <ScrollView>
+                <VerticalStackLayout Spacing="15">
+                    
+                    <Label Text="Kayıt Ol"
+                           TextColor="#1A1A1A"
+                           FontSize="24"
+                           FontAttributes="Bold"
+                           Margin="0,0,0,5" />
+
+                    <!-- İsim Soyisim Girişi -->
+                    <Border Stroke="#F0F0F0" StrokeThickness="1" BackgroundColor="#F8F8F8" Padding="15,0">
+                        <Border.StrokeShape><RoundRectangle CornerRadius="12" /></Border.StrokeShape>
+                        <Grid ColumnDefinitions="Auto, *">
+                            <Image Source="kullaniciadi.png" HeightRequest="20" WidthRequest="20" VerticalOptions="Center" Margin="0,0,10,0" />
+                            <Entry x:Name="NameEntry" Grid.Column="1" Placeholder="Ad Soyad" TextColor="Black" />
+                        </Grid>
+                    </Border>
+
+                    <!-- E-mail Girişi -->
+                    <Border Stroke="#F0F0F0" StrokeThickness="1" BackgroundColor="#F8F8F8" Padding="15,0">
+                        <Border.StrokeShape><RoundRectangle CornerRadius="12" /></Border.StrokeShape>
+                        <Grid ColumnDefinitions="Auto, *">
+                            <Image Source="email.png" HeightRequest="20" WidthRequest="20" VerticalOptions="Center" Margin="0,0,10,0" />
+                            <Entry x:Name="EmailEntry" Grid.Column="1" Placeholder="E-mail Adresi" Keyboard="Email" TextColor="Black" />
+                        </Grid>
+                    </Border>
+
+                    <!-- Cep No Girişi -->
+                    <Border Stroke="#F0F0F0" StrokeThickness="1" BackgroundColor="#F8F8F8" Padding="15,0">
+                        <Border.StrokeShape><RoundRectangle CornerRadius="12" /></Border.StrokeShape>
+                        <!-- Grid kullanımı ile ikon ve metin girişi ayrılmıştır -->
+                        <Grid ColumnDefinitions="Auto, *">
+                            <Image Source="telno.png" HeightRequest="20" WidthRequest="20" VerticalOptions="Center" Margin="0,0,10,0" />
+                            <Entry x:Name="PhoneEntry" Grid.Column="1" Placeholder="Cep Telefonu" Keyboard="Telephone" TextColor="Black" />
+                        </Grid>
+                    </Border>
+
+                    <!-- Şifre Girişi -->
+                    <Border Stroke="#F0F0F0" StrokeThickness="1" BackgroundColor="#F8F8F8" Padding="15,0">
+                        <Border.StrokeShape><RoundRectangle CornerRadius="12" /></Border.StrokeShape>
+                        <Grid ColumnDefinitions="Auto, *, Auto">
+                            <Image Source="password.png" HeightRequest="20" WidthRequest="20" VerticalOptions="Center" Margin="0,0,10,0" />
+                            <Entry x:Name="PasswordEntry" Grid.Column="1" Placeholder="Şifre" IsPassword="True" TextColor="Black" />
+                            <ImageButton Grid.Column="2" 
+                                         Source="hide.png" 
+                                         HeightRequest="20" 
+                                         WidthRequest="20" 
+                                         VerticalOptions="Center"
+                                         Clicked="OnTogglePasswordClicked"
+                                         CommandParameter="PasswordEntry" />
+                        </Grid>
+                    </Border>
+
+                    <!-- Şifre Tekrar Girişi -->
+                    <Border Stroke="#F0F0F0" StrokeThickness="1" BackgroundColor="#F8F8F8" Padding="15,0">
+                        <Border.StrokeShape><RoundRectangle CornerRadius="12" /></Border.StrokeShape>
+                        <Grid ColumnDefinitions="Auto, *, Auto">
+                            <Image Source="password.png" HeightRequest="20" WidthRequest="20" VerticalOptions="Center" Margin="0,0,10,0" />
+                            <Entry x:Name="ConfirmPasswordEntry" Grid.Column="1" Placeholder="Şifreyi Onayla" IsPassword="True" TextColor="Black" />
+                            <ImageButton Grid.Column="2" 
+                                         Source="hide.png" 
+                                         HeightRequest="20" 
+                                         WidthRequest="20" 
+                                         VerticalOptions="Center"
+                                         Clicked="OnTogglePasswordClicked"
+                                         CommandParameter="ConfirmPasswordEntry" />
+                        </Grid>
+                    </Border>
+
+                    <!-- Şifre Uyumsuzluğu İçin Hata Mesajı Alanı -->
+                    <Label x:Name="ErrorLabel" 
+                           TextColor="Red" 
+                           FontSize="12" 
+                           IsVisible="False" 
+                           HorizontalOptions="Center" />
+
+                    <!-- Kayıt Butonu -->
+                    <Button Text="Hesap Oluştur"
+                            BackgroundColor="#4A90E2"
+                            TextColor="White"
+                            HeightRequest="55"
+                            CornerRadius="15"
+                            FontAttributes="Bold"
+                            FontSize="18"
+                            Margin="0,5,0,0"
+                            Clicked="OnSignUpClicked" />
+
+                    <!-- Giriş Yap Yönlendirmesi -->
+                    <HorizontalStackLayout HorizontalOptions="Center" Spacing="5" Margin="0,15">
+                        <Label Text="Zaten hesabınız var mı?" TextColor="Gray" />
+                        <Label Text="Giriş Yap" 
+                               TextColor="#4A90E2" 
+                               FontAttributes="Bold">
+                            <Label.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnSignInTapped" />
+                            </Label.GestureRecognizers>
+                        </Label>
+                    </HorizontalStackLayout>
+
+                </VerticalStackLayout>
+            </ScrollView>
+        </Border>
+    </Grid>
+
+</ContentPage>

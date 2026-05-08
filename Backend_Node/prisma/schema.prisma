@@ -1,0 +1,75 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id             String   @id @default(uuid())
+  fullName       String
+  email          String   @unique
+  phoneNumber    String   @unique
+  passwordHash   String   
+  isEmailVerified Boolean @default(false)
+  isPhoneVerified Boolean @default(false)
+  isActive       Boolean  @default(true)
+  subscriptionType String @default("Basic")
+  createdDate    DateTime @default(now())
+  registrationIp String?
+
+  devices        Device[]
+}
+
+model Device {
+  id          String   @id @default(uuid())
+  macAddress  String   @unique
+  name        String
+  type        String   // Örn: RaspberryPi, ESP32
+  isOnline    Boolean  @default(false)
+  lastSeen    DateTime @default(now())
+  
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+
+  sensorLogs  SensorLog[] // Cihaza ait sensör logları
+}
+
+model SensorLog {
+  id          String   @id @default(uuid())
+  temperature Float    // Sıcaklık değeri
+  humidity    Float    // Nem değeri (Eklendi)
+  isRaining   Boolean  // Yağmur var mı?
+  gasDetected Boolean  // Gaz algılandı mı?
+  createdAt   DateTime @default(now())
+  
+  // Şimdilik her logu bir cihaza bağlayacağız
+  deviceId    String
+  device      Device   @relation(fields: [deviceId], references: [id])
+}
+
+model SubscriptionSettings {
+  id                 String   @id @default("default")
+  basicPlanModules   String[]
+  premiumPlanModules String[]
+  premiumPrice       Float    @default(250)
+  updatedAt          DateTime @updatedAt
+}
+
+model PaymentRecord {
+  id          String   @id @default(uuid())
+  amount      Float
+  currency    String   @default("TRY")
+  userId      String
+  status      String   // Success, Failed
+  createdAt   DateTime @default(now())
+}
+
+model ActivityLog {
+  id          String   @id @default(uuid())
+  type        String   // USER_REGISTER, PAYMENT_SUCCESS, SENSOR_ALERT, etc.
+  title       String
+  description String
+  createdAt   DateTime @default(now())
+}

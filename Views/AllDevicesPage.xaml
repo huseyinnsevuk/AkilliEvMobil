@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:local="clr-namespace:AkilliEvMobil.Views"
+             x:Class="AkilliEvMobil.Views.AllDevicesPage"
+             Title="Tüm Cihazlar"
+             Shell.NavBarIsVisible="False"
+             Shell.TabBarIsVisible="False"
+             BackgroundColor="#F5F7FA">
+    
+    <Grid RowDefinitions="Auto, Auto, *, Auto" Padding="0">
+        
+        <!-- SEARCH BAR -->
+        <Border Grid.Row="0" Margin="20,20,20,10" BackgroundColor="#FFFFFF" StrokeThickness="0" HeightRequest="50">
+            <Border.StrokeShape>
+                <RoundRectangle CornerRadius="25" />
+            </Border.StrokeShape>
+            
+            <Grid ColumnDefinitions="50, *">
+                <Image Source="kullaniciadi.png" HeightRequest="20" WidthRequest="20" HorizontalOptions="Center" VerticalOptions="Center" Opacity="0.5" />
+                <Entry x:Name="SearchEntry"
+                       Grid.Column="1" 
+                       Placeholder="Search" 
+                       PlaceholderColor="#A0AABF" 
+                       TextColor="#1E293B" 
+                       FontSize="16" 
+                       VerticalOptions="Center"
+                       TextChanged="OnSearchTextChanged" />
+            </Grid>
+        </Border>
+
+        <!-- CATEGORY TABS -->
+        <Grid Grid.Row="1" ColumnDefinitions="*, *" Margin="20,10,20,20" HeightRequest="50">
+            <Border Grid.ColumnSpan="2" BackgroundColor="#F0F3F8" StrokeThickness="0">
+                <Border.StrokeShape><RoundRectangle CornerRadius="25" /></Border.StrokeShape>
+                <Grid ColumnDefinitions="*, *">
+                    <!-- Aktif Tab -->
+                    <Border x:Name="ActiveTabBorder" Grid.Column="0" BackgroundColor="#4A90E2" StrokeThickness="0" Margin="4">
+                        <Border.StrokeShape><RoundRectangle CornerRadius="25" /></Border.StrokeShape>
+                        <Label x:Name="ActiveTabLabel" Text="Tüm Cihazlar" TextColor="White" HorizontalOptions="Center" VerticalOptions="Center" FontAttributes="Bold" />
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnActiveTabTapped" />
+                        </Border.GestureRecognizers>
+                    </Border>
+                    
+                    <!-- İnaktif Tab -->
+                    <Border x:Name="InactiveTabBorder" Grid.Column="1" BackgroundColor="Transparent" StrokeThickness="0" Margin="4">
+                        <Border.StrokeShape><RoundRectangle CornerRadius="25" /></Border.StrokeShape>
+                        <Label x:Name="InactiveTabLabel" Text="İnaktif Cihazlar" TextColor="#7D8BA1" HorizontalOptions="Center" VerticalOptions="Center" FontAttributes="Bold" />
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnInactiveTabTapped" />
+                        </Border.GestureRecognizers>
+                    </Border>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- DEVICE LIST (CollectionView) -->
+        <CollectionView Grid.Row="2" 
+                        ItemsSource="{Binding FilteredDevices}" 
+                        Margin="15,0"
+                        SelectionMode="None">
+            <CollectionView.ItemsLayout>
+                <GridItemsLayout Orientation="Vertical" Span="2" HorizontalItemSpacing="7" VerticalItemSpacing="7" />
+            </CollectionView.ItemsLayout>
+            <CollectionView.Header>
+                <BoxView HeightRequest="0" Color="Transparent" />
+            </CollectionView.Header>
+            <CollectionView.Footer>
+                <BoxView HeightRequest="0" Color="Transparent" />
+            </CollectionView.Footer>
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <Border BackgroundColor="White" StrokeThickness="0" HeightRequest="180" Margin="0,0,0,0">
+                        <Border.StrokeShape><RoundRectangle CornerRadius="20" /></Border.StrokeShape>
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnDeviceTapped" />
+                        </Border.GestureRecognizers>
+                        <Grid Padding="15">
+                            
+                            <Image Source="{Binding FavoriteIcon}" HorizontalOptions="End" VerticalOptions="Start" HeightRequest="25" WidthRequest="25">
+                                <Image.GestureRecognizers>
+                                    <TapGestureRecognizer Tapped="OnFavoriteTapped" />
+                                </Image.GestureRecognizers>
+                            </Image>
+                            <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="10" Opacity="{Binding Opacity}">
+                                <Image Source="{Binding ImageSource}" HeightRequest="80" WidthRequest="80" />
+                                <Label Text="{Binding Name}" FontSize="15" FontAttributes="Bold" TextColor="#1E293B" HorizontalTextAlignment="Center" />
+                            </VerticalStackLayout>
+
+                            <!-- Ortadaki Kilit İkonu (Sadece IsLocked ise görünür) -->
+                            <Image Source="padlock.png" 
+                                   IsVisible="{Binding IsLocked}" 
+                                   HeightRequest="40" 
+                                   WidthRequest="40" 
+                                   VerticalOptions="Center" 
+                                   HorizontalOptions="Center" 
+                                   TranslationY="-10" />
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+        <!-- YENİ MODÜLER CUSTOM TAB BAR KONTROLÜ -->
+        <local:CustomTabBar Grid.Row="3" ActiveTab="Grid" />
+    </Grid>
+</ContentPage>

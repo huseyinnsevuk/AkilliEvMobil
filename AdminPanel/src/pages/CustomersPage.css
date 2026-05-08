@@ -1,0 +1,419 @@
+.customers-page {
+  display: flex;
+  gap: 25px;
+  height: 100%;
+}
+
+/* SIDEBAR: Müşteri Listesi */
+.customers-sidebar {
+  width: 350px;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  background: #FFFFFF;
+}
+
+.sidebar-header {
+  margin-bottom: 20px;
+}
+
+.sidebar-header h2 {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 15px;
+}
+
+.search-box {
+  display: flex;
+  align-items: center;
+  background: #F1F5F9;
+  border-radius: 10px;
+  padding: 10px 15px;
+}
+
+.search-box input {
+  border: none;
+  background: transparent;
+  outline: none;
+  margin-left: 10px;
+  width: 100%;
+  font-size: 14px;
+}
+
+.search-box svg {
+  color: #94A3B8;
+}
+
+.customers-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow-y: auto;
+  flex: 1;
+  padding-right: 5px;
+}
+
+.customer-list-item {
+  display: flex;
+  align-items: center;
+  padding: 12px 15px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 1px solid transparent;
+}
+
+.customer-list-item:hover {
+  background: #F8FAFC;
+}
+
+.customer-list-item.active {
+  background: #F0FBAA; /* Uçuk yeşil/sarı tema rengi */
+  border-color: rgba(0,0,0,0.05);
+}
+
+.list-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  margin-right: 15px;
+  object-fit: cover;
+}
+
+.list-info h4 {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 3px;
+}
+
+.list-info span {
+  font-size: 12px;
+  color: #64748B;
+}
+
+.lock-icon {
+  margin-left: auto;
+  color: #EF4444;
+}
+
+/* SAĞ TARAF: Profil Detayları */
+.customer-profile-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+}
+
+/* Profil Header Kartı */
+.profile-header-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 30px;
+  background: #FFFFFF;
+}
+
+.profile-main-info {
+  display: flex;
+  align-items: center;
+  gap: 25px;
+}
+
+.profile-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 4px solid #F1F5F9;
+}
+
+.name-row {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 8px;
+}
+
+.name-row h2 {
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.plan-badge {
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.plan-badge.premium {
+  background: #FFFBEB;
+  color: #F59E0B;
+  border: 1px solid #FDE68A;
+}
+
+.plan-badge.free {
+  background: #F1F5F9;
+  color: #475569;
+  border: 1px solid #E2E8F0;
+}
+
+.status-badge.suspended {
+  background: #FEF2F2;
+  color: #EF4444;
+  border: 1px solid #FECACA;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.meta-info {
+  display: flex;
+  gap: 20px;
+  color: #64748B;
+  font-size: 14px;
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.profile-actions {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  background: #f8fafc;
+  padding: 10px 15px;
+  border-radius: 18px;
+  border: 1px solid #e2e8f0;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+}
+
+.plan-selector {
+  display: flex;
+  align-items: center;
+  background: white;
+  border-radius: 12px;
+  padding: 0 15px;
+  border: 1px solid #e2e8f0;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+  height: 42px;
+}
+
+.plan-selector:hover {
+  border-color: #94a3b8;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.plan-selector:focus-within {
+  border-color: #4a90e2;
+  box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.15);
+}
+
+.selector-icon {
+  color: #4a90e2;
+  margin-right: 10px;
+}
+
+.plan-dropdown {
+  border: none;
+  background: transparent;
+  outline: none;
+  font-size: 14px;
+  font-weight: 700;
+  color: #1e293b;
+  padding: 8px 0;
+  cursor: pointer;
+  min-width: 130px;
+  appearance: none; /* Standart ok işaretini kaldırıp daha modern yapabiliriz */
+}
+
+/* Custom Arrow for dropdown */
+.plan-selector::after {
+  content: '▾';
+  margin-left: 10px;
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.status-toggle-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 22px;
+  height: 42px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 14px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  border: none;
+}
+
+.btn-danger {
+  background: linear-gradient(135deg, #ff4d4d 0%, #dc2626 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.25);
+}
+
+.btn-danger:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(220, 38, 38, 0.4);
+  filter: brightness(1.1);
+}
+
+.btn-success {
+  background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+}
+
+.btn-success:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+  filter: brightness(1.1);
+}
+
+.status-toggle-btn:active {
+  transform: translateY(1px);
+}
+
+/* Aksiyonlar ve Cihazlar Kartı */
+.actions-card {
+  padding: 30px;
+  background: #FFFFFF;
+  flex: 1;
+}
+
+.actions-header {
+  margin-bottom: 25px;
+}
+
+.actions-header h3 {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 5px;
+}
+
+.actions-header p {
+  color: #64748B;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.devices-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.device-action-card {
+  display: flex;
+  align-items: center;
+  padding: 20px;
+  border-radius: 16px;
+  border: 1px solid #E2E8F0;
+  background: #F8FAFC;
+  transition: all 0.2s;
+}
+
+.device-action-card:hover {
+  border-color: #CBD5E1;
+}
+
+.device-icon-wrapper {
+  width: 45px;
+  height: 45px;
+  border-radius: 12px;
+  background: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #475569;
+  margin-right: 15px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+}
+
+.device-info h4 {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 4px;
+  color: #1E293B;
+}
+
+.device-status {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.device-status.success { color: #10B981; }
+.device-status.warning { color: #F59E0B; }
+.device-status.error { color: #EF4444; }
+
+.mock-switch {
+  margin-left: auto;
+  width: 44px;
+  height: 24px;
+  border-radius: 12px;
+  position: relative;
+  transition: background 0.3s;
+}
+
+.switch-on {
+  background: #10B981;
+}
+
+.switch-off {
+  background: #CBD5E1;
+}
+
+.switch-knob {
+  width: 20px;
+  height: 20px;
+  background: white;
+  border-radius: 50%;
+  position: absolute;
+  top: 2px;
+  transition: left 0.3s;
+}
+
+.switch-on .switch-knob { left: 22px; }
+.switch-off .switch-knob { left: 2px; }
+
+/* Kilitli ve Kapalı Durumlar */
+.device-action-card.locked {
+  opacity: 0.7;
+  background: #F1F5F9;
+}
+
+.device-action-card.locked .device-icon-wrapper {
+  color: #94A3B8;
+}
+
+.device-action-card.system-disabled {
+  opacity: 0.5;
+  filter: grayscale(1);
+}
+
+.no-selection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #94A3B8;
+  background: #FFFFFF;
+}
+
+.no-selection svg {
+  margin-bottom: 15px;
+}

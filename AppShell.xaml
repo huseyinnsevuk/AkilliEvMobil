@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Shell
+    x:Class="AkilliEvMobil.AppShell"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:local="clr-namespace:AkilliEvMobil"
+    xmlns:views="clr-namespace:AkilliEvMobil.Views"
+    Shell.FlyoutBehavior="Disabled"
+    Title="AkilliEvMobil">
+
+    <!-- TabBar yapısı sayesinde hepsi arka planda sekme gibi çalışacak, ancak gizli oldukları için kendi özel Bottom Barımız kullanılacak. -->
+    <TabBar>
+        <ShellContent Route="MainDashboardPage" ContentTemplate="{DataTemplate views:MainDashboardPage}" />
+        <ShellContent Route="AllDevicesPage" ContentTemplate="{DataTemplate views:AllDevicesPage}" />
+        <ShellContent Route="AutomationPage" ContentTemplate="{DataTemplate views:AutomationPage}" />
+        <ShellContent Route="SettingsPage" ContentTemplate="{DataTemplate views:SettingsPage}" />
+    </TabBar>
+
+</Shell>
