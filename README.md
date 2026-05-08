@@ -1,0 +1,2 @@
+# AkilliEvMobil
+bitirme projesi
