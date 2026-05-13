@@ -16,7 +16,9 @@ namespace AkilliEvMobil
             if (uri.Host == "payment-success")
             {
                 // Ödeme başarılı mesajını yayınla
+#pragma warning disable CS0618
                 MessagingCenter.Send(this, "PaymentSuccess");
+#pragma warning restore CS0618
             }
         }
     }

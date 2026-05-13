@@ -2,6 +2,7 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:local="clr-namespace:AkilliEvMobil.Views"
+             xmlns:controls="clr-namespace:AkilliEvMobil.Views.Controls"
              xmlns:ios="clr-namespace:Microsoft.Maui.Controls.PlatformConfiguration.iOSSpecific;assembly=Microsoft.Maui.Controls"
              x:Class="AkilliEvMobil.Views.SettingsPage"
              Title="Ayarlar"
@@ -93,10 +94,11 @@
                         <VerticalStackLayout>
                             <!-- Notification Preferences -->
                             <Grid ColumnDefinitions="60, *, Auto" Padding="15" HeightRequest="65">
-                                <Image Grid.Column="0" Source="bell.png" HeightRequest="22" WidthRequest="22" VerticalOptions="Center" HorizontalOptions="Center" />
+                                <Image Grid.Column="0" Source="bell.png" HeightRequest="20" WidthRequest="22" VerticalOptions="Center" HorizontalOptions="Center" />
                                 <Label Grid.Column="1" Text="Bildirim Tercihleri" VerticalOptions="Center" TextColor="#334155" FontSize="15" />
-                                <Switch Grid.Column="2" IsToggled="True" OnColor="#4A90E2" VerticalOptions="Center" Scale="0.8" />
+                                <controls:CustomToggle Grid.Column="2" IsToggled="True" VerticalOptions="Center" />
                             </Grid>
+
                         </VerticalStackLayout>
                     </Border>
                 </VerticalStackLayout>

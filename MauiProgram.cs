@@ -21,6 +21,8 @@ namespace AkilliEvMobil
                     // Premium display fontlar
                     fonts.AddFont("StackSansHeadline-Bold.ttf", "StackSansBold");
                     fonts.AddFont("StackSansHeadline-SemiBold.ttf", "StackSansSemiBold");
+                    fonts.AddFont("ShareTech-Regular.ttf", "ShareTech");
+                    fonts.AddFont("Quicksand-Regular.ttf", "Quicksand");
                 });
 
             // Servis Kayıtları

@@ -1,0 +1,70 @@
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="AkilliEvMobil.Views.Controls.StripedSlider"
+             x:Name="root">
+    
+    <Grid HeightRequest="60">
+        <!-- Slider Track Background -->
+        <Border HeightRequest="45" VerticalOptions="Center" StrokeThickness="0">
+            <Border.StrokeShape>
+                <RoundRectangle CornerRadius="22.5" />
+            </Border.StrokeShape>
+            <Border.Background>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                    <GradientStop Color="#EEEEEE" Offset="0" />
+                    <GradientStop Color="#E0E0E0" Offset="1" />
+                </LinearGradientBrush>
+            </Border.Background>
+
+            <Grid>
+                <!-- Filled Part (Gradient) -->
+                <Border x:Name="FillBorder" HeightRequest="45" HorizontalOptions="Start" StrokeThickness="0">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="22.5" />
+                    </Border.StrokeShape>
+                    <Border.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                            <GradientStop Color="{Binding StartColor, Source={x:Reference root}}" Offset="0.0" />
+                            <GradientStop Color="{Binding EndColor, Source={x:Reference root}}" Offset="1.0" />
+                        </LinearGradientBrush>
+                    </Border.Background>
+                </Border>
+
+                <!-- Stripes Overlay (Using GraphicsView for custom drawing) -->
+                <GraphicsView x:Name="StripesGraphicsView" HeightRequest="45" VerticalOptions="Center" InputTransparent="True" />
+            </Grid>
+        </Border>
+
+        <!-- Hidden Slider for Interaction -->
+        <Slider x:Name="MainSlider" Minimum="0" Maximum="100" 
+                Margin="27.5,0"
+                MinimumTrackColor="Transparent" MaximumTrackColor="Transparent" 
+                ThumbColor="Transparent" 
+                ValueChanged="OnSliderValueChanged" />
+
+        <!-- Custom Thumb -->
+        <Border x:Name="ThumbBorder" HeightRequest="55" WidthRequest="55" BackgroundColor="White" 
+                HorizontalOptions="Start" VerticalOptions="Center" TranslationX="0" StrokeThickness="4">
+            <Border.StrokeShape>
+                <RoundRectangle CornerRadius="27.5" />
+            </Border.StrokeShape>
+            <Border.Stroke>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                    <GradientStop Color="{Binding StartColor, Source={x:Reference root}}" Offset="0" />
+                    <GradientStop Color="{Binding EndColor, Source={x:Reference root}}" Offset="1" />
+                </LinearGradientBrush>
+            </Border.Stroke>
+            <Border.Shadow>
+                <Shadow Brush="Black" Offset="0,4" Radius="10" Opacity="0.15" />
+            </Border.Shadow>
+            <Grid>
+                <!-- Thumb Stripes or Icon -->
+                <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="4">
+                    <BoxView WidthRequest="15" HeightRequest="2" Color="{Binding EndColor, Source={x:Reference root}}" CornerRadius="1" />
+                    <BoxView WidthRequest="15" HeightRequest="2" Color="{Binding EndColor, Source={x:Reference root}}" CornerRadius="1" />
+                    <BoxView WidthRequest="15" HeightRequest="2" Color="{Binding EndColor, Source={x:Reference root}}" CornerRadius="1" />
+                </VerticalStackLayout>
+            </Grid>
+        </Border>
+    </Grid>
+</ContentView>

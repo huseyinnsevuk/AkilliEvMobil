@@ -11,7 +11,7 @@ namespace AkilliEvMobil
                   Categories = new[] { Android.Content.Intent.CategoryDefault, Android.Content.Intent.CategoryBrowsable })]
     public class MainActivity : MauiAppCompatActivity
     {
-        protected override void OnNewIntent(Android.Content.Intent intent)
+        protected override void OnNewIntent(Android.Content.Intent? intent)
         {
             base.OnNewIntent(intent);
             Platform.OnNewIntent(intent);

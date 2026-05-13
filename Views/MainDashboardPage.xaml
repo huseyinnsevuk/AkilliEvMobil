@@ -119,15 +119,18 @@
                     <!-- Modlar: İyi Geceler ve Günaydın -->
                     <VerticalStackLayout Grid.Column="1" Spacing="10" HorizontalOptions="Fill">
                         <!-- İyi Geceler Modu -->
-                        <Border BackgroundColor="#FFFFFF" StrokeThickness="0" Padding="5" HeightRequest="65">
+                        <Border StrokeThickness="0" Padding="0" HeightRequest="65">
                             <Border.StrokeShape><RoundRectangle CornerRadius="32" /></Border.StrokeShape>
-                            <HorizontalStackLayout Spacing="12" VerticalOptions="Center" HorizontalOptions="Start" Margin="5,0">
-                                <Border BackgroundColor="Transparent" StrokeThickness="0">
-                                    <Border.StrokeShape><RoundRectangle CornerRadius="25" /></Border.StrokeShape>
-                                    <Image Source="night.png" HeightRequest="50" WidthRequest="50" HorizontalOptions="Center" VerticalOptions="Center" />
-                                </Border>
-                                <Label Text="İyi Geceler" TextColor="#1E293B" FontSize="15" FontAttributes="Bold" VerticalOptions="Center" />
-                            </HorizontalStackLayout>
+                            <Grid>
+                                <Image Source="goodnightmodebg.jpg" Aspect="AspectFill" />
+                                <HorizontalStackLayout Spacing="12" VerticalOptions="Center" HorizontalOptions="Start" Margin="10,0">
+                                    <Border BackgroundColor="Transparent" StrokeThickness="0">
+                                        <Border.StrokeShape><RoundRectangle CornerRadius="25" /></Border.StrokeShape>
+                                        <Image Source="night.png" HeightRequest="50" WidthRequest="50" HorizontalOptions="Center" VerticalOptions="Center" />
+                                    </Border>
+                                    <Label Text="İyi Geceler" TextColor="White" FontSize="15" FontAttributes="Bold" VerticalOptions="Center" />
+                                </HorizontalStackLayout>
+                            </Grid>
                         </Border>
 
                         <!-- Günaydın Modu -->

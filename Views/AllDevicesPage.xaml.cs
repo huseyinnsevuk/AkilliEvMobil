@@ -82,9 +82,29 @@ namespace AkilliEvMobil.Views
         {
             if (sender is Border border && border.BindingContext is SmartDevice device)
             {
+                // Noticeable Pop Effect
+                await border.ScaleTo(0.9, 100, Easing.CubicOut);
+                await border.ScaleTo(1.0, 100, Easing.CubicIn);
+
                 if (device.IsLocked)
                 {
                     await DisplayAlert("Kilitli Özellik", "Premium üyelik gerektirir.", "Tamam");
+                }
+                else if (device.Id == "light")
+                {
+                    await Shell.Current.GoToAsync(nameof(LightingPage));
+                }
+                else if (device.Id == "tent")
+                {
+                    await Shell.Current.GoToAsync(nameof(TentPage));
+                }
+                else if (device.Id == "fan")
+                {
+                    await Shell.Current.GoToAsync(nameof(FanPage));
+                }
+                else if (device.Id == "heater")
+                {
+                    await Shell.Current.GoToAsync(nameof(HeaterPage));
                 }
             }
         }
@@ -104,7 +124,7 @@ namespace AkilliEvMobil.Views
             await Shell.Current.GoToAsync("//MainDashboardPage");
         }
 
-        private async void OnGridTapped(object sender, EventArgs e)
+        private void OnGridTapped(object sender, EventArgs e)
         {
             // Zaten bu sayfadayız
         }

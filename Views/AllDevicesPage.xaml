@@ -71,24 +71,28 @@
             </CollectionView.Footer>
             <CollectionView.ItemTemplate>
                 <DataTemplate>
-                    <Border BackgroundColor="White" StrokeThickness="0" HeightRequest="180" Margin="0,0,0,0">
+                    <Border BackgroundColor="White" StrokeThickness="0" HeightRequest="180">
                         <Border.StrokeShape><RoundRectangle CornerRadius="20" /></Border.StrokeShape>
                         <Border.GestureRecognizers>
                             <TapGestureRecognizer Tapped="OnDeviceTapped" />
                         </Border.GestureRecognizers>
                         <Grid Padding="15">
-                            
                             <Image Source="{Binding FavoriteIcon}" HorizontalOptions="End" VerticalOptions="Start" HeightRequest="25" WidthRequest="25">
                                 <Image.GestureRecognizers>
                                     <TapGestureRecognizer Tapped="OnFavoriteTapped" />
                                 </Image.GestureRecognizers>
                             </Image>
-                            <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="10" Opacity="{Binding Opacity}">
-                                <Image Source="{Binding ImageSource}" HeightRequest="80" WidthRequest="80" />
-                                <Label Text="{Binding Name}" FontSize="15" FontAttributes="Bold" TextColor="#1E293B" HorizontalTextAlignment="Center" />
+                            <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="5" Opacity="{Binding Opacity}">
+                                <Border BackgroundColor="Transparent" StrokeThickness="0" HeightRequest="90" WidthRequest="90" HorizontalOptions="Center">
+                                    <Border.StrokeShape><RoundRectangle CornerRadius="45" /></Border.StrokeShape>
+                                    <Border.Shadow>
+                                        <Shadow Brush="#CBD5E1" Offset="0,8" Radius="15" Opacity="0.4" />
+                                    </Border.Shadow>
+                                    <Image Source="{Binding ImageSource}" HeightRequest="70" WidthRequest="70" VerticalOptions="Center" HorizontalOptions="Center" />
+                                </Border>
+                                <Label Text="{Binding Name}" FontFamily="Quicksand" FontSize="18" FontAttributes="Bold" TextColor="#1E293B" HorizontalTextAlignment="Center" />
                             </VerticalStackLayout>
-
-                            <!-- Ortadaki Kilit İkonu (Sadece IsLocked ise görünür) -->
+                            
                             <Image Source="padlock.png" 
                                    IsVisible="{Binding IsLocked}" 
                                    HeightRequest="40" 

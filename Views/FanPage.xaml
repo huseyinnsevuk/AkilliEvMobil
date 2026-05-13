@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:local="clr-namespace:AkilliEvMobil.Views"
+             xmlns:controls="clr-namespace:AkilliEvMobil.Views.Controls"
+             x:Class="AkilliEvMobil.Views.FanPage"
+             Shell.NavBarIsVisible="False"
+             Shell.TabBarIsVisible="False"
+             BackgroundColor="#F5F7FA">
+
+    <Grid RowDefinitions="Auto, *">
+        <!-- Header -->
+        <Grid Grid.Row="0" ColumnDefinitions="Auto, *, Auto" Padding="15,40,15,20" BackgroundColor="#F5F7FA" ZIndex="1">
+            <Border Grid.Column="0" HeightRequest="44" WidthRequest="44" BackgroundColor="White" StrokeThickness="0" HorizontalOptions="Start" VerticalOptions="Center">
+                <Border.StrokeShape><RoundRectangle CornerRadius="22" /></Border.StrokeShape>
+                <Border.Shadow><Shadow Brush="Black" Offset="0,2" Radius="5" Opacity="0.05" /></Border.Shadow>
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnBackClicked" />
+                </Border.GestureRecognizers>
+                <VisualStateManager.VisualStateGroups>
+                    <VisualStateGroupList>
+                        <VisualStateGroup x:Name="CommonStates">
+                            <VisualState x:Name="Normal" />
+                            <VisualState x:Name="Pressed">
+                                <VisualState.Setters>
+                                    <Setter Property="Scale" Value="0.9" />
+                                    <Setter Property="BackgroundColor" Value="#F0F3F8" />
+                                </VisualState.Setters>
+                            </VisualState>
+                        </VisualStateGroup>
+                    </VisualStateGroupList>
+                </VisualStateManager.VisualStateGroups>
+                <Image Source="back.png" HeightRequest="18" WidthRequest="18" TranslationX="-3" VerticalOptions="Center" HorizontalOptions="Center" InputTransparent="True" />
+            </Border>
+            <Label Grid.Column="1" Text="Fan" FontFamily="Quicksand" FontSize="24" FontAttributes="Bold" HorizontalOptions="Center" VerticalOptions="Center" TextColor="#1E293B" />
+            <BoxView Grid.Column="2" WidthRequest="44" BackgroundColor="Transparent" />
+        </Grid>
+
+        <!-- Scrollable Content -->
+        <ScrollView Grid.Row="1" VerticalScrollBarVisibility="Never">
+            <VerticalStackLayout Padding="0,0,0,100">
+                <!-- Fan Image Section -->
+                <Grid VerticalOptions="Center" HorizontalOptions="Center" Margin="0,20">
+                    <Image x:Name="FanImage" Source="fan.png" HeightRequest="320" Aspect="AspectFit" VerticalOptions="Center" />
+                </Grid>
+
+                <!-- Status Card -->
+                <Border Margin="25,0,25,30" BackgroundColor="White" StrokeThickness="0" Padding="20">
+                    <Border.StrokeShape><RoundRectangle CornerRadius="30" /></Border.StrokeShape>
+                    <Border.Shadow><Shadow Brush="Black" Offset="0,4" Radius="15" Opacity="0.03" /></Border.Shadow>
+                    
+                    <Grid ColumnDefinitions="*, Auto">
+                        <VerticalStackLayout Grid.Column="0" Spacing="4">
+                            <Label Text="Ana Güç" FontSize="18" FontAttributes="Bold" TextColor="#1E293B" />
+                            <Label x:Name="StatusLabel" Text="Şu an açık" FontSize="14" TextColor="#A0AABF" />
+                        </VerticalStackLayout>
+                        
+                        <Switch x:Name="FanSwitch" IsToggled="True" Toggled="OnFanToggled" Scale="1.2" ThumbColor="#4A90E2" OnColor="#B3E5FC" TranslationX="-30">
+                            <VisualStateManager.VisualStateGroups>
+                                <VisualStateGroupList>
+                                    <VisualStateGroup x:Name="CommonStates">
+                                        <VisualState x:Name="On">
+                                            <VisualState.Setters>
+                                                <Setter Property="ThumbColor" Value="#4A90E2" />
+                                                <Setter Property="OnColor" Value="#B3E5FC" />
+                                            </VisualState.Setters>
+                                        </VisualState>
+                                        <VisualState x:Name="Off">
+                                            <VisualState.Setters>
+                                                <Setter Property="ThumbColor" Value="#BDBDBD" />
+                                            </VisualState.Setters>
+                                        </VisualState>
+                                    </VisualStateGroup>
+                                </VisualStateGroupList>
+                            </VisualStateManager.VisualStateGroups>
+                        </Switch>
+                    </Grid>
+                </Border>
+
+                <!-- Speed Slider Section -->
+                <VerticalStackLayout Padding="25,0,25,20" Spacing="25">
+                    <Grid ColumnDefinitions="*, Auto">
+                        <Label Grid.Column="0" Text="Çalışma Hızı" FontSize="18" FontAttributes="Bold" TextColor="#1E293B" />
+                        <Label Grid.Column="1" x:Name="SpeedLabel" Text="50%" FontSize="18" FontAttributes="Bold" TextColor="#4A90E2" />
+                    </Grid>
+                    
+                    <controls:StripedSlider x:Name="SpeedSlider" Value="50" StartColor="#4A90E2" EndColor="#357ABD" />
+                </VerticalStackLayout>
+            </VerticalStackLayout>
+        </ScrollView>
+
+    </Grid>
+</ContentPage>

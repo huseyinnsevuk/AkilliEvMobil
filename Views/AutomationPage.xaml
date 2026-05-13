@@ -2,20 +2,99 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:local="clr-namespace:AkilliEvMobil.Views"
+             xmlns:controls="clr-namespace:AkilliEvMobil.Views.Controls"
              x:Class="AkilliEvMobil.Views.AutomationPage"
              Title="Otomasyon Sistemleri"
              Shell.NavBarIsVisible="False"
              Shell.TabBarIsVisible="False"
              BackgroundColor="#F5F7FA">
     
-    <Grid RowDefinitions="*, Auto">
-        <!-- İÇERİK: OTOMASYON -->
-        <VerticalStackLayout Grid.Row="0" VerticalOptions="Center" HorizontalOptions="Center" Spacing="20">
-            <Label Text="Zamanlanmış Görevler &amp; Senaryolar" FontSize="20" FontAttributes="Bold" HorizontalOptions="Center" TextColor="#1E293B" />
-            <Label Text="Burada otomasyon ayarları yer alacak." FontSize="14" HorizontalOptions="Center" TextColor="#A0AABF" />
-        </VerticalStackLayout>
+    <Grid RowDefinitions="Auto, *, Auto" Padding="0">
+        
+        <!-- SEARCH BAR -->
+        <Border Grid.Row="0" Margin="20,20,20,10" BackgroundColor="#FFFFFF" StrokeThickness="0" HeightRequest="50">
+            <Border.StrokeShape>
+                <RoundRectangle CornerRadius="25" />
+            </Border.StrokeShape>
+            
+            <Grid ColumnDefinitions="50, *">
+                <Image Source="kullaniciadi.png" HeightRequest="20" WidthRequest="20" HorizontalOptions="Center" VerticalOptions="Center" Opacity="0.5" />
+                <Entry x:Name="SearchEntry"
+                       Grid.Column="1" 
+                       Placeholder="Rutin ara..." 
+                       PlaceholderColor="#A0AABF" 
+                       TextColor="#1E293B" 
+                       FontSize="16" 
+                       VerticalOptions="Center"
+                       TextChanged="OnSearchTextChanged" />
+            </Grid>
+        </Border>
+
+        <!-- ROUTINES GRID -->
+        <CollectionView Grid.Row="1" 
+                        ItemsSource="{Binding FilteredRoutines}" 
+                        Margin="15,0"
+                        SelectionMode="None">
+            <CollectionView.ItemsLayout>
+                <GridItemsLayout Orientation="Vertical" Span="2" HorizontalItemSpacing="10" VerticalItemSpacing="10" />
+            </CollectionView.ItemsLayout>
+            <CollectionView.Header>
+                <VerticalStackLayout Padding="5,10">
+                    <Label Text="Aktif Rutinler" 
+                           FontSize="20" 
+                           FontAttributes="Bold" 
+                           TextColor="#1E293B" 
+                           Margin="0,0,0,10" />
+                </VerticalStackLayout>
+            </CollectionView.Header>
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <Grid HeightRequest="180">
+                        <Grid.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnRoutineTapped" />
+                        </Grid.GestureRecognizers>
+                        
+                        <!-- Custom Background (Concave Card) -->
+                        <GraphicsView>
+                            <GraphicsView.Drawable>
+                                <controls:ConcaveCardDrawable CardColor="White" />
+                            </GraphicsView.Drawable>
+                        </GraphicsView>
+
+                        <!-- Content -->
+                        <Grid Padding="15">
+                            <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="10">
+                                <!-- Icon Circle -->
+                                <Border BackgroundColor="#F0F3F8" 
+                                        StrokeThickness="0" 
+                                        HeightRequest="90" 
+                                        WidthRequest="90" 
+                                        HorizontalOptions="Center">
+                                    <Border.StrokeShape><RoundRectangle CornerRadius="45" /></Border.StrokeShape>
+                                    <Border.Shadow>
+                                        <Shadow Brush="#CBD5E1" Offset="0,8" Radius="15" Opacity="0.4" />
+                                    </Border.Shadow>
+                                    <Image Source="{Binding Icon}" 
+                                           HeightRequest="50" 
+                                           WidthRequest="50" 
+                                           VerticalOptions="Center" 
+                                           HorizontalOptions="Center" />
+                                </Border>
+                                
+                                <Label Text="{Binding Name}" 
+                                       FontFamily="Quicksand" 
+                                       FontSize="17" 
+                                       FontAttributes="Bold" 
+                                       TextColor="#1E293B" 
+                                       HorizontalTextAlignment="Center" />
+                            </VerticalStackLayout>
+                        </Grid>
+                    </Grid>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
 
         <!-- YENİ MODÜLER CUSTOM TAB BAR KONTROLÜ (TÜM SAYFALAR İÇİN ORTAK) -->
-        <local:CustomTabBar Grid.Row="1" ActiveTab="Automation" />
+        <local:CustomTabBar Grid.Row="2" ActiveTab="Automation" />
     </Grid>
 </ContentPage>

@@ -13,6 +13,7 @@ namespace AkilliEvMobil.Views
             InitializeComponent();
 
             // Ödeme sonrası deep link dönüşünü dinle
+#pragma warning disable CS0618
             MessagingCenter.Subscribe<App>(this, "PaymentSuccess", (sender) =>
             {
                 MainThread.BeginInvokeOnMainThread(async () =>
@@ -20,6 +21,7 @@ namespace AkilliEvMobil.Views
                     await ShowSuccessScreen();
                 });
             });
+#pragma warning restore CS0618
         }
 
         // ─── SAYFA OLAYLARI ───────────────────────────────────────────────

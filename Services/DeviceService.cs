@@ -42,7 +42,7 @@ namespace AkilliEvMobil.Services
         // Use Unicode for heart icons: Hollow (♡) and Solid (♥)
         public string FavoriteIcon => IsFavorite ? "fav.png" : "unfav.png";
 
-        public event PropertyChangedEventHandler PropertyChanged;
+        public event PropertyChangedEventHandler? PropertyChanged;
         protected void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));

@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:local="clr-namespace:AkilliEvMobil.Views"
+             x:Class="AkilliEvMobil.Views.HeaterPage"
+             Shell.NavBarIsVisible="False"
+             Shell.TabBarIsVisible="False"
+             BackgroundColor="#F5F7FA">
+
+    <Grid RowDefinitions="Auto, *">
+        <!-- Header -->
+        <Grid Grid.Row="0" ColumnDefinitions="Auto, *, Auto" Padding="15,40,15,20" BackgroundColor="#F5F7FA" ZIndex="1">
+            <Border Grid.Column="0" HeightRequest="44" WidthRequest="44" BackgroundColor="White" StrokeThickness="0" HorizontalOptions="Start" VerticalOptions="Center">
+                <Border.StrokeShape><RoundRectangle CornerRadius="22" /></Border.StrokeShape>
+                <Border.Shadow><Shadow Brush="Black" Offset="0,2" Radius="5" Opacity="0.05" /></Border.Shadow>
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnBackClicked" />
+                </Border.GestureRecognizers>
+                <VisualStateManager.VisualStateGroups>
+                    <VisualStateGroupList>
+                        <VisualStateGroup x:Name="CommonStates">
+                            <VisualState x:Name="Normal" />
+                            <VisualState x:Name="Pressed">
+                                <VisualState.Setters>
+                                    <Setter Property="Scale" Value="0.9" />
+                                    <Setter Property="BackgroundColor" Value="#F0F3F8" />
+                                </VisualState.Setters>
+                            </VisualState>
+                        </VisualStateGroup>
+                    </VisualStateGroupList>
+                </VisualStateManager.VisualStateGroups>
+                <Image Source="back.png" HeightRequest="18" WidthRequest="18" TranslationX="-3" VerticalOptions="Center" HorizontalOptions="Center" InputTransparent="True" />
+            </Border>
+            <Label Grid.Column="1" Text="Isıtıcı" FontFamily="Quicksand" FontSize="24" FontAttributes="Bold" HorizontalOptions="Center" VerticalOptions="Center" TextColor="#1E293B" />
+            <BoxView Grid.Column="2" WidthRequest="44" BackgroundColor="Transparent" />
+        </Grid>
+
+        <!-- Content -->
+        <ScrollView Grid.Row="1" VerticalScrollBarVisibility="Never">
+            <VerticalStackLayout Padding="0,0,0,100" Spacing="40">
+                
+                <!-- Heater Image Section -->
+                <Grid VerticalOptions="Center" HorizontalOptions="Center" Margin="0,20">
+                    <Image Source="heater.png" HeightRequest="200" Aspect="AspectFit" />
+                </Grid>
+
+                <!-- Status Info -->
+                <VerticalStackLayout HorizontalOptions="Center" Spacing="5">
+                    <Label x:Name="StatusLabel" Text="Şu an Kapalı" FontSize="20" FontAttributes="Bold" TextColor="#A0AABF" HorizontalOptions="Center" />
+                    <Label x:Name="TempLabel" Text="Ortam: 22°C" FontSize="14" TextColor="#64748B" HorizontalOptions="Center" />
+                </VerticalStackLayout>
+
+                <!-- Large Circular Power Button with Animated Heat Waves -->
+                <Grid HorizontalOptions="Center" VerticalOptions="Center">
+                    <!-- Custom Animated Heat Waves (GraphicsView) -->
+                    <GraphicsView x:Name="WaveView" HeightRequest="250" WidthRequest="250" HorizontalOptions="Center" VerticalOptions="Center" Opacity="0" />
+                    
+                    <Border x:Name="PowerButtonBorder" HeightRequest="150" WidthRequest="150" Stroke="White" StrokeThickness="1.5">
+                        <Border.StrokeShape><RoundRectangle CornerRadius="75" /></Border.StrokeShape>
+                        <Border.Background>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                <GradientStop Color="#E6FFFFFF" Offset="0.0" />
+                                <GradientStop Color="#CCDFE5F0" Offset="1.0" />
+                            </LinearGradientBrush>
+                        </Border.Background>
+                        <Border.Shadow>
+                            <Shadow x:Name="ButtonShadow" Brush="Black" Offset="0,6" Radius="15" Opacity="0.08" />
+                        </Border.Shadow>
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnPowerTapped" />
+                        </Border.GestureRecognizers>
+                        
+                        <Grid>
+                            <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="8">
+                                <Image x:Name="PowerIcon" Source="power.png" HeightRequest="45" WidthRequest="45" HorizontalOptions="Center" />
+                                <Label x:Name="PowerLabel" Text="BAŞLAT" FontSize="14" FontAttributes="Bold" TextColor="#1E293B" HorizontalOptions="Center" />
+                            </VerticalStackLayout>
+                        </Grid>
+                    </Border>
+                </Grid>
+            </VerticalStackLayout>
+        </ScrollView>
+
+    </Grid>
+</ContentPage>
