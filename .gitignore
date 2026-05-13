@@ -29,3 +29,5 @@ yarn-error.log*
 !composer.json
 .env
 secret.key
+
+Backend/firebase-service-account.json.json
