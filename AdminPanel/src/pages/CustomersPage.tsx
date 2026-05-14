@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import {
   User,
   Mail,
@@ -10,7 +10,6 @@ import {
   ThermometerSun,
   Warehouse,
   Flame,
-  Droplets,
   Camera,
   Search,
   Lock,

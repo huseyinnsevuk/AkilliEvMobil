@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Search,
   Bell,
@@ -8,7 +8,6 @@ import {
   UserMinus,
   DollarSign,
   ArrowUpRight,
-  ArrowDownRight,
   Home,
   FileText,
   Settings,
@@ -38,7 +37,7 @@ interface DashboardStats {
 function App() {
   const [currentPage, setCurrentPage] = useState('dashboard');
   const [stats, setStats] = useState<DashboardStats | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchStats = async () => {
