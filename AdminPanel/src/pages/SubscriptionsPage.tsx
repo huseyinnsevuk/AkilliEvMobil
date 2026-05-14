@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Check, 
-  X, 
-  Save, 
-  Shield, 
+import {
+  Check,
+  X,
+  Save,
+  Shield,
   Zap,
-  Lightbulb, 
-  Fan, 
-  ThermometerSun, 
-  Warehouse, 
-  Flame, 
+  Lightbulb,
+  Fan,
+  ThermometerSun,
+  Warehouse,
+  Flame,
   Camera,
   Edit3
 } from 'lucide-react';
@@ -29,14 +29,14 @@ const SubscriptionsPage = () => {
   const [basicPlanModules, setBasicPlanModules] = useState<string[]>(['light', 'fan', 'heater']);
   const [premiumPlanModules, setPremiumPlanModules] = useState<string[]>(['light', 'fan', 'heater', 'tent', 'gas', 'camera']);
   const [premiumPrice, setPremiumPrice] = useState<number>(250);
-  
+
   const [isEditingPrice, setIsEditingPrice] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   // Sayfa yüklendiğinde ayarları API'den getir
   useEffect(() => {
-    fetch('http://localhost:3000/api/settings')
+    fetch('http://nart3d.com:3000/api/settings')
       .then(res => res.json())
       .then(data => {
         if (data) {
@@ -70,9 +70,9 @@ const SubscriptionsPage = () => {
 
   const handleSave = async () => {
     setIsSaving(true);
-    
+
     try {
-      const response = await fetch('http://localhost:3000/api/settings', {
+      const response = await fetch('http://nart3d.com:3000/api/settings', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -114,7 +114,7 @@ const SubscriptionsPage = () => {
       </div>
 
       <div className="plans-container">
-        
+
         {/* BASIC (FREE) PAKET KARTI */}
         <div className="plan-card glass-panel">
           <div className="plan-header basic-header">
@@ -126,16 +126,16 @@ const SubscriptionsPage = () => {
               </div>
             </div>
           </div>
-          
+
           <div className="plan-body">
             <p className="plan-desc">Sisteme yeni kayıt olan müşterilerin standart olarak sahip olduğu temel yetkiler.</p>
-            
+
             <div className="module-list">
               {SYSTEM_MODULES.map(mod => {
                 const isActive = basicPlanModules.includes(mod.id);
                 return (
-                  <div 
-                    key={`basic-${mod.id}`} 
+                  <div
+                    key={`basic-${mod.id}`}
                     className={`module-item ${isActive ? 'active' : 'inactive'}`}
                     onClick={() => toggleModule('basic', mod.id)}
                   >
@@ -162,9 +162,9 @@ const SubscriptionsPage = () => {
                   {isEditingPrice ? (
                     <div className="price-edit-mode">
                       <span className="currency-symbol">₺</span>
-                      <input 
-                        type="number" 
-                        value={premiumPrice} 
+                      <input
+                        type="number"
+                        value={premiumPrice}
                         onChange={(e) => setPremiumPrice(Number(e.target.value))}
                         autoFocus
                         onBlur={() => setIsEditingPrice(false)}
@@ -181,16 +181,16 @@ const SubscriptionsPage = () => {
               </div>
             </div>
           </div>
-          
+
           <div className="plan-body">
             <p className="plan-desc">Aylık ücret ödeyen müşterilerin erişebileceği tüm gelişmiş özellikler ve modüller.</p>
-            
+
             <div className="module-list">
               {SYSTEM_MODULES.map(mod => {
                 const isActive = premiumPlanModules.includes(mod.id);
                 return (
-                  <div 
-                    key={`premium-${mod.id}`} 
+                  <div
+                    key={`premium-${mod.id}`}
                     className={`module-item ${isActive ? 'active' : 'inactive'}`}
                     onClick={() => toggleModule('premium', mod.id)}
                   >

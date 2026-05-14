@@ -68,9 +68,7 @@ namespace AkilliEvMobil.Views
 
                     if (!string.IsNullOrEmpty(userId))
                     {
-                        string baseUrl = Microsoft.Maui.Devices.DeviceInfo.Platform == Microsoft.Maui.Devices.DevicePlatform.Android 
-                            ? "http://10.49.76.214:3000" 
-                            : "http://localhost:3000";
+                        string baseUrl = "http://nart3d.com:3000";
 
                         using var client = new System.Net.Http.HttpClient();
                         client.Timeout = TimeSpan.FromSeconds(3);
@@ -128,9 +126,7 @@ namespace AkilliEvMobil.Views
         {
             try
             {
-                string baseUrl = Microsoft.Maui.Devices.DeviceInfo.Platform == Microsoft.Maui.Devices.DevicePlatform.Android 
-                    ? "http://10.49.76.214:3000" 
-                    : "http://localhost:3000";
+                string baseUrl = "http://nart3d.com:3000";
 
                 using var client = new System.Net.Http.HttpClient();
                 client.Timeout = TimeSpan.FromSeconds(5);
@@ -194,9 +190,7 @@ namespace AkilliEvMobil.Views
             {
                 try
                 {
-                    string baseUrl = Microsoft.Maui.Devices.DeviceInfo.Platform == Microsoft.Maui.Devices.DevicePlatform.Android 
-                        ? "http://10.49.76.214:3000" 
-                        : "http://localhost:3000";
+                    string baseUrl = "http://nart3d.com:3000";
 
                     using var client = new System.Net.Http.HttpClient();
                     client.Timeout = TimeSpan.FromSeconds(5);

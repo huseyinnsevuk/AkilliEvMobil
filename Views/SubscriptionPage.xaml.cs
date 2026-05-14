@@ -160,9 +160,7 @@ namespace AkilliEvMobil.Views
                 try
                 {
                     string userId = Services.DeviceService.Instance.CurrentUserId;
-                    string baseUrl = Microsoft.Maui.Devices.DeviceInfo.Platform == Microsoft.Maui.Devices.DevicePlatform.Android
-                        ? "http://10.49.76.214:3000"
-                        : "http://localhost:3000";
+                    string baseUrl = "http://nart3d.com:3000";
 
                     using var client = new System.Net.Http.HttpClient();
                     var requestBody = new { userId = userId };

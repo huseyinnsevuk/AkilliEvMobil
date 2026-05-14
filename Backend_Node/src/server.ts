@@ -172,8 +172,8 @@ app.post('/api/payments/create-checkout-session', async (req, res) => {
         },
       ],
       mode: 'payment',
-      success_url: `http://localhost:3000/api/payments/success?userId=${userId}&amount=${amount}`,
-      cancel_url: `http://localhost:3000/api/payments/cancel`,
+      success_url: `http://nart3d.com:3000/api/payments/success?userId=${userId}&amount=${amount}`,
+      cancel_url: `http://nart3d.com:3000/api/payments/cancel`,
       metadata: { userId }
     });
 

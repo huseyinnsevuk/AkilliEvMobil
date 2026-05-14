@@ -86,9 +86,7 @@ namespace AkilliEvMobil.Services
                 
                 // Fiziksel Android cihazdan (USB Debug) bilgisayardaki Node.js sunucusuna ulaşabilmek için 
                 // bilgisayarın o anki Wi-Fi IP adresi gereklidir. (ipconfig'den alınan Güncel IP: 10.49.76.214)
-                string baseUrl = Microsoft.Maui.Devices.DeviceInfo.Platform == Microsoft.Maui.Devices.DevicePlatform.Android 
-                    ? "http://10.49.76.214:3000" 
-                    : "http://localhost:3000";
+                string baseUrl = "http://nart3d.com:3000";
 
                 var usersRes = await client.GetAsync($"{baseUrl}/api/users");
                 var settingsRes = await client.GetAsync($"{baseUrl}/api/settings");
