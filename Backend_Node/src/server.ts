@@ -1,8 +1,6 @@
 import express from 'express';
 import cors from 'cors';
 import { PrismaClient } from '@prisma/client';
-import { Pool } from 'pg';
-import { PrismaPg } from '@prisma/adapter-pg';
 import dotenv from 'dotenv';
 import Stripe from 'stripe';
 import fetch from 'node-fetch';
@@ -15,9 +13,7 @@ const stripe = new Stripe(stripeKey, {
   apiVersion: '2025-01-27.acacia' as any
 });
 
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-const adapter = new PrismaPg(pool as any);
-const prisma = new PrismaClient({ adapter });
+const prisma = new PrismaClient();
 
 const PORT = Number(process.env.PORT) || 3000;
 
