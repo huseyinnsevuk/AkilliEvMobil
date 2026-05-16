@@ -8,6 +8,7 @@ import mqtt from 'mqtt';
 
 dotenv.config();
 
+const prisma = new PrismaClient();
 const app = express();
 
 // MQTT Bridge Ayarları
@@ -79,7 +80,6 @@ const stripe = new Stripe(stripeKey, {
   apiVersion: '2025-01-27.acacia' as any
 });
 
-const prisma = new PrismaClient();
 
 const PORT = Number(process.env.PORT) || 3000;
 
