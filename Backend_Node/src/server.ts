@@ -7,6 +7,9 @@ import fetch from 'node-fetch';
 import mqtt from 'mqtt';
 
 dotenv.config();
+console.log("-----------------------------------------");
+console.log("🚀 SURUM 2.0 - GUNCEL KOD AKTIF!");
+console.log("-----------------------------------------");
 
 const prisma = new PrismaClient();
 const app = express();
