@@ -75,6 +75,26 @@ app.get('/api/sensors/latest', async (req, res) => {
   }
 });
 
+// Cihaz Kontrol API (Mobil -> Backend -> MQTT -> Raspi)
+app.post('/api/devices/control', async (req, res) => {
+  try {
+    const { deviceType, action } = req.body; // deviceType: tente, lamba vb. action: 1 veya 0
+    
+    const topic = `Nest/home/command/${deviceType}`;
+    mqttClient.publish(topic, action.toString());
+    
+    console.log(`📡 Komut MQTT'ye fırlatıldı: ${topic} -> ${action}`);
+    
+    // Aktivite kaydı tut
+    await logActivity('DEVICE_CONTROL', 'Cihaz Kontrolü', `${deviceType} cihazına ${action} komutu gönderildi.`);
+    
+    res.json({ success: True, message: 'Komut iletildi' });
+  } catch (err) {
+    console.error('Komut iletilemedi:', err);
+    res.status(500).json({ error: 'Komut iletilemedi' });
+  }
+});
+
 const stripeKey = process.env.STRIPE_SECRET_KEY || 'sk_test_dummy_key';
 const stripe = new Stripe(stripeKey, {
   apiVersion: '2025-01-27.acacia' as any
