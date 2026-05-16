@@ -79,20 +79,28 @@ app.get('/api/sensors/latest', async (req, res) => {
 
 // Cihaz Kontrol API (Mobil -> Backend -> MQTT -> Raspi)
 app.post('/api/devices/control', async (req, res) => {
+  console.log('📬 Yeni komut isteği geldi:', req.body);
   try {
-    const { deviceType, data } = req.body; // data: { position: 50, speed: 50 }
+    const { deviceType, data } = req.body;
     
+    if (!deviceType || !data) {
+      console.warn('⚠️ Eksik veri: deviceType veya data bulunamadı!');
+      return res.status(400).json({ error: 'Eksik veri' });
+    }
+
     const topic = `Nest/home/command/${deviceType}`;
-    mqttClient.publish(topic, JSON.stringify(data));
     
-    console.log(`📡 Komut MQTT'ye fırlatıldı: ${topic} -> ${JSON.stringify(data)}`);
+    if (mqttClient.connected) {
+      mqttClient.publish(topic, JSON.stringify(data));
+      console.log(`📡 Komut MQTT'ye fırlatıldı: ${topic} -> ${JSON.stringify(data)}`);
+    } else {
+      console.error('❌ MQTT Broker\'a bağlı değiliz! Komut gönderilemedi.');
+    }
     
-    // Aktivite kaydı tut
-    await logActivity('DEVICE_CONTROL', 'Cihaz Kontrolü', `${deviceType} cihazına komut gönderildi: ${JSON.stringify(data)}`);
-    
+    await logActivity('DEVICE_CONTROL', 'Cihaz Kontrolü', `${deviceType} cihazına komut gönderildi.`);
     res.json({ success: true, message: 'Komut iletildi' });
   } catch (err) {
-    console.error('Komut iletilemedi:', err);
+    console.error('❌ Komut işleme hatası:', err);
     res.status(500).json({ error: 'Komut iletilemedi' });
   }
 });
