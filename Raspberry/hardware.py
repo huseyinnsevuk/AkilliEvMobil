@@ -45,17 +45,48 @@ def on_connect(client, userdata, flags, rc):
     else:
         print(f"❌ Bağlantı Hatası: {rc}")
 
-def on_message(client, userdata, msg):
-    payload = msg.payload.decode().strip()
-    print(f"📩 Komut Geldi: {msg.topic} -> {payload}")
+current_angle = 0
+
+def set_servo_angle_with_speed(target_angle, speed_percent):
+    global current_angle
     
-    if msg.topic == KONU_TENTE:
-        if payload == "1":
-            print("➡️ Tente Açılıyor (180 derece)...")
-            set_servo_angle(180)
-        else:
-            print("➡️ Tente Kapanıyor (0 derece)...")
-            set_servo_angle(0)
+    # Hızı gecikmeye çevir (Hız arttıkça gecikme azalır)
+    # %100 hız -> 0.001s gecikme, %10 hız -> 0.1s gecikme
+    delay = (101 - speed_percent) / 1000.0
+    
+    step = 1 if target_angle > current_angle else -1
+    
+    print(f"🔄 Hareket Başladı: {current_angle} -> {target_angle} (Hız: %{speed_percent})")
+    
+    for angle in range(int(current_angle), int(target_angle), step):
+        duty = angle / 18 + 2.5
+        pwm.ChangeDutyCycle(duty)
+        time.sleep(delay)
+    
+    # Hedef açıya tam oturt
+    pwm.ChangeDutyCycle(target_angle / 18 + 2.5)
+    time.sleep(0.1)
+    pwm.ChangeDutyCycle(0) # Titremeyi önlemek için akımı kes
+    current_angle = target_angle
+    print("✅ Hedefe ulaşıldı.")
+
+def on_message(client, userdata, msg):
+    try:
+        import json
+        payload_str = msg.payload.decode().strip()
+        print(f"📩 Komut Geldi: {msg.topic} -> {payload_str}")
+        
+        if msg.topic == KONU_TENTE:
+            # Backend'den JSON formatında veri bekliyoruz: {"position": 50, "speed": 50}
+            data = json.loads(payload_str)
+            opening_percent = int(data.get("position", 0))
+            speed = int(data.get("speed", 50))
+            
+            target_angle = (opening_percent * 180) / 100
+            set_servo_angle_with_speed(target_angle, speed)
+            
+    except Exception as e:
+        print(f"❌ Komut işleme hatası: {e}")
 
 client = mqtt.Client()
 client.on_connect = on_connect

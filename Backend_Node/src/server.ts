@@ -78,17 +78,17 @@ app.get('/api/sensors/latest', async (req, res) => {
 // Cihaz Kontrol API (Mobil -> Backend -> MQTT -> Raspi)
 app.post('/api/devices/control', async (req, res) => {
   try {
-    const { deviceType, action } = req.body; // deviceType: tente, lamba vb. action: 1 veya 0
+    const { deviceType, data } = req.body; // data: { position: 50, speed: 50 }
     
     const topic = `Nest/home/command/${deviceType}`;
-    mqttClient.publish(topic, action.toString());
+    mqttClient.publish(topic, JSON.stringify(data));
     
-    console.log(`📡 Komut MQTT'ye fırlatıldı: ${topic} -> ${action}`);
+    console.log(`📡 Komut MQTT'ye fırlatıldı: ${topic} -> ${JSON.stringify(data)}`);
     
     // Aktivite kaydı tut
-    await logActivity('DEVICE_CONTROL', 'Cihaz Kontrolü', `${deviceType} cihazına ${action} komutu gönderildi.`);
+    await logActivity('DEVICE_CONTROL', 'Cihaz Kontrolü', `${deviceType} cihazına komut gönderildi: ${JSON.stringify(data)}`);
     
-    res.json({ success: True, message: 'Komut iletildi' });
+    res.json({ success: true, message: 'Komut iletildi' });
   } catch (err) {
     console.error('Komut iletilemedi:', err);
     res.status(500).json({ error: 'Komut iletilemedi' });

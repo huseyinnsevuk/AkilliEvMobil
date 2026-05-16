@@ -3,6 +3,7 @@ namespace AkilliEvMobil.Views;
 public partial class TentPage : ContentPage
 {
     private int _currentOpening = 50;
+    private int _currentSpeed = 50; // Varsayılan hız %50
 
     public TentPage()
     {
@@ -26,8 +27,8 @@ public partial class TentPage : ContentPage
             string text = button.Text.Replace("%", "");
             if (int.TryParse(text, out int val))
             {
-                _currentOpening = val;
-                StatusLabel.Text = $"Açıklık derecesi: %{_currentOpening}";
+                _currentSpeed = val; // Burası artık "Hız"ı temsil ediyor
+                StatusLabel.Text = $"Çalışma hızı: %{_currentSpeed}";
             }
         }
     }
@@ -72,7 +73,8 @@ public partial class TentPage : ContentPage
             if (_currentOpening < 100)
             {
                 _currentOpening = Math.Min(100, _currentOpening + 10);
-                StatusLabel.Text = $"Açıklık derecesi: %{_currentOpening}";
+                StatusLabel.Text = $"Tente Açıklığı: %{_currentOpening} | Hız: %{_currentSpeed}";
+                await SendCommand("tente", _currentOpening, _currentSpeed);
             }
         }
     }
@@ -87,8 +89,33 @@ public partial class TentPage : ContentPage
             if (_currentOpening > 0)
             {
                 _currentOpening = Math.Max(0, _currentOpening - 10);
-                StatusLabel.Text = $"Açıklık derecesi: %{_currentOpening}";
+                StatusLabel.Text = $"Tente Açıklığı: %{_currentOpening} | Hız: %{_currentSpeed}";
+                await SendCommand("tente", _currentOpening, _currentSpeed);
             }
+        }
+    }
+
+    private async Task SendCommand(string deviceType, int position, int speed)
+    {
+        try
+        {
+            string baseUrl = "http://nart3d.com:3000";
+            using var client = new System.Net.Http.HttpClient();
+            
+            // Yeni veri formatı: { position: 50, speed: 50 }
+            var payload = new { 
+                deviceType = deviceType, 
+                data = new { position = position, speed = speed } 
+            };
+            
+            var json = System.Text.Json.JsonSerializer.Serialize(payload);
+            var content = new System.Net.Http.StringContent(json, System.Text.Encoding.UTF8, "application/json");
+
+            await client.PostAsync($"{baseUrl}/api/devices/control", content);
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error sending command: {ex.Message}");
         }
     }
 }
