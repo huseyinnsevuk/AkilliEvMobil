@@ -539,5 +539,6 @@ app.get('/api/dashboard/stats', async (req, res) => {
 });
 
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Sunucu http://0.0.0.0:${PORT} portunda başarıyla başlatıldı \uD83D\uDE80`);
+  console.log(`Sunucu ${PORT} portunda başarıyla başlatıldı.`);
+  console.log(`Tüm arayüzlerden (0.0.0.0) dinleniyor...`);
 });

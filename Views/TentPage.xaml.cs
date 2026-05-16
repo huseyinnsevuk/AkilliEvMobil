@@ -99,7 +99,7 @@ public partial class TentPage : ContentPage
     {
         try
         {
-            string baseUrl = "http://nart3d.com:3000";
+            string baseUrl = "http://141.98.48.101:3000";
             using var client = new System.Net.Http.HttpClient();
             
             // Yeni veri formatı: { position: 50, speed: 50 }
@@ -115,6 +115,9 @@ public partial class TentPage : ContentPage
         }
         catch (Exception ex)
         {
+            MainThread.BeginInvokeOnMainThread(() => {
+                StatusLabel.Text = $"Hata: {ex.Message}";
+            });
             System.Diagnostics.Debug.WriteLine($"Error sending command: {ex.Message}");
         }
     }
