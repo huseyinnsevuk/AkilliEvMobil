@@ -39,9 +39,9 @@ def set_servo_angle(angle):
 def on_connect(client, userdata, flags, rc):
     if rc == 0:
         print("✅ MQTT Broker'a Bağlandı!")
-        # KOMUT KANALINA ABONE OL
-        client.subscribe(KONU_TENTE)
-        print(f"📡 {KONU_TENTE} kanalı dinleniyor...")
+        # TÜM NEST KANALLARINI DİNLE (Debug için)
+        client.subscribe("Nest/#")
+        print(f"📡 Nest/# kanalları dinleniyor...")
     else:
         print(f"❌ Bağlantı Hatası: {rc}")
 
