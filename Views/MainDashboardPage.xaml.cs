@@ -66,18 +66,13 @@ namespace AkilliEvMobil.Views
                         userId = DeviceService.Instance.CurrentUserId;
                     }
 
-                    if (!string.IsNullOrEmpty(userId))
-                    {
                         string baseUrl = "http://nart3d.com:3000";
-
                         using var client = new System.Net.Http.HttpClient();
-                        client.Timeout = TimeSpan.FromSeconds(3);
+                        client.Timeout = TimeSpan.FromSeconds(5);
 
-                        // 1. Yeni rastgele veri simüle et (Kullanıcıya özel)
-                        await client.PostAsync($"{baseUrl}/api/simulate/{userId}", null);
-
-                        // 2. En güncel veriyi çek
-                        var response = await client.GetAsync($"{baseUrl}/api/users/{userId}/sensors/latest");
+                        // [GÜNCELLEME] Simülasyonu kapattık, doğrudan gerçek veriyi çekiyoruz
+                        var response = await client.GetAsync($"{baseUrl}/api/sensors/latest");
+                        
                         if (response.IsSuccessStatusCode)
                         {
                             var json = await response.Content.ReadAsStringAsync();
@@ -85,6 +80,7 @@ namespace AkilliEvMobil.Views
 
                             if (log != null)
                             {
+                                // JSON'dan değerleri güvenli bir şekilde al
                                 double temp = log["temperature"]?.GetValue<double>() ?? 0;
                                 double humidity = log["humidity"]?.GetValue<double>() ?? 0;
                                 bool isRaining = log["isRaining"]?.GetValue<bool>() ?? false;
@@ -92,22 +88,23 @@ namespace AkilliEvMobil.Views
 
                                 MainThread.BeginInvokeOnMainThread(() =>
                                 {
-                                    TempLabel.Text = $"{temp:F1} °C";
-                                    HumidityLabel.Text = $"%{humidity:F0}";
+                                    // Sıcaklık ve Nem Güncelleme
+                                    TempLabel.Text = temp > 0 ? $"{temp:F1} °C" : "-- °C";
+                                    HumidityLabel.Text = humidity > 0 ? $"%{humidity:F0}" : "% --";
                                     
-                                    // Gaz durumunu da burada bir yere ekleyebiliriz veya RainLabel rengini değiştirebiliriz
-                                    if (gasDetected)
-                                    {
-                                        TempLabel.TextColor = Colors.Red;
+                                    // Yağmur Durumu (Varsa etiketiniz güncellenir)
+                                    if (isRaining) {
+                                        // Örn: RainLabel.Text = "Yağmur Yağıyor";
                                     }
-                                    else
-                                    {
-                                        TempLabel.TextColor = Color.FromArgb("#1E293B");
+
+                                    // Gaz Alarmı Görselleştirme
+                                    TempLabel.TextColor = gasDetected ? Colors.Red : Color.FromArgb("#1E293B");
+                                    if (gasDetected) {
+                                        // Ciddi bir uyarı gerekirse buraya ekleyebiliriz
                                     }
                                 });
                             }
                         }
-                    }
                 }
                 catch (Exception ex)
                 {

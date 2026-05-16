@@ -25,26 +25,52 @@ mqttClient.on('message', async (topic, message) => {
   const sensorType = topic.split('/').pop(); // sicaklik, nem, gaz vb.
 
   try {
-    // Gelen veriyi veritabanına logla
-    // Not: Gerçek senaryoda deviceId'yi topic'ten veya cihaz listesinden almalıyız.
-    // Şimdilik en az bir cihaz olduğunu varsayıp ilk cihazı buluyoruz.
-    const device = await prisma.device.findFirst();
+    // 1. Cihazı bul, yoksa otomatik oluştur
+    let device = await prisma.device.findFirst();
     
-    if (device) {
-      await prisma.sensorLog.create({
+    if (!device) {
+      console.log('📝 İlk cihaz bulunamadı, "Ana Kontrol Birimi" oluşturuluyor...');
+      // Rastgele bir kullanıcı bul (cihaz bir kullanıcıya bağlı olmalı)
+      const user = await prisma.user.findFirst();
+      if (!user) {
+        console.error('❌ Cihaz oluşturulamadı: Veritabanında kayıtlı kullanıcı yok!');
+        return;
+      }
+
+      device = await prisma.device.create({
         data: {
-          deviceId: device.id,
-          temperature: sensorType === 'sicaklik' ? parseFloat(payload) : 0,
-          humidity: sensorType === 'nem' ? parseFloat(payload) : 0,
-          isRaining: sensorType === 'yagmur' ? payload === '1' : false,
-          gasDetected: sensorType === 'gaz' ? payload === '1' : false,
-          // Not: Diğer sensörler için tabloyu genişletebiliriz.
+          name: 'Ana Kontrol Birimi (Raspi)',
+          macAddress: 'AA:BB:CC:DD:EE:FF',
+          type: 'RaspberryPi',
+          userId: user.id
         }
       });
-      console.log(`📝 Sensör Kaydı: ${sensorType} -> ${payload}`);
     }
+
+    // 2. Sensör verisini logla
+    await prisma.sensorLog.create({
+      data: {
+        deviceId: device.id,
+        temperature: sensorType === 'sicaklik' ? parseFloat(payload) : 0,
+        humidity: sensorType === 'nem' ? parseFloat(payload) : 0,
+        isRaining: sensorType === 'yagmur' ? payload === '1' : false,
+        gasDetected: sensorType === 'gaz' ? payload === '1' : false,
+      }
+    });
+    console.log(`📝 Sensör Kaydı (${device.name}): ${sensorType} -> ${payload}`);
   } catch (err) {
     console.error('❌ Sensör verisi kaydedilemedi:', err);
+  }
+});
+
+app.get('/api/sensors/latest', async (req, res) => {
+  try {
+    const latestLog = await prisma.sensorLog.findFirst({
+      orderBy: { createdAt: 'desc' }
+    });
+    res.json(latestLog || { temperature: 22, humidity: 45, isRaining: false, gasDetected: false });
+  } catch (err) {
+    res.status(500).json({ error: 'Sensör verisi alınamadı' });
   }
 });
 
