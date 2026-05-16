@@ -4,10 +4,50 @@ import { PrismaClient } from '@prisma/client';
 import dotenv from 'dotenv';
 import Stripe from 'stripe';
 import fetch from 'node-fetch';
+import mqtt from 'mqtt';
 
 dotenv.config();
 
 const app = express();
+
+// MQTT Bridge Ayarları
+const mqttClient = mqtt.connect('mqtt://localhost');
+
+mqttClient.on('connect', () => {
+  console.log('✅ Backend MQTT Broker\'a bağlandı!');
+  mqttClient.subscribe('Nest/home/sensor/#', (err) => {
+    if (!err) console.log('📡 Nest sensör kanalları dinleniyor...');
+  });
+});
+
+mqttClient.on('message', async (topic, message) => {
+  const payload = message.toString();
+  const sensorType = topic.split('/').pop(); // sicaklik, nem, gaz vb.
+
+  try {
+    // Gelen veriyi veritabanına logla
+    // Not: Gerçek senaryoda deviceId'yi topic'ten veya cihaz listesinden almalıyız.
+    // Şimdilik en az bir cihaz olduğunu varsayıp ilk cihazı buluyoruz.
+    const device = await prisma.device.findFirst();
+    
+    if (device) {
+      await prisma.sensorLog.create({
+        data: {
+          deviceId: device.id,
+          temperature: sensorType === 'sicaklik' ? parseFloat(payload) : 0,
+          humidity: sensorType === 'nem' ? parseFloat(payload) : 0,
+          isRaining: sensorType === 'yagmur' ? payload === '1' : false,
+          gasDetected: sensorType === 'gaz' ? payload === '1' : false,
+          // Not: Diğer sensörler için tabloyu genişletebiliriz.
+        }
+      });
+      console.log(`📝 Sensör Kaydı: ${sensorType} -> ${payload}`);
+    }
+  } catch (err) {
+    console.error('❌ Sensör verisi kaydedilemedi:', err);
+  }
+});
+
 const stripeKey = process.env.STRIPE_SECRET_KEY || 'sk_test_dummy_key';
 const stripe = new Stripe(stripeKey, {
   apiVersion: '2025-01-27.acacia' as any
