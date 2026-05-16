@@ -16,6 +16,36 @@ app.use(express.json());
 // MQTT Bridge Ayarları
 const mqttClient = mqtt.connect('mqtt://localhost');
 
+// Cihaz Kontrol API (Mobil -> Backend -> MQTT -> Raspi)
+app.post('/api/devices/control', async (req, res) => {
+  console.log('📬 Yeni komut isteği geldi:', JSON.stringify(req.body));
+  try {
+    const { deviceType, data } = req.body;
+    if (!deviceType || !data) {
+      console.warn('⚠️ Eksik veri: body içinden deviceType veya data alınamadı!');
+      return res.status(400).json({ error: 'Eksik veri' });
+    }
+    const topic = `Nest/home/command/${deviceType}`;
+    const payload = JSON.stringify(data);
+    console.log(`📡 MQTT Bağlantı Durumu: ${mqttClient.connected ? 'BAĞLI' : 'BAĞLI DEĞİL'}`);
+    if (mqttClient.connected) {
+      mqttClient.publish(topic, payload, (err) => {
+        if (err) console.error('❌ MQTT Publish Hatası:', err);
+        else console.log(`🚀 Mesaj Broker'a başarıyla iletildi: ${topic} -> ${payload}`);
+      });
+    } else {
+      console.error('❌ MQTT Broker\'a bağlı değiliz! Komut gönderilemedi.');
+    }
+    await logActivity('DEVICE_CONTROL', 'Cihaz Kontrolü', `${deviceType} cihazına komut gönderildi.`);
+    res.json({ success: true, message: 'Komut iletildi' });
+  } catch (err) {
+    console.error('❌ Komut işleme hatası:', err);
+    res.status(500).json({ error: 'Komut iletilemedi' });
+  }
+});
+
+
+
 mqttClient.on('connect', () => {
   console.log('✅ Backend MQTT Broker\'a bağlandı!');
   mqttClient.subscribe('Nest/home/sensor/#', (err) => {
@@ -77,38 +107,6 @@ app.get('/api/sensors/latest', async (req, res) => {
   }
 });
 
-// Cihaz Kontrol API (Mobil -> Backend -> MQTT -> Raspi)
-app.post('/api/devices/control', async (req, res) => {
-  console.log('📬 Yeni komut isteği geldi:', JSON.stringify(req.body));
-  try {
-    const { deviceType, data } = req.body;
-    
-    if (!deviceType || !data) {
-      console.warn('⚠️ Eksik veri: body içinden deviceType veya data alınamadı!');
-      return res.status(400).json({ error: 'Eksik veri' });
-    }
-
-    const topic = `Nest/home/command/${deviceType}`;
-    const payload = JSON.stringify(data);
-    
-    console.log(`📡 MQTT Bağlantı Durumu: ${mqttClient.connected ? 'BAĞLI' : 'BAĞLI DEĞİL'}`);
-
-    if (mqttClient.connected) {
-      mqttClient.publish(topic, payload, (err) => {
-        if (err) console.error('❌ MQTT Publish Hatası:', err);
-        else console.log(`🚀 Mesaj Broker'a başarıyla iletildi: ${topic} -> ${payload}`);
-      });
-    } else {
-      console.error('❌ MQTT Broker\'a bağlı değiliz! Komut gönderilemedi.');
-    }
-    
-    await logActivity('DEVICE_CONTROL', 'Cihaz Kontrolü', `${deviceType} cihazına komut gönderildi.`);
-    res.json({ success: true, message: 'Komut iletildi' });
-  } catch (err) {
-    console.error('❌ Komut işleme hatası:', err);
-    res.status(500).json({ error: 'Komut iletilemedi' });
-  }
-});
 
 const stripeKey = process.env.STRIPE_SECRET_KEY || 'sk_test_dummy_key';
 const stripe = new Stripe(stripeKey, {
