@@ -1,7 +1,6 @@
 import time
 import paho.mqtt.client as mqtt
-import adafruit_dht
-import board
+import RPi.GPIO as GPIO
 
 # ==========================================
 # ⚙️ AYARLAR
@@ -11,15 +10,13 @@ MQTT_PORT = 1883
 
 # MQTT KONULARI
 TOPIC_BASE     = "Nest/home"
-KONU_SICAKLIK  = f"{TOPIC_BASE}/sensor/sicaklik"
-KONU_NEM       = f"{TOPIC_BASE}/sensor/nem"
+KONU_YAGMUR    = f"{TOPIC_BASE}/sensor/yagmur"
 
-# DHT11 Sensör Ayarı (Orijinal pininiz D4 korunmuştur)
-try:
-    dht_device = adafruit_dht.DHT11(board.D4)
-    print("✅ DHT11 Sensörü Hazır (Pin: D4)")
-except Exception as e:
-    print(f"❌ Sensör Başlatılamadı: {e}")
+# Pin Ayarı (GPIO 17)
+PIN_YAGMUR = 17
+
+GPIO.setmode(GPIO.BCM)
+GPIO.setup(PIN_YAGMUR, GPIO.IN)
 
 # ==========================================
 # 📡 MQTT KURULUMU
@@ -41,29 +38,23 @@ except Exception as e:
     print(f"❌ MQTT Bağlantı Hatası: {e}")
 
 # ==========================================
-# 🔄 ANA DÖNGÜ (Sadece Veri Gönderimi)
+# 🔄 ANA DÖNGÜ (Sadece Yağmur)
 # ==========================================
-print("🚀 Veri gönderimi başlıyor (5 saniyede bir)...")
+print("🚀 YAĞMUR SENSÖRÜ VERİ GÖNDERİMİ BAŞLADI...")
 
 while True:
     try:
-        # Sensörden verileri oku
-        temperature = dht_device.temperature
-        humidity = dht_device.humidity
+        # Sensörden oku
+        durum = GPIO.input(PIN_YAGMUR)
+        yagmur_var_mi = "1" if durum == 0 else "0"
+        
+        # MQTT'ye gönder
+        client.publish(KONU_YAGMUR, yagmur_var_mi)
+        
+        durum_metni = "YAĞMUR VAR 💧" if yagmur_var_mi == "1" else "Hava Kuru ☀️"
+        print(f"📝 VDS'e Gönderildi -> {durum_metni}")
 
-        if temperature is not None and humidity is not None:
-            # MQTT'ye gönder
-            client.publish(KONU_SICAKLIK, str(temperature))
-            client.publish(KONU_NEM, str(humidity))
-            
-            print(f"📝 Gönderildi -> Sıcaklık: {temperature}°C | Nem: %{humidity}")
-        else:
-            print("⚠️ Sensörden veri okunamadı, tekrar deneniyor...")
-
-    except RuntimeError as error:
-        # DHT bazen okuma hatası verebilir, devam et
-        print(f"⚠️ Okuma uyarısı: {error.args[0]}")
     except Exception as e:
-        print(f"❌ Beklenmedik Hata: {e}")
+        print(f"❌ Hata: {e}")
     
-    time.sleep(5)
+    time.sleep(3)
