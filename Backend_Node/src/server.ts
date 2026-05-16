@@ -10,6 +10,8 @@ dotenv.config();
 
 const prisma = new PrismaClient();
 const app = express();
+app.use(cors());
+app.use(express.json());
 
 // MQTT Bridge Ayarları
 const mqttClient = mqtt.connect('mqtt://localhost');
@@ -103,8 +105,6 @@ const stripe = new Stripe(stripeKey, {
 
 const PORT = Number(process.env.PORT) || 3000;
 
-app.use(cors());
-app.use(express.json());
 
 // Log middleware
 app.use((req, res, next) => {
