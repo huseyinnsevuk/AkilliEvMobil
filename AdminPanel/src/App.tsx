@@ -247,8 +247,8 @@ function App() {
                     {stats?.latestActivities.map((activity: any) => (
                       <div className="activity-item" key={activity.id}>
                         <div className={`activity-icon ${activity.type === 'USER_REGISTER' ? 'bg-blue' :
-                            activity.type === 'PAYMENT_SUCCESS' ? 'bg-green' :
-                              activity.type === 'SENSOR_ALERT' ? 'bg-red' : 'bg-orange'
+                          activity.type === 'PAYMENT_SUCCESS' ? 'bg-green' :
+                            activity.type === 'SENSOR_ALERT' ? 'bg-red' : 'bg-orange'
                           }`}><Activity size={16} /></div>
                         <div className="activity-details">
                           <h4>{activity.title}</h4>
