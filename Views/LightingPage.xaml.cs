@@ -2,6 +2,9 @@ namespace AkilliEvMobil.Views;
 
 public partial class LightingPage : ContentPage
 {
+    private System.Timers.Timer _sliderDebounceTimer;
+    private double _lastSliderValue;
+
     public LightingPage()
     {
         InitializeComponent();
@@ -13,6 +16,15 @@ public partial class LightingPage : ContentPage
             {
                 UpdateBrightnessUI(BrightnessSlider.Value);
             }
+        };
+
+        // Initialize Debounce Timer
+        _sliderDebounceTimer = new System.Timers.Timer(150); // 150ms gecikme ile gönder
+        _sliderDebounceTimer.AutoReset = false;
+        _sliderDebounceTimer.Elapsed += async (s, e) =>
+        {
+            int brightness = (int)_lastSliderValue;
+            await SendLightingCommandAsync("ON", brightness);
         };
     }
 
@@ -26,6 +38,11 @@ public partial class LightingPage : ContentPage
         {
             GlowEffect.Opacity = (value / 100.0) * 0.3; // Max opacity 0.3
         }
+
+        // Timer'ı sıfırla ve son değeri kaydet
+        _lastSliderValue = value;
+        _sliderDebounceTimer.Stop();
+        _sliderDebounceTimer.Start();
     }
 
     private async void OnBackClicked(object sender, EventArgs e)

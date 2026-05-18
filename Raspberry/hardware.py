@@ -17,17 +17,43 @@ KONU_AYDINLATMA= f"{TOPIC_BASE}/command/aydinlatma" # Yeni eklendi
 # Pin Ayarları
 PIN_YAGMUR = 17
 PIN_SERVO  = 18
-PIN_AYDINLATMA = 27 # Aydınlatma (Röle/LED) için eklendi
+
+# Aydınlatma (L298N Kanal B)
+PIN_LIGHT_PWM  = 13  # ENB (Parlaklık - Hız)
+PIN_LIGHT_IN3  = 20  # IN3 (Yön +) 
+PIN_LIGHT_IN4  = 21  # IN4 (Yön -) 
 
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(PIN_YAGMUR, GPIO.IN)
 GPIO.setup(PIN_SERVO, GPIO.OUT)
-GPIO.setup(PIN_AYDINLATMA, GPIO.OUT)
-GPIO.output(PIN_AYDINLATMA, False) # Başlangıçta kapalı olsun
+
+# L298N Aydınlatma Pin Kurulumları
+GPIO.setup(PIN_LIGHT_PWM, GPIO.OUT)
+GPIO.setup(PIN_LIGHT_IN3, GPIO.OUT)
+GPIO.setup(PIN_LIGHT_IN4, GPIO.OUT)
+
+# Aydınlatma Yönünü Ayarla (Akım IN3'ten IN4'e akacak)
+GPIO.output(PIN_LIGHT_IN3, GPIO.HIGH)
+GPIO.output(PIN_LIGHT_IN4, GPIO.LOW)
+
+# Aydınlatma için PWM (L298N üzerinden parlaklık)
+pwm_aydinlatma = GPIO.PWM(PIN_LIGHT_PWM, 100) # 100 Hz frekans (Kullanıcının önceki koduna göre)
+pwm_aydinlatma.start(0) # Başlangıçta %0 duty cycle (kapalı)
 
 # PWM Ayarı (Servo için)
 pwm = GPIO.PWM(PIN_SERVO, 50)
 pwm.start(0)
+
+# --- BAŞLANGIÇ TESTİ (Debug İçin) ---
+print("🧪 DONANIM TESTİ BAŞLIYOR... (Lamba 2 saniye yanmalı)")
+try:
+    pwm_aydinlatma.ChangeDutyCycle(100) 
+    time.sleep(2)
+    pwm_aydinlatma.ChangeDutyCycle(0)   
+    print("✅ Donanım testi tamamlandı. Sistem dinlemeye geçiyor.")
+except Exception as e:
+    print(f"❌ Test sırasında hata: {e}")
+
 
 def set_servo_angle(angle):
     duty = angle / 18 + 2.5
@@ -93,12 +119,13 @@ def on_message(client, userdata, msg):
             # Örn: {"state": "ON", "brightness": 100}
             data = json.loads(payload_str)
             state = data.get("state", "OFF")
+            brightness = int(data.get("brightness", 100))
             
             if state == "ON":
-                GPIO.output(PIN_AYDINLATMA, True)
-                print("💡 Aydınlatma AÇILDI")
+                pwm_aydinlatma.ChangeDutyCycle(brightness)
+                print(f"💡 Aydınlatma AÇILDI (Parlaklık: %{brightness})")
             else:
-                GPIO.output(PIN_AYDINLATMA, False)
+                pwm_aydinlatma.ChangeDutyCycle(0)
                 print("💡 Aydınlatma KAPATILDI")
             
     except Exception as e:

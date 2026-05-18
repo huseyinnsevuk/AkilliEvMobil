@@ -57,7 +57,10 @@ namespace AkilliEvMobil.Views
                 
                 // TEST/GELİŞTİRME AŞAMASI: SMS ve Mail Doğrulaması tamamen atlandı.
                 // Başarılı girişten hemen sonra ana menüye aktarıyoruz.
-                Application.Current.MainPage = new AppShell();
+                MainThread.BeginInvokeOnMainThread(() =>
+                {
+                    Application.Current.MainPage = new AppShell();
+                });
             }
             else
             {
