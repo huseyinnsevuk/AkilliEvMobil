@@ -37,7 +37,7 @@ GPIO.output(PIN_LIGHT_IN3, GPIO.HIGH)
 GPIO.output(PIN_LIGHT_IN4, GPIO.LOW)
 
 # Aydınlatma için PWM (L298N üzerinden parlaklık)
-pwm_aydinlatma = GPIO.PWM(PIN_LIGHT_PWM, 100) # 100 Hz frekans (Kullanıcının önceki koduna göre)
+pwm_aydinlatma = GPIO.PWM(PIN_LIGHT_PWM, 100) # Frekans tekrar 100 Hz'e alındı (RPi.GPIO stabilitesi için)
 pwm_aydinlatma.start(0) # Başlangıçta %0 duty cycle (kapalı)
 
 # PWM Ayarı (Servo için)
@@ -47,9 +47,13 @@ pwm.start(0)
 # --- BAŞLANGIÇ TESTİ (Debug İçin) ---
 print("🧪 DONANIM TESTİ BAŞLIYOR... (Lamba 2 saniye yanmalı)")
 try:
+    GPIO.output(PIN_LIGHT_IN3, GPIO.HIGH) # Yönü aç
     pwm_aydinlatma.ChangeDutyCycle(100) 
     time.sleep(2)
+    
+    # Tamamen Kapat
     pwm_aydinlatma.ChangeDutyCycle(0)   
+    GPIO.output(PIN_LIGHT_IN3, GPIO.LOW)  # YÖN PİNİNİ DE KAPAT (Kaçak voltajı engeller)
     print("✅ Donanım testi tamamlandı. Sistem dinlemeye geçiyor.")
 except Exception as e:
     print(f"❌ Test sırasında hata: {e}")
@@ -121,11 +125,13 @@ def on_message(client, userdata, msg):
             state = data.get("state", "OFF")
             brightness = int(data.get("brightness", 100))
             
-            if state == "ON":
+            if state == "ON" and brightness > 0:
+                GPIO.output(PIN_LIGHT_IN3, GPIO.HIGH) # L298N çıkışına izin ver
                 pwm_aydinlatma.ChangeDutyCycle(brightness)
                 print(f"💡 Aydınlatma AÇILDI (Parlaklık: %{brightness})")
             else:
                 pwm_aydinlatma.ChangeDutyCycle(0)
+                GPIO.output(PIN_LIGHT_IN3, GPIO.LOW) # L298N çıkışını tamamen kes
                 print("💡 Aydınlatma KAPATILDI")
             
     except Exception as e:
