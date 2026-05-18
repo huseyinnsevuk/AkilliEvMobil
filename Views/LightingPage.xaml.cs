@@ -33,7 +33,7 @@ public partial class LightingPage : ContentPage
         await Shell.Current.GoToAsync("..");
     }
 
-    private void OnLightToggled(object sender, ToggledEventArgs e)
+    private async void OnLightToggled(object sender, ToggledEventArgs e)
     {
         bool isOn = e.Value;
         StatusLabel.Text = isOn ? "Şu an açık" : "Şu an kapalı";
@@ -42,6 +42,48 @@ public partial class LightingPage : ContentPage
         if (GlowEffect != null)
         {
             GlowEffect.Opacity = isOn ? (BrightnessSlider.Value / 100.0) * 0.3 : 0;
+        }
+
+        // Backend'e komut gönder
+        await SendLightingCommandAsync(isOn ? "ON" : "OFF", (int)BrightnessSlider.Value);
+    }
+
+    private async System.Threading.Tasks.Task SendLightingCommandAsync(string state, int brightness)
+    {
+        try
+        {
+            using var client = new System.Net.Http.HttpClient();
+            client.Timeout = System.TimeSpan.FromSeconds(5);
+            
+            var payload = new
+            {
+                deviceType = "aydinlatma",
+                data = new
+                {
+                    state = state,
+                    brightness = brightness
+                }
+            };
+            
+            var json = System.Text.Json.JsonSerializer.Serialize(payload);
+            var content = new System.Net.Http.StringContent(json, System.Text.Encoding.UTF8, "application/json");
+            
+            // Backend sunucu adresi
+            string baseUrl = "http://nart3d.com:3000"; 
+            var response = await client.PostAsync($"{baseUrl}/api/devices/control", content);
+            
+            if (!response.IsSuccessStatusCode)
+            {
+                System.Diagnostics.Debug.WriteLine($"[Lighting] HTTP Hatası: {response.StatusCode}");
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine($"[Lighting] Komut başarıyla gönderildi: {state}");
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[Lighting] Bağlantı Hatası: {ex.Message}");
         }
     }
 }

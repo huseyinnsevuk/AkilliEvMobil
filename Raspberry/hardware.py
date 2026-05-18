@@ -12,14 +12,18 @@ MQTT_PORT = 1883
 TOPIC_BASE     = "Nest/home"
 KONU_YAGMUR    = f"{TOPIC_BASE}/sensor/yagmur"
 KONU_TENTE     = f"{TOPIC_BASE}/command/tente"
+KONU_AYDINLATMA= f"{TOPIC_BASE}/command/aydinlatma" # Yeni eklendi
 
 # Pin Ayarları
 PIN_YAGMUR = 17
 PIN_SERVO  = 18
+PIN_AYDINLATMA = 27 # Aydınlatma (Röle/LED) için eklendi
 
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(PIN_YAGMUR, GPIO.IN)
 GPIO.setup(PIN_SERVO, GPIO.OUT)
+GPIO.setup(PIN_AYDINLATMA, GPIO.OUT)
+GPIO.output(PIN_AYDINLATMA, False) # Başlangıçta kapalı olsun
 
 # PWM Ayarı (Servo için)
 pwm = GPIO.PWM(PIN_SERVO, 50)
@@ -84,6 +88,18 @@ def on_message(client, userdata, msg):
             
             target_angle = (opening_percent * 180) / 100
             set_servo_angle_with_speed(target_angle, speed)
+            
+        elif msg.topic == KONU_AYDINLATMA:
+            # Örn: {"state": "ON", "brightness": 100}
+            data = json.loads(payload_str)
+            state = data.get("state", "OFF")
+            
+            if state == "ON":
+                GPIO.output(PIN_AYDINLATMA, True)
+                print("💡 Aydınlatma AÇILDI")
+            else:
+                GPIO.output(PIN_AYDINLATMA, False)
+                print("💡 Aydınlatma KAPATILDI")
             
     except Exception as e:
         print(f"❌ Komut işleme hatası: {e}")
