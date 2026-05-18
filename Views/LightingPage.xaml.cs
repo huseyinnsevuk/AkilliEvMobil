@@ -85,8 +85,8 @@ public partial class LightingPage : ContentPage
             var json = System.Text.Json.JsonSerializer.Serialize(payload);
             var content = new System.Net.Http.StringContent(json, System.Text.Encoding.UTF8, "application/json");
             
-            // Backend sunucu adresi
-            string baseUrl = "http://nart3d.com:3000"; 
+            // Backend sunucu adresi (Timeout hatasını önlemek için doğrudan IP eklendi)
+            string baseUrl = "http://141.98.48.101:3000"; 
             var response = await client.PostAsync($"{baseUrl}/api/devices/control", content);
             
             if (!response.IsSuccessStatusCode)

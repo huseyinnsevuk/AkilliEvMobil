@@ -37,7 +37,7 @@ GPIO.output(PIN_LIGHT_IN3, GPIO.HIGH)
 GPIO.output(PIN_LIGHT_IN4, GPIO.LOW)
 
 # Aydınlatma için PWM (L298N üzerinden parlaklık)
-pwm_aydinlatma = GPIO.PWM(PIN_LIGHT_PWM, 100) # Frekans tekrar 100 Hz'e alındı (RPi.GPIO stabilitesi için)
+pwm_aydinlatma = GPIO.PWM(PIN_LIGHT_PWM, 1000) # Kırpışmayı önlemek için 1000 Hz'e sabitlendi
 pwm_aydinlatma.start(0) # Başlangıçta %0 duty cycle (kapalı)
 
 # PWM Ayarı (Servo için)
