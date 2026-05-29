@@ -36,6 +36,7 @@ KONU_YAGMUR    = f"{TOPIC_BASE}/sensor/yagmur"
 KONU_TENTE     = f"{TOPIC_BASE}/command/tente"
 KONU_AYDINLATMA= f"{TOPIC_BASE}/command/aydinlatma"
 KONU_FAN       = f"{TOPIC_BASE}/command/fan"
+KONU_ISIK      = f"{TOPIC_BASE}/sensor/isik"
 
 # Pin Ayarları
 PIN_YAGMUR = 17
