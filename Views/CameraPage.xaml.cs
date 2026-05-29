@@ -39,11 +39,11 @@ namespace AkilliEvMobil.Views
 
         private void StartStream()
         {
-            // VDS sunucumuzdaki statik ve kalıcı global MJPEG akış adresi (Doğrudan IP üzerinden)!
-            string streamUrl = "http://141.98.48.101:3000/api/camera/stream";
+            // VDS sunucumuzdaki statik ve kalıcı global HTML oynatıcı adresi (Doğrudan IP üzerinden)!
+            string viewUrl = "http://141.98.48.101:3000/api/camera/view";
             
-            StreamImage.Source = ImageSource.FromUri(new Uri(streamUrl));
-            StreamImage.IsVisible = true;
+            StreamWebView.Source = new UrlWebViewSource { Url = viewUrl };
+            StreamWebView.Opacity = 1;
             PlaceholderView.IsVisible = false;
             RecIndicator.IsVisible = true;
             ViewfinderOverlay.IsVisible = true; // Show overlays
@@ -57,7 +57,7 @@ namespace AkilliEvMobil.Views
             // Start the premium blinking animation
             StartBlinkingAnimation();
             
-            System.Diagnostics.Debug.WriteLine($"[Camera] Global yayın başlatıldı: {streamUrl}");
+            System.Diagnostics.Debug.WriteLine($"[Camera] Global yayın başlatıldı: {viewUrl}");
         }
 
         private void StopStream()
@@ -67,9 +67,9 @@ namespace AkilliEvMobil.Views
             // Stop the blinking animation
             StopBlinkingAnimation();
 
-            // Clear the Image Source to sever the socket connection
-            StreamImage.Source = null;
-            StreamImage.IsVisible = false;
+            // Clear the WebView Source to sever the socket connection
+            StreamWebView.Source = new UrlWebViewSource { Url = "about:blank" };
+            StreamWebView.Opacity = 0;
             PlaceholderView.IsVisible = true;
             RecIndicator.IsVisible = false;
             ViewfinderOverlay.IsVisible = false; // Hide overlays

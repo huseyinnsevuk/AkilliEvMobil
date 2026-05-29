@@ -57,13 +57,13 @@
                                     <Label Text="Yayını başlatmak için aşağıdaki butona dokunun." FontSize="13" TextColor="#94A3B8" HorizontalTextAlignment="Center" Margin="20,0" />
                                 </VerticalStackLayout>
                                 
-                                <!-- The Real MJPEG Stream Image -->
-                                <Image x:Name="StreamImage" 
-                                       HeightRequest="320" 
-                                       Aspect="AspectFit"
-                                       HorizontalOptions="Fill" 
-                                       VerticalOptions="Fill" 
-                                       IsVisible="False" />
+                                <!-- The Real MJPEG Stream WebView (High compatibility, handles stream naturally) -->
+                                <WebView x:Name="StreamWebView" 
+                                         HeightRequest="320" 
+                                         HorizontalOptions="Fill" 
+                                         VerticalOptions="Fill" 
+                                         IsVisible="True"
+                                         Opacity="0" />
                                 
                                 <!-- ========================================== -->
                                 <!-- 🔴 HIGH-TECH VIEWFINDER OVERLAYS -->

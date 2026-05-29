@@ -563,6 +563,43 @@ app.post('/api/camera/upload', express.raw({ type: 'image/jpeg', limit: '5mb' })
   res.sendStatus(200);
 });
 
+// Mobil uygulamalar için gömülü, şık HTML oynatıcı sayfası (Aynı origin üzerinden, sıfır CORS/Mixed-Content hatası!)
+app.get('/api/camera/view', (req, res) => {
+  res.setHeader('Content-Type', 'text/html');
+  res.send(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+        <title>Kamera Yayini</title>
+        <style>
+            html, body {
+                margin: 0;
+                padding: 0;
+                background-color: #0F172A;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                height: 100%;
+                width: 100%;
+                overflow: hidden;
+            }
+            img {
+                width: 100%;
+                height: 100%;
+                object-fit: contain;
+                image-rendering: auto;
+            }
+        </style>
+    </head>
+    <body>
+        <img src="/api/camera/stream" alt="Canli Yayin" />
+    </body>
+    </html>
+  `);
+});
+
 // Mobil uygulamalar bu adresten canlı yayını dünyanın her yerinden izler
 app.get('/api/camera/stream', (req, res) => {
   res.setHeader('Age', 0);
