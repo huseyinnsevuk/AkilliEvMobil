@@ -39,8 +39,8 @@ namespace AkilliEvMobil.Views
 
         private void StartStream()
         {
-            // VDS sunucumuzdaki statik ve kalıcı global MJPEG akış adresi!
-            string streamUrl = "http://nart3d.com:3000/api/camera/stream";
+            // VDS sunucumuzdaki statik ve kalıcı global MJPEG akış adresi (Doğrudan IP üzerinden)!
+            string streamUrl = "http://141.98.48.101:3000/api/camera/stream";
             
             StreamImage.Source = ImageSource.FromUri(new Uri(streamUrl));
             StreamImage.IsVisible = true;

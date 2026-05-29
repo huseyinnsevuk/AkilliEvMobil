@@ -134,7 +134,7 @@ class CameraCapture:
                         try:
                             # VDS sunucusuna binary POST ile aktarım
                             session.post(
-                                "http://nart3d.com:3000/api/camera/upload", 
+                                "http://141.98.48.101:3000/api/camera/upload", 
                                 data=jpeg_bytes, 
                                 headers={"Content-Type": "image/jpeg"},
                                 timeout=0.8
