@@ -11,8 +11,12 @@ import threading
 # ==========================================
 try:
     import smbus
+    import board
+    import adafruit_dht
+    HAS_DHT = True
     IS_PC = False
 except ImportError:
+    HAS_DHT = False
     IS_PC = True
     class MockSMBus:
         def __init__(self, bus): pass
@@ -23,6 +27,22 @@ except ImportError:
             if reg == (0x80 | 0x0D): return 0x0F  # high byte (0x0F -> 0x0FA0 = 4000 raw counts)
             return 0
     smbus = type('smbus', (), {'SMBus': MockSMBus})
+
+    class MockDHT11:
+        def __init__(self, pin):
+            self.pin = pin
+        @property
+        def temperature(self):
+            import random
+            return int(random.uniform(22, 26))
+        @property
+        def humidity(self):
+            import random
+            return int(random.uniform(40, 50))
+        def exit(self): pass
+    
+    board = type('board', (), {'D4': 4})
+    adafruit_dht = type('adafruit_dht', (), {'DHT11': MockDHT11})
 
 # ==========================================
 # ⚙️ AYARLAR
@@ -37,6 +57,8 @@ KONU_TENTE     = f"{TOPIC_BASE}/command/tente"
 KONU_AYDINLATMA= f"{TOPIC_BASE}/command/aydinlatma"
 KONU_FAN       = f"{TOPIC_BASE}/command/fan"
 KONU_ISIK      = f"{TOPIC_BASE}/sensor/isik"
+KONU_SICAKLIK  = f"{TOPIC_BASE}/sensor/sicaklik"
+KONU_NEM       = f"{TOPIC_BASE}/sensor/nem"
 
 # Pin Ayarları
 PIN_YAGMUR = 17
@@ -116,6 +138,30 @@ def read_lux():
     except Exception as e:
         print(f"⚠️ Işık sensörü okunamadı: {e}")
         return 250
+
+# DHT11 Sıcaklık ve Nem Sensörü Başlatma (GPIO 4 / board.D4)
+try:
+    dht_device = adafruit_dht.DHT11(board.D4)
+    print("✅ DHT11 Sıcaklık ve Nem Sensörü Başlatıldı.")
+except Exception as e:
+    print(f"⚠️ DHT11 Sıcaklık ve Nem Sensörü Başlatılamadı: {e}")
+    dht_device = None
+
+def read_dht():
+    """DHT11 Sensöründen Sıcaklık ve Nem Okur, Hataları Graceful Ele Alır"""
+    if dht_device is None:
+        return None, None
+    try:
+        temp = dht_device.temperature
+        hum = dht_device.humidity
+        if temp is not None and hum is not None:
+            return temp, hum
+    except RuntimeError as error:
+        # Adafruit DHT okuma hataları timing sebepli çok yaygındır, sessizce geçilir
+        pass
+    except Exception as e:
+        print(f"⚠️ DHT11 Okuma Hatası: {e}")
+    return None, None
 
 # --- BAŞLANGIÇ TESTİ (Debug İçin) ---
 print("🧪 DONANIM TESTİ BAŞLIYOR... (Lamba ve Fan 2 saniye çalışmalı)")
@@ -357,6 +403,15 @@ while True:
         # LDR Işık Sensörü Okuma ve Yayınlama (Lux)
         lux_degeri = read_lux()
         client.publish(KONU_ISIK, str(lux_degeri))
+
+        # DHT11 Sıcaklık ve Nem Sensörü Okuma ve Yayınlama
+        temp, hum = read_dht()
+        if temp is not None:
+            client.publish(KONU_SICAKLIK, str(temp))
+            print(f"🌡️ Sıcaklık Okundu: {temp}°C")
+        if hum is not None:
+            client.publish(KONU_NEM, str(hum))
+            print(f"💧 Nem Okundu: %{hum}")
     except Exception as e:
         print(f"❌ Hata: {e}")
     time.sleep(3)
