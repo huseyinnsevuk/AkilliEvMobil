@@ -10,6 +10,7 @@ namespace AkilliEvMobil
             Routing.RegisterRoute(nameof(Views.TentPage), typeof(Views.TentPage));
             Routing.RegisterRoute(nameof(Views.FanPage), typeof(Views.FanPage));
             Routing.RegisterRoute(nameof(Views.HeaterPage), typeof(Views.HeaterPage));
+            Routing.RegisterRoute(nameof(Views.CameraPage), typeof(Views.CameraPage));
         }
     }
 }

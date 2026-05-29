@@ -16,9 +16,9 @@ namespace AkilliEvMobil.Views
             
             Routines = new ObservableCollection<Routine>
             {
-                new Routine { Name = "Karşılama Modu", Description = "Siz eve gelmeden konfor şartlarını hazırlar.", Icon = "home_on.png" },
-                new Routine { Name = "Tasarruf Modu", Description = "Enerji tüketimini minimuma indirir.", Icon = "power.png" },
-                new Routine { Name = "Tatil Modu", Description = "Güvenliği maksimize eder ve varlık simülasyonu yapar.", Icon = "lock.png" }
+                new Routine { Name = "Karşılama Modu", Description = "Siz eve gelmeden konfor şartlarını hazırlar.", Icon = "home_on.png", IconBackground = "#4A9EF7" },
+                new Routine { Name = "Tasarruf Modu", Description = "Enerji tüketimini minimuma indirir.", Icon = "power.png", IconBackground = "#34C759" },
+                new Routine { Name = "Tatil Modu", Description = "Güvenliği maksimize eder ve varlık simülasyonu yapar.", Icon = "lock.png", IconBackground = "#FF9500" }
             };
 
             FilteredRoutines = new ObservableCollection<Routine>(Routines);
@@ -58,5 +58,6 @@ namespace AkilliEvMobil.Views
         public string Name { get; set; }
         public string Description { get; set; }
         public string Icon { get; set; }
+        public string IconBackground { get; set; } = "#4A9EF7";
     }
 }

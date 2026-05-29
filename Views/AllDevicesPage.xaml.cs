@@ -94,6 +94,10 @@ namespace AkilliEvMobil.Views
                 {
                     await Shell.Current.GoToAsync(nameof(LightingPage));
                 }
+                else if (device.Id == "camera")
+                {
+                    await Shell.Current.GoToAsync(nameof(CameraPage));
+                }
                 else if (device.Id == "tent")
                 {
                     await Shell.Current.GoToAsync(nameof(TentPage));
