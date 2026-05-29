@@ -818,9 +818,9 @@ app.post('/api/camera/share/whatsapp', async (req, res) => {
     // Videoyu derle
     const { outputFilename } = await compileVideo();
     
-    // Green API Credentials (AuthService.cs'ten aldığımız orijinal bilgiler!)
-    const idInstance = "7105411368";
-    const apiTokenInstance = "04c359491bde449a8820fc445674cb90d29d3fd0036e4b81a2";
+    // Green API Credentials (Güvenlik için .env'den yüklenir, fallback olarak orijinal bilgiler)
+    const idInstance = process.env.GREEN_API_ID_INSTANCE || "7105411368";
+    const apiTokenInstance = process.env.GREEN_API_TOKEN_INSTANCE || "04c359491bde449a8820fc445674cb90d29d3fd0036e4b81a2";
     
     const videoUrl = `http://141.98.48.101:${PORT}/public/shares/${outputFilename}`;
     const greenApiUrl = `https://api.green-api.com/waInstance${idInstance}/sendFileByUrl/${apiTokenInstance}`;
