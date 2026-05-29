@@ -56,6 +56,7 @@ KONU_YAGMUR    = f"{TOPIC_BASE}/sensor/yagmur"
 KONU_TENTE     = f"{TOPIC_BASE}/command/tente"
 KONU_AYDINLATMA= f"{TOPIC_BASE}/command/aydinlatma"
 KONU_FAN       = f"{TOPIC_BASE}/command/fan"
+KONU_HEATER    = f"{TOPIC_BASE}/command/heater"
 KONU_ISIK      = f"{TOPIC_BASE}/sensor/isik"
 KONU_SICAKLIK  = f"{TOPIC_BASE}/sensor/sicaklik"
 KONU_NEM       = f"{TOPIC_BASE}/sensor/nem"
@@ -63,6 +64,9 @@ KONU_NEM       = f"{TOPIC_BASE}/sensor/nem"
 # Pin Ayarları
 PIN_YAGMUR = 17
 PIN_SERVO  = 18
+
+# Isıtıcı (Röle)
+PIN_HEATER = 16
 
 # Aydınlatma (L298N Kanal B)
 PIN_LIGHT_PWM  = 13  # ENB (Parlaklık - Hız)
@@ -77,6 +81,7 @@ PIN_FAN_IN2    = 6   # IN2 (Yön -)
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(PIN_YAGMUR, GPIO.IN)
 GPIO.setup(PIN_SERVO, GPIO.OUT)
+GPIO.setup(PIN_HEATER, GPIO.OUT)
 
 # L298N Aydınlatma Pin Kurulumları
 GPIO.setup(PIN_LIGHT_PWM, GPIO.OUT)
@@ -95,6 +100,9 @@ GPIO.output(PIN_LIGHT_IN4, GPIO.LOW)
 # Fan Yönünü Ayarla (Varsayılan: İleri)
 GPIO.output(PIN_FAN_IN1, GPIO.HIGH)
 GPIO.output(PIN_FAN_IN2, GPIO.LOW)
+
+# Isıtıcı Başlangıç Durumu (Kapalı)
+GPIO.output(PIN_HEATER, GPIO.LOW)
 
 # Aydınlatma için PWM (L298N üzerinden parlaklık)
 pwm_aydinlatma = GPIO.PWM(PIN_LIGHT_PWM, 1000) # Kırpışmayı önlemek için 1000 Hz
@@ -164,7 +172,7 @@ def read_dht():
     return None, None
 
 # --- BAŞLANGIÇ TESTİ (Debug İçin) ---
-print("🧪 DONANIM TESTİ BAŞLIYOR... (Lamba ve Fan 2 saniye çalışmalı)")
+print("🧪 DONANIM TESTİ BAŞLIYOR... (Lamba, Fan ve Isıtıcı 2 saniye çalışmalı)")
 try:
     # Lamba Testi
     GPIO.output(PIN_LIGHT_IN3, GPIO.HIGH) 
@@ -174,6 +182,9 @@ try:
     GPIO.output(PIN_FAN_IN1, GPIO.HIGH)
     GPIO.output(PIN_FAN_IN2, GPIO.LOW)
     pwm_fan.ChangeDutyCycle(100)
+
+    # Isıtıcı Testi
+    GPIO.output(PIN_HEATER, GPIO.HIGH)
     
     time.sleep(2)
     
@@ -184,6 +195,9 @@ try:
     # Fan Kapat
     pwm_fan.ChangeDutyCycle(0)
     GPIO.output(PIN_FAN_IN1, GPIO.LOW)  # Kaçak voltajı engelle
+
+    # Isıtıcı Kapat
+    GPIO.output(PIN_HEATER, GPIO.LOW)
     
     print("✅ Donanım testi tamamlandı. Sistem dinlemeye geçiyor.")
 except Exception as e:
@@ -371,6 +385,17 @@ def on_message(client, userdata, msg):
                 GPIO.output(PIN_FAN_IN1, GPIO.LOW) # Kaçak voltajı engelle
                 GPIO.output(PIN_FAN_IN2, GPIO.LOW)
                 print("🌀 Fan KAPATILDI")
+
+        elif msg.topic == KONU_HEATER:
+            data = json.loads(payload_str)
+            state = data.get("state", "OFF")
+            
+            if state == "ON":
+                GPIO.output(PIN_HEATER, GPIO.HIGH)
+                print("🔥 Isıtıcı AÇILDI")
+            else:
+                GPIO.output(PIN_HEATER, GPIO.LOW)
+                print("🔥 Isıtıcı KAPATILDI")
             
     except Exception as e:
         print(f"❌ Komut işleme hatası: {e}")

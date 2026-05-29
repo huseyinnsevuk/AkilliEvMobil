@@ -7,11 +7,27 @@ public partial class HeaterPage : ContentPage, IDrawable
     private bool _isOn = false;
     private float _phase = 0;
     private bool _isAnimating = false;
+    private System.Timers.Timer _sensorPollTimer;
 
     public HeaterPage()
     {
         InitializeComponent();
         WaveView.Drawable = this;
+
+        // Initialize Poll Timer for Temperature sensor readings
+        _sensorPollTimer = new System.Timers.Timer(3000); // Poll every 3 seconds
+        _sensorPollTimer.AutoReset = true;
+        _sensorPollTimer.Elapsed += async (s, e) =>
+        {
+            await PollSensorDataAsync();
+        };
+    }
+
+    protected override async void OnAppearing()
+    {
+        base.OnAppearing();
+        _sensorPollTimer?.Start();
+        await PollSensorDataAsync();
     }
 
     private async void OnBackClicked(object sender, EventArgs e)
@@ -45,6 +61,78 @@ public partial class HeaterPage : ContentPage, IDrawable
 
             _isAnimating = false;
             await WaveView.FadeTo(0, 300);
+        }
+
+        // Send heater state to backend
+        await SendHeaterCommandAsync(_isOn ? "ON" : "OFF");
+    }
+
+    private async System.Threading.Tasks.Task PollSensorDataAsync()
+    {
+        try
+        {
+            using var client = new System.Net.Http.HttpClient();
+            client.Timeout = System.TimeSpan.FromSeconds(3);
+            
+            string baseUrl = "http://141.98.48.101:3000";
+            var response = await client.GetAsync($"{baseUrl}/api/sensors/latest");
+            if (response.IsSuccessStatusCode)
+            {
+                var jsonString = await response.Content.ReadAsStringAsync();
+                using var doc = System.Text.Json.JsonDocument.Parse(jsonString);
+                var root = doc.RootElement;
+                if (root.TryGetProperty("temperature", out var tempProp))
+                {
+                    double temp = tempProp.GetDouble();
+                    
+                    // Update UI on main thread safely
+                    MainThread.BeginInvokeOnMainThread(() =>
+                    {
+                        TempLabel.Text = $"Ortam: {temp:F1}°C";
+                    });
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[Heater] Error polling temperature sensor: {ex.Message}");
+        }
+    }
+
+    private async System.Threading.Tasks.Task SendHeaterCommandAsync(string state)
+    {
+        try
+        {
+            using var client = new System.Net.Http.HttpClient();
+            client.Timeout = System.TimeSpan.FromSeconds(5);
+            
+            var payload = new
+            {
+                deviceType = "heater",
+                data = new
+                {
+                    state = state
+                }
+            };
+            
+            var json = System.Text.Json.JsonSerializer.Serialize(payload);
+            var content = new System.Net.Http.StringContent(json, System.Text.Encoding.UTF8, "application/json");
+            
+            string baseUrl = "http://141.98.48.101:3000"; 
+            var response = await client.PostAsync($"{baseUrl}/api/devices/control", content);
+            
+            if (!response.IsSuccessStatusCode)
+            {
+                System.Diagnostics.Debug.WriteLine($"[Heater] HTTP Hatası: {response.StatusCode}");
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine($"[Heater] Komut başarıyla gönderildi: {state}");
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[Heater] Bağlantı Hatası: {ex.Message}");
         }
     }
 
@@ -119,6 +207,8 @@ public partial class HeaterPage : ContentPage, IDrawable
 
     protected override void OnDisappearing()
     {
+        _sensorPollTimer?.Stop();
+        _sensorPollTimer?.Dispose();
         base.OnDisappearing();
         _isAnimating = false;
     }
