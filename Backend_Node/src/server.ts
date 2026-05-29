@@ -566,6 +566,17 @@ app.post('/api/camera/upload', express.raw({ type: 'image/jpeg', limit: '5mb' })
   res.sendStatus(200);
 });
 
+// Anlık JPEG karesini doğrudan servis eden uyumlu endpoint
+app.get('/api/camera/frame', (req, res) => {
+  if (latestCameraFrame) {
+    res.setHeader('Content-Type', 'image/jpeg');
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.send(latestCameraFrame);
+  } else {
+    res.sendStatus(404);
+  }
+});
+
 // Mobil uygulamalar için gömülü, şık HTML oynatıcı sayfası (Aynı origin üzerinden, sıfır CORS/Mixed-Content hatası!)
 app.get('/api/camera/view', (req, res) => {
   res.setHeader('Content-Type', 'text/html');
@@ -597,7 +608,24 @@ app.get('/api/camera/view', (req, res) => {
         </style>
     </head>
     <body>
-        <img src="/api/camera/stream" alt="Canli Yayin" />
+        <img id="feed" src="" alt="Canli Yayin" />
+        <script>
+            const img = document.getElementById('feed');
+            function updateFrame() {
+                // Her kareyi benzersiz zaman damgasıyla çekerek önbelleği devre dışı bırakırız
+                img.src = '/api/camera/frame?t=' + Date.now();
+            }
+            img.onload = () => {
+                // Önceki kare başarıyla yüklendiğinde yenisini hemen isteriz (Akıcı görüntü)
+                setTimeout(updateFrame, 16); // ~60 FPS max
+            };
+            img.onerror = () => {
+                // Hata durumunda yarım saniye bekleyip tekrar deneriz
+                setTimeout(updateFrame, 500);
+            };
+            // Döngüyü başlat
+            updateFrame();
+        </script>
     </body>
     </html>
   `);
