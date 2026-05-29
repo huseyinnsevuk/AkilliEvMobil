@@ -17,6 +17,7 @@ TOPIC_BASE     = "Nest/home"
 KONU_YAGMUR    = f"{TOPIC_BASE}/sensor/yagmur"
 KONU_TENTE     = f"{TOPIC_BASE}/command/tente"
 KONU_AYDINLATMA= f"{TOPIC_BASE}/command/aydinlatma"
+KONU_FAN       = f"{TOPIC_BASE}/command/fan"
 
 # Pin Ayarları
 PIN_YAGMUR = 17
@@ -27,6 +28,11 @@ PIN_LIGHT_PWM  = 13  # ENB (Parlaklık - Hız)
 PIN_LIGHT_IN3  = 20  # IN3 (Yön +) 
 PIN_LIGHT_IN4  = 21  # IN4 (Yön -) 
 
+# Fan (L298N Kanal A)
+PIN_FAN_PWM    = 12  # ENA (Hız / PWM)
+PIN_FAN_IN1    = 5   # IN1 (Yön +)
+PIN_FAN_IN2    = 6   # IN2 (Yön -)
+
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(PIN_YAGMUR, GPIO.IN)
 GPIO.setup(PIN_SERVO, GPIO.OUT)
@@ -36,28 +42,53 @@ GPIO.setup(PIN_LIGHT_PWM, GPIO.OUT)
 GPIO.setup(PIN_LIGHT_IN3, GPIO.OUT)
 GPIO.setup(PIN_LIGHT_IN4, GPIO.OUT)
 
+# L298N Fan Pin Kurulumları
+GPIO.setup(PIN_FAN_PWM, GPIO.OUT)
+GPIO.setup(PIN_FAN_IN1, GPIO.OUT)
+GPIO.setup(PIN_FAN_IN2, GPIO.OUT)
+
 # Aydınlatma Yönünü Ayarla (Akım IN3'ten IN4'e akacak)
 GPIO.output(PIN_LIGHT_IN3, GPIO.HIGH)
 GPIO.output(PIN_LIGHT_IN4, GPIO.LOW)
 
+# Fan Yönünü Ayarla (Varsayılan: İleri)
+GPIO.output(PIN_FAN_IN1, GPIO.HIGH)
+GPIO.output(PIN_FAN_IN2, GPIO.LOW)
+
 # Aydınlatma için PWM (L298N üzerinden parlaklık)
 pwm_aydinlatma = GPIO.PWM(PIN_LIGHT_PWM, 1000) # Kırpışmayı önlemek için 1000 Hz
 pwm_aydinlatma.start(0) # Başlangıçta %0 duty cycle (kapalı)
+
+# Fan için PWM (L298N üzerinden hız)
+pwm_fan = GPIO.PWM(PIN_FAN_PWM, 100) # 100 Hz
+pwm_fan.start(0) # Başlangıçta %0 duty cycle (kapalı)
 
 # PWM Ayarı (Servo için)
 pwm = GPIO.PWM(PIN_SERVO, 50)
 pwm.start(0)
 
 # --- BAŞLANGIÇ TESTİ (Debug İçin) ---
-print("🧪 DONANIM TESTİ BAŞLIYOR... (Lamba 2 saniye yanmalı)")
+print("🧪 DONANIM TESTİ BAŞLIYOR... (Lamba ve Fan 2 saniye çalışmalı)")
 try:
-    GPIO.output(PIN_LIGHT_IN3, GPIO.HIGH) # Yönü aç
+    # Lamba Testi
+    GPIO.output(PIN_LIGHT_IN3, GPIO.HIGH) 
     pwm_aydinlatma.ChangeDutyCycle(100) 
+    
+    # Fan Testi
+    GPIO.output(PIN_FAN_IN1, GPIO.HIGH)
+    GPIO.output(PIN_FAN_IN2, GPIO.LOW)
+    pwm_fan.ChangeDutyCycle(100)
+    
     time.sleep(2)
     
-    # Tamamen Kapat
+    # Lamba Kapat
     pwm_aydinlatma.ChangeDutyCycle(0)   
     GPIO.output(PIN_LIGHT_IN3, GPIO.LOW)  # Kaçak voltajı engelle
+    
+    # Fan Kapat
+    pwm_fan.ChangeDutyCycle(0)
+    GPIO.output(PIN_FAN_IN1, GPIO.LOW)  # Kaçak voltajı engelle
+    
     print("✅ Donanım testi tamamlandı. Sistem dinlemeye geçiyor.")
 except Exception as e:
     print(f"❌ Test sırasında hata: {e}")
@@ -228,6 +259,22 @@ def on_message(client, userdata, msg):
                 pwm_aydinlatma.ChangeDutyCycle(0)
                 GPIO.output(PIN_LIGHT_IN3, GPIO.LOW) # L298N çıkışını kes
                 print("💡 Aydınlatma KAPATILDI")
+                
+        elif msg.topic == KONU_FAN:
+            data = json.loads(payload_str)
+            state = data.get("state", "OFF")
+            speed = int(data.get("speed", 100))
+            
+            if state == "ON" and speed > 0:
+                GPIO.output(PIN_FAN_IN1, GPIO.HIGH) # Fan yönünü ileri ayarla
+                GPIO.output(PIN_FAN_IN2, GPIO.LOW)
+                pwm_fan.ChangeDutyCycle(speed)
+                print(f"🌀 Fan AÇILDI (Hız: %{speed})")
+            else:
+                pwm_fan.ChangeDutyCycle(0)
+                GPIO.output(PIN_FAN_IN1, GPIO.LOW) # Kaçak voltajı engelle
+                GPIO.output(PIN_FAN_IN2, GPIO.LOW)
+                print("🌀 Fan KAPATILDI")
             
     except Exception as e:
         print(f"❌ Komut işleme hatası: {e}")
