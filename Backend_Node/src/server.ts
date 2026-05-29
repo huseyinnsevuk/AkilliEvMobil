@@ -102,10 +102,33 @@ mqttClient.on('message', async (topic, message) => {
 
 app.get('/api/sensors/latest', async (req, res) => {
   try {
-    const latestLog = await prisma.sensorLog.findFirst({
+    const latestTempLog = await prisma.sensorLog.findFirst({
+      where: { temperature: { gt: 0 } },
       orderBy: { createdAt: 'desc' }
     });
-    res.json(latestLog || { temperature: 22, humidity: 45, isRaining: false, gasDetected: false, lightLevel: 0 });
+
+    const latestHumLog = await prisma.sensorLog.findFirst({
+      where: { humidity: { gt: 0 } },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    const latestLightLog = await prisma.sensorLog.findFirst({
+      where: { lightLevel: { gt: 0 } },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    const absoluteLatestLog = await prisma.sensorLog.findFirst({
+      orderBy: { createdAt: 'desc' }
+    });
+
+    res.json({
+      temperature: latestTempLog?.temperature ?? 22,
+      humidity: latestHumLog?.humidity ?? 45,
+      isRaining: absoluteLatestLog?.isRaining ?? false,
+      gasDetected: absoluteLatestLog?.gasDetected ?? false,
+      lightLevel: latestLightLog?.lightLevel ?? 250,
+      createdAt: absoluteLatestLog?.createdAt ?? new Date()
+    });
   } catch (err) {
     res.status(500).json({ error: 'Sensör verisi alınamadı' });
   }
@@ -233,12 +256,34 @@ app.get('/api/users/:userId/sensors/latest', async (req, res) => {
       return res.status(404).json({ error: 'Bu kullanıcıya ait bir cihaz bulunamadı.' });
     }
 
-    const latestLog = await prisma.sensorLog.findFirst({
+    const latestTempLog = await prisma.sensorLog.findFirst({
+      where: { deviceId: device.id, temperature: { gt: 0 } },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    const latestHumLog = await prisma.sensorLog.findFirst({
+      where: { deviceId: device.id, humidity: { gt: 0 } },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    const latestLightLog = await prisma.sensorLog.findFirst({
+      where: { deviceId: device.id, lightLevel: { gt: 0 } },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    const absoluteLatestLog = await prisma.sensorLog.findFirst({
       where: { deviceId: device.id },
       orderBy: { createdAt: 'desc' }
     });
 
-    res.json(latestLog || { temperature: 0, humidity: 0, isRaining: false, gasDetected: false, lightLevel: 0 });
+    res.json({
+      temperature: latestTempLog?.temperature ?? 0,
+      humidity: latestHumLog?.humidity ?? 0,
+      isRaining: absoluteLatestLog?.isRaining ?? false,
+      gasDetected: absoluteLatestLog?.gasDetected ?? false,
+      lightLevel: latestLightLog?.lightLevel ?? 0,
+      createdAt: absoluteLatestLog?.createdAt ?? new Date()
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Sensör verileri alınamadı.' });
