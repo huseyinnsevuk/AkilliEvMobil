@@ -52,6 +52,7 @@ namespace AkilliEvMobil.Views
             PlaceholderView.IsVisible = false;
             RecIndicator.IsVisible = true;
             ViewfinderOverlay.IsVisible = true; // Show overlays
+            ShareButtonFloating.IsVisible = true; // Show floating share button
             SnapshotButton.IsEnabled = true;
 
             ToggleStreamButton.Text = "Yayını Durdur";
@@ -78,6 +79,7 @@ namespace AkilliEvMobil.Views
             PlaceholderView.IsVisible = true;
             RecIndicator.IsVisible = false;
             ViewfinderOverlay.IsVisible = false; // Hide overlays
+            ShareButtonFloating.IsVisible = false; // Hide floating share button
             SnapshotButton.IsEnabled = false;
 
             ToggleStreamButton.Text = "Yayını Başlat";

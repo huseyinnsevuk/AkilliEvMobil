@@ -32,27 +32,7 @@
                 <Image Source="back.png" HeightRequest="18" WidthRequest="18" TranslationX="-3" VerticalOptions="Center" HorizontalOptions="Center" InputTransparent="True" />
             </Border>
             <Label Grid.Column="1" Text="Güvenlik Kamerası" FontFamily="Quicksand" FontSize="24" FontAttributes="Bold" HorizontalOptions="Center" VerticalOptions="Center" TextColor="#1E293B" />
-            <Border Grid.Column="2" HeightRequest="44" WidthRequest="44" BackgroundColor="White" StrokeThickness="0" HorizontalOptions="End" VerticalOptions="Center">
-                <Border.StrokeShape><RoundRectangle CornerRadius="22" /></Border.StrokeShape>
-                <Border.Shadow><Shadow Brush="Black" Offset="0,2" Radius="5" Opacity="0.05" /></Border.Shadow>
-                <Border.GestureRecognizers>
-                    <TapGestureRecognizer Tapped="OnSendClicked" />
-                </Border.GestureRecognizers>
-                <VisualStateManager.VisualStateGroups>
-                    <VisualStateGroupList>
-                        <VisualStateGroup x:Name="CommonStates">
-                            <VisualState x:Name="Normal" />
-                            <VisualState x:Name="Pressed">
-                                <VisualState.Setters>
-                                    <Setter Property="Scale" Value="0.9" />
-                                    <Setter Property="BackgroundColor" Value="#F0F3F8" />
-                                </VisualState.Setters>
-                            </VisualState>
-                        </VisualStateGroup>
-                    </VisualStateGroupList>
-                </VisualStateManager.VisualStateGroups>
-                <Image Source="send.png" HeightRequest="20" WidthRequest="20" VerticalOptions="Center" HorizontalOptions="Center" InputTransparent="True" />
-            </Border>
+            <BoxView Grid.Column="2" WidthRequest="44" BackgroundColor="Transparent" />
         </Grid>
 
         <!-- Scrollable Content -->
@@ -121,6 +101,27 @@
                                         <Ellipse x:Name="RecDot" Grid.Column="0" Fill="#EF4444" HeightRequest="10" WidthRequest="10" VerticalOptions="Center" />
                                         <Label Grid.Column="1" Text="REC" TextColor="White" FontSize="11" FontAttributes="Bold" VerticalOptions="Center" />
                                     </Grid>
+                                </Border>
+                                
+                                <!-- Transparent Share Button Floating in the Bottom-Right Corner of Camera Screen -->
+                                <Border VerticalOptions="End" HorizontalOptions="End" Margin="15" HeightRequest="44" WidthRequest="44" BackgroundColor="Transparent" StrokeThickness="0" x:Name="ShareButtonFloating" IsVisible="False">
+                                    <Border.GestureRecognizers>
+                                        <TapGestureRecognizer Tapped="OnSendClicked" />
+                                    </Border.GestureRecognizers>
+                                    <VisualStateManager.VisualStateGroups>
+                                        <VisualStateGroupList>
+                                            <VisualStateGroup x:Name="CommonStates">
+                                                <VisualState x:Name="Normal" />
+                                                <VisualState x:Name="Pressed">
+                                                    <VisualState.Setters>
+                                                        <Setter Property="Scale" Value="0.9" />
+                                                        <Setter Property="Opacity" Value="0.7" />
+                                                    </VisualState.Setters>
+                                                </VisualState>
+                                            </VisualStateGroup>
+                                        </VisualStateGroupList>
+                                    </VisualStateManager.VisualStateGroups>
+                                    <Image Source="send.png" HeightRequest="26" WidthRequest="26" VerticalOptions="Center" HorizontalOptions="Center" InputTransparent="True" />
                                 </Border>
                                 
                             </Grid>
