@@ -91,6 +91,7 @@ mqttClient.on('message', async (topic, message) => {
         humidity: sensorType === 'nem' ? parseFloat(payload) : 0,
         isRaining: sensorType === 'yagmur' ? payload === '1' : false,
         gasDetected: sensorType === 'gaz' ? payload === '1' : false,
+        lightLevel: sensorType === 'isik' ? parseFloat(payload) : 0,
       }
     });
     console.log(`📝 Sensör Kaydı (${device.name}): ${sensorType} -> ${payload}`);
@@ -104,7 +105,7 @@ app.get('/api/sensors/latest', async (req, res) => {
     const latestLog = await prisma.sensorLog.findFirst({
       orderBy: { createdAt: 'desc' }
     });
-    res.json(latestLog || { temperature: 22, humidity: 45, isRaining: false, gasDetected: false });
+    res.json(latestLog || { temperature: 22, humidity: 45, isRaining: false, gasDetected: false, lightLevel: 0 });
   } catch (err) {
     res.status(500).json({ error: 'Sensör verisi alınamadı' });
   }
@@ -237,7 +238,7 @@ app.get('/api/users/:userId/sensors/latest', async (req, res) => {
       orderBy: { createdAt: 'desc' }
     });
 
-    res.json(latestLog || { temperature: 0, humidity: 0, isRaining: false, gasDetected: false });
+    res.json(latestLog || { temperature: 0, humidity: 0, isRaining: false, gasDetected: false, lightLevel: 0 });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Sensör verileri alınamadı.' });
@@ -400,6 +401,7 @@ app.post('/api/simulate/:userId', async (req, res) => {
         humidity: parseFloat((Math.random() * (60 - 30) + 30).toFixed(1)),
         isRaining: Math.random() > 0.8,
         gasDetected: Math.random() > 0.95,
+        lightLevel: parseFloat((Math.random() * (600 - 150) + 150).toFixed(1)),
         deviceId: device.id
       }
     });
@@ -414,7 +416,7 @@ app.post('/api/simulate/:userId', async (req, res) => {
 // Sensör Verilerini Kaydetme API'si (Cihazdan Gelen)
 app.post('/api/sensors', async (req, res) => {
   try {
-    const { temperature, humidity, isRaining, gasDetected, deviceId } = req.body;
+    const { temperature, humidity, isRaining, gasDetected, lightLevel, deviceId } = req.body;
 
     // Test aşamasında "DeviceId" gelmezse, veritabanında sahte bir Test Cihazı (Dummy Device) yaratıyoruz.
     let targetDeviceId = deviceId;
@@ -434,7 +436,7 @@ app.post('/api/sensors', async (req, res) => {
            });
        }
        targetDeviceId = testDevice.id;
-    }
+     }
 
     // Sensör verisini PostgreSQL'e yazıyoruz
     const log = await prisma.sensorLog.create({
@@ -443,11 +445,12 @@ app.post('/api/sensors', async (req, res) => {
         humidity: humidity || 0,
         isRaining,
         gasDetected,
+        lightLevel: lightLevel || 0,
         deviceId: targetDeviceId
       }
     });
 
-    console.log(`[+] Sensör Verisi Alındı -> Sıcaklık: ${temperature}°C, Yağmur: ${isRaining}, Gaz: ${gasDetected}`);
+    console.log(`[+] Sensör Verisi Alındı -> Sıcaklık: ${temperature}°C, Yağmur: ${isRaining}, Gaz: ${gasDetected}, Işık: ${lightLevel || 0} Lux`);
     res.status(201).json({ message: 'Sensör verisi başarıyla PostgreSQL veritabanına kaydedildi.', data: log });
   } catch (error) {
     console.error('Sensör verisi kaydedilemedi:', error);

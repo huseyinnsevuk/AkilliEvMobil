@@ -4,7 +4,6 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 model User {
@@ -43,6 +42,7 @@ model SensorLog {
   humidity    Float    // Nem değeri (Eklendi)
   isRaining   Boolean  // Yağmur var mı?
   gasDetected Boolean  // Gaz algılandı mı?
+  lightLevel  Float    @default(0) // Ortam ışık seviyesi (Lux)
   createdAt   DateTime @default(now())
   
   // Şimdilik her logu bir cihaza bağlayacağız

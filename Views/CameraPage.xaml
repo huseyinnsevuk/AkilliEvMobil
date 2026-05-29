@@ -91,7 +91,7 @@
                                     <Label Text="+" TextColor="White" FontSize="20" Opacity="0.3" HorizontalOptions="Center" VerticalOptions="Center" />
                                     
                                     <!-- Channel Details Watermark (Bottom Left) -->
-                                    <Label Text="CAM-01 / YAZ BAHÇESİ" TextColor="White" FontSize="10" FontAttributes="Bold" Opacity="0.7" HorizontalOptions="Start" VerticalOptions="End" Margin="25,0,0,25" />
+                                    <Label Text="CAM-01 / BAHÇE" TextColor="White" FontSize="10" FontAttributes="Bold" Opacity="0.7" HorizontalOptions="Start" VerticalOptions="End" Margin="25,0,0,25" />
                                 </Grid>
 
                                 <!-- Live Blinking REC Indicator Overlay (Top Left) -->

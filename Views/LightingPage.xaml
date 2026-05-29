@@ -84,6 +84,26 @@
                     </Grid>
                 </Border>
 
+                <!-- Ambient Light Card (LDR Sensörü) -->
+                <Border Margin="25,0,25,30" BackgroundColor="White" StrokeThickness="0" Padding="20">
+                    <Border.StrokeShape><RoundRectangle CornerRadius="30" /></Border.StrokeShape>
+                    <Border.Shadow><Shadow Brush="Black" Offset="0,4" Radius="15" Opacity="0.03" /></Border.Shadow>
+                    
+                    <Grid ColumnDefinitions="*, Auto">
+                        <VerticalStackLayout Grid.Column="0" Spacing="4">
+                            <Label Text="Ortam Aydınlığı" FontSize="18" FontAttributes="Bold" TextColor="#1E293B" />
+                            <Label Text="LDR Işık Sensöründen alınan güncel değer" FontSize="12" TextColor="#A0AABF" />
+                        </VerticalStackLayout>
+                        
+                        <Border Grid.Column="1" BackgroundColor="#FFF8E1" StrokeThickness="0" Padding="12,6" HorizontalOptions="End" VerticalOptions="Center">
+                            <Border.StrokeShape><RoundRectangle CornerRadius="12" /></Border.StrokeShape>
+                            <HorizontalStackLayout Spacing="4" VerticalOptions="Center">
+                                <Label x:Name="LuxLabel" Text="Yükleniyor..." FontSize="14" FontAttributes="Bold" TextColor="#FFB300" VerticalOptions="Center" />
+                            </HorizontalStackLayout>
+                        </Border>
+                    </Grid>
+                </Border>
+
                 <!-- Slider Section -->
                 <VerticalStackLayout Padding="25,0,25,20" Spacing="25">
                     <Grid ColumnDefinitions="*, Auto">

@@ -7,6 +7,24 @@ import socketserver
 import threading
 
 # ==========================================
+# 🧪 DONANIM SİMÜLASYONU (PC vs RASPBERRY)
+# ==========================================
+try:
+    import smbus
+    IS_PC = False
+except ImportError:
+    IS_PC = True
+    class MockSMBus:
+        def __init__(self, bus): pass
+        def write_byte_data(self, addr, reg, val): pass
+        def read_byte_data(self, addr, reg):
+            # Return a realistic visible light raw reading in simulation mode (roughly 266 Lux)
+            if reg == (0x80 | 0x0C): return 0xA0  # low byte (0xA0)
+            if reg == (0x80 | 0x0D): return 0x0F  # high byte (0x0F -> 0x0FA0 = 4000 raw counts)
+            return 0
+    smbus = type('smbus', (), {'SMBus': MockSMBus})
+
+# ==========================================
 # ⚙️ AYARLAR
 # ==========================================
 VDS_DOMAIN = "nart3d.com" 
@@ -66,6 +84,37 @@ pwm_fan.start(0) # Başlangıçta %0 duty cycle (kapalı)
 # PWM Ayarı (Servo için)
 pwm = GPIO.PWM(PIN_SERVO, 50)
 pwm.start(0)
+
+# TSL2561 Işık Sensörü Başlatma
+TSL2561_ADDR = 0x39 
+try: 
+    bus = smbus.SMBus(1)
+    # TSL2561 Güç Verme (0x80 | 0x00 adresine 0x03 yazılır)
+    bus.write_byte_data(TSL2561_ADDR, 0x80 | 0x00, 0x03)
+    print("✅ TSL2561 Işık Sensörü Başlatıldı.")
+except Exception as e:
+    print(f"⚠️ Işık Sensörü Başlatılamadı: {e}")
+    bus = None
+
+def read_lux():
+    """TSL2561 Sensöründen Ortam Aydınlığını Lux Cinsinden Okur"""
+    if bus is None:
+        return 250 # Okunamadıysa varsayılan iç mekan aydınlığı (Lux)
+    try:
+        if IS_PC:
+            import random
+            return int(random.uniform(280, 320))
+        # TSL2561 Kanal 0 Broad-Spectrum (Kızılötesi + Görünür Işık) okuması
+        low = bus.read_byte_data(TSL2561_ADDR, 0x80 | 0x0C)
+        high = bus.read_byte_data(TSL2561_ADDR, 0x80 | 0x0D)
+        val = high * 256 + low
+        
+        # 1 Lux yaklaşık 0.15 counts olarak ölçeklenir
+        lux = int(val * 0.15)
+        return max(0, lux)
+    except Exception as e:
+        print(f"⚠️ Işık sensörü okunamadı: {e}")
+        return 250
 
 # --- BAŞLANGIÇ TESTİ (Debug İçin) ---
 print("🧪 DONANIM TESTİ BAŞLIYOR... (Lamba ve Fan 2 saniye çalışmalı)")
@@ -299,9 +348,14 @@ print("🚀 SİSTEM ÇİFT YÖNLÜ ÇALIŞIYOR...")
 
 while True:
     try:
+        # Yağmur Sensörü Okuma ve Yayınlama
         durum = GPIO.input(PIN_YAGMUR)
         yagmur_var_mi = "1" if durum == 0 else "0"
         client.publish(KONU_YAGMUR, yagmur_var_mi)
+        
+        # LDR Işık Sensörü Okuma ve Yayınlama (Lux)
+        lux_degeri = read_lux()
+        client.publish(KONU_ISIK, str(lux_degeri))
     except Exception as e:
         print(f"❌ Hata: {e}")
     time.sleep(3)
