@@ -1,4 +1,8 @@
 using System;
+using System.Linq;
+using System.Net.Http;
+using System.Net.Http.Json;
+using System.Threading.Tasks;
 using Microsoft.Maui.Controls;
 
 namespace AkilliEvMobil.Views
@@ -6,6 +10,7 @@ namespace AkilliEvMobil.Views
     public partial class CameraPage : ContentPage
     {
         private bool _isStreaming = false;
+        private readonly HttpClient _httpClient = new HttpClient();
 
         public CameraPage()
         {
@@ -113,6 +118,117 @@ namespace AkilliEvMobil.Views
             }
 
             await DisplayAlert("Fotoğraf Çekildi", "Kamera anlık görüntüsü galeriye başarıyla kaydedildi.", "Tamam");
+        }
+
+        private void OnSendClicked(object sender, EventArgs e)
+        {
+            // Reset modal state
+            WpPhoneEntry.Text = string.Empty;
+            EmailEntry.Text = string.Empty;
+            
+            ShareSelectionView.IsVisible = true;
+            WhatsAppInputView.IsVisible = false;
+            EmailInputView.IsVisible = false;
+            ShareLoadingView.IsVisible = false;
+            
+            ShareOverlay.IsVisible = true;
+        }
+
+        private void OnCancelShareClicked(object sender, EventArgs e)
+        {
+            ShareOverlay.IsVisible = false;
+        }
+
+        private void OnShareViaWhatsAppClicked(object sender, EventArgs e)
+        {
+            ShareSelectionView.IsVisible = false;
+            WhatsAppInputView.IsVisible = true;
+        }
+
+        private void OnShareViaEmailClicked(object sender, EventArgs e)
+        {
+            ShareSelectionView.IsVisible = false;
+            EmailInputView.IsVisible = true;
+        }
+
+        private async void OnSubmitWhatsAppShareClicked(object sender, EventArgs e)
+        {
+            string phone = WpPhoneEntry.Text?.Trim();
+            if (string.IsNullOrEmpty(phone))
+            {
+                await DisplayAlert("Hata", "Lütfen geçerli bir telefon numarası girin.", "Tamam");
+                return;
+            }
+            
+            // Clean/validate input briefly
+            string digits = new string(phone.Where(char.IsDigit).ToArray());
+            if (digits.Length < 9)
+            {
+                await DisplayAlert("Hata", "Telefon numarası eksik veya geçersiz.", "Tamam");
+                return;
+            }
+
+            try
+            {
+                WhatsAppInputView.IsVisible = false;
+                ShareLoadingView.IsVisible = true;
+
+                var payload = new { phoneNumber = phone };
+                var response = await _httpClient.PostAsJsonAsync("http://141.98.48.101:3000/api/camera/share/whatsapp", payload);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    await DisplayAlert("Başarılı", "Son 10 saniyelik video WhatsApp ile başarıyla gönderildi!", "Harika");
+                }
+                else
+                {
+                    await DisplayAlert("Paylaşım Başarısız", "Sunucudan hata yanıtı alındı. Lütfen daha sonra tekrar deneyin.", "Tamam");
+                }
+            }
+            catch (Exception ex)
+            {
+                await DisplayAlert("Bağlantı Hatası", $"Sunucuya bağlanılamadı: {ex.Message}", "Tamam");
+            }
+            finally
+            {
+                ShareOverlay.IsVisible = false;
+            }
+        }
+
+        private async void OnSubmitEmailShareClicked(object sender, EventArgs e)
+        {
+            string email = EmailEntry.Text?.Trim();
+            if (string.IsNullOrEmpty(email) || !email.Contains("@"))
+            {
+                await DisplayAlert("Hata", "Lütfen geçerli bir e-posta adresi girin.", "Tamam");
+                return;
+            }
+
+            try
+            {
+                EmailInputView.IsVisible = false;
+                ShareLoadingView.IsVisible = true;
+
+                var payload = new { emailAddress = email };
+                var response = await _httpClient.PostAsJsonAsync("http://141.98.48.101:3000/api/camera/share/email", payload);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    await DisplayAlert("Başarılı", "Son 10 saniyelik video e-posta adresinize başarıyla gönderildi!", "Harika");
+                }
+                else
+                {
+                    await DisplayAlert("Paylaşım Başarısız", "Sunucudan hata yanıtı alındı. Lütfen daha sonra tekrar deneyin.", "Tamam");
+                }
+            }
+            catch (Exception ex)
+            {
+                await DisplayAlert("Bağlantı Hatası", $"Sunucuya bağlanılamadı: {ex.Message}", "Tamam");
+            }
+            finally
+            {
+                ShareOverlay.IsVisible = false;
+            }
         }
     }
 }

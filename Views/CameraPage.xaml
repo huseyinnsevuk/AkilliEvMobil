@@ -32,7 +32,27 @@
                 <Image Source="back.png" HeightRequest="18" WidthRequest="18" TranslationX="-3" VerticalOptions="Center" HorizontalOptions="Center" InputTransparent="True" />
             </Border>
             <Label Grid.Column="1" Text="Güvenlik Kamerası" FontFamily="Quicksand" FontSize="24" FontAttributes="Bold" HorizontalOptions="Center" VerticalOptions="Center" TextColor="#1E293B" />
-            <BoxView Grid.Column="2" WidthRequest="44" BackgroundColor="Transparent" />
+            <Border Grid.Column="2" HeightRequest="44" WidthRequest="44" BackgroundColor="White" StrokeThickness="0" HorizontalOptions="End" VerticalOptions="Center">
+                <Border.StrokeShape><RoundRectangle CornerRadius="22" /></Border.StrokeShape>
+                <Border.Shadow><Shadow Brush="Black" Offset="0,2" Radius="5" Opacity="0.05" /></Border.Shadow>
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnSendClicked" />
+                </Border.GestureRecognizers>
+                <VisualStateManager.VisualStateGroups>
+                    <VisualStateGroupList>
+                        <VisualStateGroup x:Name="CommonStates">
+                            <VisualState x:Name="Normal" />
+                            <VisualState x:Name="Pressed">
+                                <VisualState.Setters>
+                                    <Setter Property="Scale" Value="0.9" />
+                                    <Setter Property="BackgroundColor" Value="#F0F3F8" />
+                                </VisualState.Setters>
+                            </VisualState>
+                        </VisualStateGroup>
+                    </VisualStateGroupList>
+                </VisualStateManager.VisualStateGroups>
+                <Image Source="send.png" HeightRequest="20" WidthRequest="20" VerticalOptions="Center" HorizontalOptions="Center" InputTransparent="True" />
+            </Border>
         </Grid>
 
         <!-- Scrollable Content -->
@@ -136,5 +156,92 @@
                 
             </VerticalStackLayout>
         </ScrollView>
+        <!-- ========================================== -->
+        <!-- 🔗 PREMIUM SHARING MODAL/OVERLAY -->
+        <!-- ========================================== -->
+        <Grid Grid.RowSpan="2" x:Name="ShareOverlay" BackgroundColor="#800F172A" IsVisible="False" ZIndex="10">
+            <Grid.GestureRecognizers>
+                <TapGestureRecognizer Tapped="OnCancelShareClicked" />
+            </Grid.GestureRecognizers>
+            
+            <!-- White Dialog Card -->
+            <Border WidthRequest="320" HeightRequest="385" VerticalOptions="Center" HorizontalOptions="Center" StrokeThickness="0" BackgroundColor="White" Padding="25">
+                <Border.StrokeShape><RoundRectangle CornerRadius="28" /></Border.StrokeShape>
+                <Border.Shadow><Shadow Brush="Black" Offset="0,15" Radius="30" Opacity="0.15" /></Border.Shadow>
+                <Border.GestureRecognizers>
+                    <!-- Empty gesture to prevent closing when tapping inside the card -->
+                    <TapGestureRecognizer />
+                </Border.GestureRecognizers>
+                
+                <Grid RowDefinitions="Auto, *, Auto" RowSpacing="15">
+                    <!-- Title & Header -->
+                    <VerticalStackLayout Grid.Row="0" Spacing="5" HorizontalOptions="Center">
+                        <Label Text="Kamerayı Paylaş 📹" FontFamily="Quicksand" FontSize="20" FontAttributes="Bold" TextColor="#1E293B" HorizontalOptions="Center" />
+                        <Label Text="Son 10 saniyelik video kaydını gönderin." FontSize="12" TextColor="#64748B" HorizontalOptions="Center" />
+                    </VerticalStackLayout>
+                    
+                    <!-- Content Area (Switch between selection, phone input, and mail input) -->
+                    <Grid Grid.Row="1">
+                        <!-- Step 1: Selection Buttons -->
+                        <Grid x:Name="ShareSelectionView" ColumnDefinitions="*, *" ColumnSpacing="20" VerticalOptions="Center" IsVisible="True">
+                            <!-- WhatsApp Share Option -->
+                            <VerticalStackLayout Grid.Column="0" Spacing="10" HorizontalOptions="Center">
+                                <Border HeightRequest="80" WidthRequest="80" BackgroundColor="#E8F8F0" StrokeThickness="0">
+                                    <Border.StrokeShape><RoundRectangle CornerRadius="40" /></Border.StrokeShape>
+                                    <Border.GestureRecognizers>
+                                        <TapGestureRecognizer Tapped="OnShareViaWhatsAppClicked" />
+                                    </Border.GestureRecognizers>
+                                    <Image Source="whatsapp.png" HeightRequest="44" WidthRequest="44" VerticalOptions="Center" HorizontalOptions="Center" />
+                                </Border>
+                                <Label Text="WhatsApp" FontAttributes="Bold" FontSize="14" TextColor="#1E293B" HorizontalOptions="Center" />
+                            </VerticalStackLayout>
+                            
+                            <!-- Email Share Option -->
+                            <VerticalStackLayout Grid.Column="1" Spacing="10" HorizontalOptions="Center">
+                                <Border HeightRequest="80" WidthRequest="80" BackgroundColor="#F0F4FC" StrokeThickness="0">
+                                    <Border.StrokeShape><RoundRectangle CornerRadius="40" /></Border.StrokeShape>
+                                    <Border.GestureRecognizers>
+                                        <TapGestureRecognizer Tapped="OnShareViaEmailClicked" />
+                                    </Border.GestureRecognizers>
+                                    <Image Source="mail.png" HeightRequest="40" WidthRequest="40" VerticalOptions="Center" HorizontalOptions="Center" />
+                                </Border>
+                                <Label Text="E-Posta" FontAttributes="Bold" FontSize="14" TextColor="#1E293B" HorizontalOptions="Center" />
+                            </VerticalStackLayout>
+                        </Grid>
+                        
+                        <!-- Step 2a: WhatsApp Phone Input View -->
+                        <VerticalStackLayout x:Name="WhatsAppInputView" Spacing="15" VerticalOptions="Center" IsVisible="False">
+                            <Label Text="Telefon Numarası Girin:" FontAttributes="Bold" FontSize="14" TextColor="#334155" />
+                            <Border StrokeThickness="1" Stroke="#E2E8F0" BackgroundColor="#F8FAFC" HeightRequest="50" Padding="15,0">
+                                <Border.StrokeShape><RoundRectangle CornerRadius="12" /></Border.StrokeShape>
+                                <Entry x:Name="WpPhoneEntry" Placeholder="Örn: 533 123 4567" Keyboard="Telephone" TextColor="#1E293B" PlaceholderColor="#94A3B8" VerticalOptions="Center" />
+                            </Border>
+                            <Button Text="WhatsApp ile Gönder" Clicked="OnSubmitWhatsAppShareClicked" BackgroundColor="#25D366" TextColor="White" CornerRadius="12" HeightRequest="45" FontAttributes="Bold" />
+                        </VerticalStackLayout>
+                        
+                        <!-- Step 2b: Email Input View -->
+                        <VerticalStackLayout x:Name="EmailInputView" Spacing="15" VerticalOptions="Center" IsVisible="False">
+                            <Label Text="E-Posta Adresi Girin:" FontAttributes="Bold" FontSize="14" TextColor="#334155" />
+                            <Border StrokeThickness="1" Stroke="#E2E8F0" BackgroundColor="#F8FAFC" HeightRequest="50" Padding="15,0">
+                                <Border.StrokeShape><RoundRectangle CornerRadius="12" /></Border.StrokeShape>
+                                <Entry x:Name="EmailEntry" Placeholder="Örn: isim@adres.com" Keyboard="Email" TextColor="#1E293B" PlaceholderColor="#94A3B8" VerticalOptions="Center" />
+                            </Border>
+                            <Button Text="E-Posta ile Gönder" Clicked="OnSubmitEmailShareClicked" BackgroundColor="#4A90E2" TextColor="White" CornerRadius="12" HeightRequest="45" FontAttributes="Bold" />
+                        </VerticalStackLayout>
+                        
+                        <!-- Step 3: Loading / Progress View -->
+                        <VerticalStackLayout x:Name="ShareLoadingView" Spacing="15" VerticalOptions="Center" IsVisible="False">
+                            <ActivityIndicator IsRunning="True" Color="#4A90E2" HeightRequest="50" WidthRequest="50" />
+                            <Label Text="Video derleniyor ve gönderiliyor..." FontSize="13" TextColor="#64748B" HorizontalTextAlignment="Center" />
+                        </VerticalStackLayout>
+                    </Grid>
+                    
+                    <!-- Footer Actions -->
+                    <Grid Grid.Row="2" ColumnDefinitions="*, *">
+                        <Button Grid.Column="0" Grid.ColumnSpan="2" Text="İptal" Clicked="OnCancelShareClicked" BackgroundColor="Transparent" TextColor="#64748B" FontAttributes="Bold" />
+                    </Grid>
+                </Grid>
+            </Border>
+        </Grid>
     </Grid>
 </ContentPage>
