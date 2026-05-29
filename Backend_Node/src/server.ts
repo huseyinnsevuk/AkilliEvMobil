@@ -539,6 +539,53 @@ app.get('/api/dashboard/stats', async (req, res) => {
   }
 });
 
+// ==========================================
+// 🎬 TAMPON BELLEKLİ GERÇEK ZAMANLI KAMERA BULUT KÖPRÜSÜ
+// ==========================================
+let latestCameraFrame: Buffer | null = null;
+const streamClients = new Set<any>();
+
+// Raspberry Pi bu endpoint'e anlık JPEG karelerini binary olarak POST eder
+app.post('/api/camera/upload', express.raw({ type: 'image/jpeg', limit: '5mb' }), (req, res) => {
+  latestCameraFrame = req.body as Buffer;
+  
+  // Bağlı olan tüm telefonlara bu yeni kareyi anında gönder (Gerçek zamanlı dağıtım)
+  for (const client of streamClients) {
+    try {
+      client.write(`--frame\r\nContent-Type: image/jpeg\r\nContent-Length: ${latestCameraFrame.length}\r\n\r\n`);
+      client.write(latestCameraFrame);
+      client.write('\r\n');
+    } catch (err) {
+      streamClients.delete(client);
+    }
+  }
+  
+  res.sendStatus(200);
+});
+
+// Mobil uygulamalar bu adresten canlı yayını dünyanın her yerinden izler
+app.get('/api/camera/stream', (req, res) => {
+  res.setHeader('Age', 0);
+  res.setHeader('Cache-Control', 'no-cache, private');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Content-Type', 'multipart/x-mixed-replace; boundary=frame');
+  
+  // Eğer hafızada ilk kare varsa hemen gönder
+  if (latestCameraFrame) {
+    res.write(`--frame\r\nContent-Type: image/jpeg\r\nContent-Length: ${latestCameraFrame.length}\r\n\r\n`);
+    res.write(latestCameraFrame);
+    res.write('\r\n');
+  }
+  
+  // İstemciyi dinleyiciler arasına ekle
+  streamClients.add(res);
+  
+  // İstemci sayfadan çıkarsa listeden çıkar ve soketi temizle
+  req.on('close', () => {
+    streamClients.delete(res);
+  });
+});
+
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Sunucu ${PORT} portunda başarıyla başlatıldı.`);
   console.log(`Tüm arayüzlerden (0.0.0.0) dinleniyor...`);

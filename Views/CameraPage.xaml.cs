@@ -1,21 +1,15 @@
 using System;
 using Microsoft.Maui.Controls;
-using Microsoft.Maui.Storage;
 
 namespace AkilliEvMobil.Views
 {
     public partial class CameraPage : ContentPage
     {
         private bool _isStreaming = false;
-        private string _cameraIp = "nart3d.com";
 
         public CameraPage()
         {
             InitializeComponent();
-            
-            // Load saved IP address or use default
-            _cameraIp = Preferences.Get("CameraIp", "nart3d.com");
-            IpAddressEntry.Text = _cameraIp;
         }
 
         protected override void OnDisappearing()
@@ -45,13 +39,11 @@ namespace AkilliEvMobil.Views
 
         private void StartStream()
         {
-            _cameraIp = IpAddressEntry.Text?.Trim() ?? "nart3d.com";
+            // VDS sunucumuzdaki statik ve kalıcı global MJPEG akış adresi!
+            string streamUrl = "http://nart3d.com:3000/api/camera/stream";
             
-            // Format URL: index.html has a styled player, stream.mjpg is the raw feed
-            string streamUrl = $"http://{_cameraIp}:8000/index.html";
-            
-            StreamWebView.Source = new UrlWebViewSource { Url = streamUrl };
-            StreamWebView.IsVisible = true;
+            StreamImage.Source = ImageSource.FromUri(new Uri(streamUrl));
+            StreamImage.IsVisible = true;
             PlaceholderView.IsVisible = false;
             RecIndicator.IsVisible = true;
             ViewfinderOverlay.IsVisible = true; // Show overlays
@@ -65,7 +57,7 @@ namespace AkilliEvMobil.Views
             // Start the premium blinking animation
             StartBlinkingAnimation();
             
-            System.Diagnostics.Debug.WriteLine($"[Camera] Yayını başlattı: {streamUrl}");
+            System.Diagnostics.Debug.WriteLine($"[Camera] Global yayın başlatıldı: {streamUrl}");
         }
 
         private void StopStream()
@@ -75,9 +67,9 @@ namespace AkilliEvMobil.Views
             // Stop the blinking animation
             StopBlinkingAnimation();
 
-            // Set source to about:blank to sever the HTTP connection completely
-            StreamWebView.Source = new UrlWebViewSource { Url = "about:blank" };
-            StreamWebView.IsVisible = false;
+            // Clear the Image Source to sever the socket connection
+            StreamImage.Source = null;
+            StreamImage.IsVisible = false;
             PlaceholderView.IsVisible = true;
             RecIndicator.IsVisible = false;
             ViewfinderOverlay.IsVisible = false; // Hide overlays
@@ -121,75 +113,6 @@ namespace AkilliEvMobil.Views
             }
 
             await DisplayAlert("Fotoğraf Çekildi", "Kamera anlık görüntüsü galeriye başarıyla kaydedildi.", "Tamam");
-        }
-
-        private async void OnSaveIpClicked(object sender, EventArgs e)
-        {
-            string newIp = IpAddressEntry.Text?.Trim() ?? "";
-            if (string.IsNullOrEmpty(newIp))
-            {
-                await DisplayAlert("Hata", "Lütfen geçerli bir IP adresi girin.", "Tamam");
-                return;
-            }
-
-            _cameraIp = newIp;
-            Preferences.Set("CameraIp", _cameraIp);
-            
-            await DisplayAlert("Başarılı", "Kamera IP adresi kaydedildi ve güncellendi.", "Tamam");
-
-            // If streaming, restart it with the new IP address automatically
-            if (_isStreaming)
-            {
-                StopStream();
-                StartStream();
-            }
-        }
-
-        private async void OnCameraLightToggled(object sender, ToggledEventArgs e)
-        {
-            bool isOn = e.Value;
-            
-            // Backend'e aydınlatma komutu gönder (Gece görüşü)
-            await SendLightingCommandAsync(isOn ? "ON" : "OFF", 100);
-        }
-
-        private async System.Threading.Tasks.Task SendLightingCommandAsync(string state, int brightness)
-        {
-            try
-            {
-                using var client = new System.Net.Http.HttpClient();
-                client.Timeout = System.TimeSpan.FromSeconds(5);
-                
-                var payload = new
-                {
-                    deviceType = "aydinlatma",
-                    data = new
-                    {
-                        state = state,
-                        brightness = brightness
-                    }
-                };
-                
-                var json = System.Text.Json.JsonSerializer.Serialize(payload);
-                var content = new System.Net.Http.StringContent(json, System.Text.Encoding.UTF8, "application/json");
-                
-                // Backend server address matching LightingPage setup
-                string baseUrl = "http://141.98.48.101:3000"; 
-                var response = await client.PostAsync($"{baseUrl}/api/devices/control", content);
-                
-                if (!response.IsSuccessStatusCode)
-                {
-                    System.Diagnostics.Debug.WriteLine($"[Camera Light] HTTP Hatası: {response.StatusCode}");
-                }
-                else
-                {
-                    System.Diagnostics.Debug.WriteLine($"[Camera Light] Aydınlatma tetiklendi: {state}");
-                }
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"[Camera Light] Bağlantı Hatası: {ex.Message}");
-            }
         }
     }
 }

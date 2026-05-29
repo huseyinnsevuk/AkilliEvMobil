@@ -46,10 +46,10 @@
                     
                     <VerticalStackLayout Spacing="12">
                         <!-- Camera Feed Screen Wrapper (Small floating viewport window) -->
-                        <Border HeightRequest="320" BackgroundColor="#0F172A" StrokeThickness="0" OverflowMode="Clipped">
+                        <Border HeightRequest="320" BackgroundColor="#0F172A" StrokeThickness="0">
                             <Border.StrokeShape><RoundRectangle CornerRadius="16" /></Border.StrokeShape>
                             
-                            <Grid>
+                            <Grid IsClippedToBounds="True">
                                 <!-- Loading/Inactive Placeholder View -->
                                 <VerticalStackLayout x:Name="PlaceholderView" VerticalOptions="Center" HorizontalOptions="Center" Spacing="15" IsVisible="True">
                                     <Image Source="cctv.png" HeightRequest="80" WidthRequest="80" Opacity="0.5" />
@@ -57,15 +57,16 @@
                                     <Label Text="Yayını başlatmak için aşağıdaki butona dokunun." FontSize="13" TextColor="#94A3B8" HorizontalTextAlignment="Center" Margin="20,0" />
                                 </VerticalStackLayout>
                                 
-                                <!-- The Real MJPEG Stream WebView -->
-                                <WebView x:Name="StreamWebView" 
-                                         HeightRequest="320" 
-                                         HorizontalOptions="Fill" 
-                                         VerticalOptions="Fill" 
-                                         IsVisible="False" />
+                                <!-- The Real MJPEG Stream Image -->
+                                <Image x:Name="StreamImage" 
+                                       HeightRequest="320" 
+                                       Aspect="AspectFit"
+                                       HorizontalOptions="Fill" 
+                                       VerticalOptions="Fill" 
+                                       IsVisible="False" />
                                 
                                 <!-- ========================================== -->
-                                <!-- 🔴 HIGH-TECH VIEWFINDER OVERLAYS (Only visible when streaming) -->
+                                <!-- 🔴 HIGH-TECH VIEWFINDER OVERLAYS -->
                                 <!-- ========================================== -->
                                 
                                 <!-- VIEW FINDER FOCUS CORNER GRAPHICS -->
@@ -129,53 +130,6 @@
                                     HeightRequest="50" 
                                     Clicked="OnSnapshotClicked" 
                                     IsEnabled="False" />
-                        </Grid>
-                    </VerticalStackLayout>
-                </Border>
-
-                <!-- Lighting Integration (Premium Smart Feature) -->
-                <Border Margin="20,0" BackgroundColor="White" StrokeThickness="0" Padding="20">
-                    <Border.StrokeShape><RoundRectangle CornerRadius="24" /></Border.StrokeShape>
-                    <Border.Shadow><Shadow Brush="Black" Offset="0,4" Radius="15" Opacity="0.03" /></Border.Shadow>
-                    
-                    <Grid ColumnDefinitions="*, Auto" ColumnSpacing="15">
-                        <VerticalStackLayout Grid.Column="0" Spacing="4" VerticalOptions="Center">
-                            <Label Text="Gece Görüşü Aydınlatması" FontSize="18" FontAttributes="Bold" TextColor="#1E293B" />
-                            <Label Text="Kameranın önünü aydınlatmak için lambayı açın." FontSize="13" TextColor="#64748B" />
-                        </VerticalStackLayout>
-                        <Switch Grid.Column="1" x:Name="CameraLightSwitch" Toggled="OnCameraLightToggled" Scale="1.1" ThumbColor="#FFB300" OnColor="#FFE082" VerticalOptions="Center" />
-                    </Grid>
-                </Border>
-
-                <!-- Connection IP Configuration Card -->
-                <Border Margin="20,0" BackgroundColor="White" StrokeThickness="0" Padding="20">
-                    <Border.StrokeShape><RoundRectangle CornerRadius="24" /></Border.StrokeShape>
-                    <Border.Shadow><Shadow Brush="Black" Offset="0,4" Radius="15" Opacity="0.03" /></Border.Shadow>
-                    
-                    <VerticalStackLayout Spacing="12">
-                        <Label Text="Kamera Ağ Ayarları" FontSize="18" FontAttributes="Bold" TextColor="#1E293B" />
-                        <Label Text="Raspberry Pi cihazınızın IP adresini veya alan adını girin." FontSize="13" TextColor="#64748B" />
-                        
-                        <Grid ColumnDefinitions="*, Auto" ColumnSpacing="10" Margin="0,5,0,0">
-                            <!-- IP Input Entry -->
-                            <Entry Grid.Column="0" 
-                                   x:Name="IpAddressEntry" 
-                                   Placeholder="Örn: 192.168.1.100 veya nart3d.com" 
-                                   TextColor="#1E293B" 
-                                   BackgroundColor="#F0F3F8" 
-                                   HeightRequest="48"
-                                   FontSize="15" />
-                            
-                            <!-- Save Button -->
-                            <Button Grid.Column="1" 
-                                    Text="Kaydet" 
-                                    FontAttributes="Bold" 
-                                    TextColor="White" 
-                                    BackgroundColor="#10B981" 
-                                    CornerRadius="12" 
-                                    HeightRequest="48" 
-                                    WidthRequest="80" 
-                                    Clicked="OnSaveIpClicked" />
                         </Grid>
                     </VerticalStackLayout>
                 </Border>

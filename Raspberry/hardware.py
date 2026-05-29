@@ -73,13 +73,13 @@ def set_servo_angle(angle):
 # ==========================================
 # 📹 KAMERA YAKALAMA YAPISI (GStreamer)
 # ==========================================
+# 📹 KAMERA YAKALAMA VE BULUT YÜKLEME YAPISI
+# ==========================================
 class CameraCapture:
     def __init__(self):
         self.width = 640
         self.height = 480
         self.fps = 30
-        self.frame = None
-        self.lock = threading.Lock()
         
         # GStreamer pipeline tanımı (Ters montaj için 180 derece dönüş OpenCV'de uygulanacak)
         self.pipeline = (
@@ -104,13 +104,15 @@ class CameraCapture:
             
         time.sleep(1.0)
         
-        # Arka planda frame okuma döngüsünü başlat
+        # Arka planda frame okuma ve yükleme döngüsünü başlat
         self.running = True
-        self.thread = threading.Thread(target=self._capture_loop, daemon=True)
+        self.thread = threading.Thread(target=self._capture_and_upload_loop, daemon=True)
         self.thread.start()
 
-    def _capture_loop(self):
-        print("🏃 Arka planda kamera okuma döngüsü başladı...")
+    def _capture_and_upload_loop(self):
+        print("🏃 Arka planda kamera okuma ve VDS sunucusuna yükleme döngüsü başladı...")
+        import requests
+        session = requests.Session() # Keep-Alive sayesinde tünel kadar hızlı bağlantı
         first_frame = True
         frame_count = 0
         
@@ -119,31 +121,37 @@ class CameraCapture:
                 ret, frame = self.video.read()
                 if ret:
                     if first_frame:
-                        print("🎉 GStreamer üzerinden ilk kamera karesi başarıyla okundu!")
+                        print("🎉 GStreamer üzerinden ilk kare başarıyla okundu ve VDS sunucusuna yükleniyor!")
                         first_frame = False
                     
                     # 180 Derece Döndürme (Ters montaj için)
                     frame = cv2.rotate(frame, cv2.ROTATE_180)
                     
-                    frame_count += 1
-                    if frame_count % 90 == 0:
-                        print(f"📡 Canlı yayından 90 kare başarıyla okundu (Toplam: {frame_count})")
-                        
-                    with self.lock:
-                        self.frame = frame
+                    # Kareyi yüksek kaliteli/düşük boyutlu JPEG'e sıkıştır (%40 kalite idealdir)
+                    ret_enc, jpeg = cv2.imencode('.jpg', frame, [int(cv2.IMWRITE_JPEG_QUALITY), 40])
+                    if ret_enc:
+                        jpeg_bytes = jpeg.tobytes()
+                        try:
+                            # VDS sunucusuna binary POST ile aktarım
+                            session.post(
+                                "http://nart3d.com:3000/api/camera/upload", 
+                                data=jpeg_bytes, 
+                                headers={"Content-Type": "image/jpeg"},
+                                timeout=0.8
+                            )
+                            
+                            frame_count += 1
+                            if frame_count % 90 == 0:
+                                print(f"📡 VDS bulut sunucusuna 90 kare başarıyla yüklendi (Toplam: {frame_count})")
+                        except Exception as e:
+                            # Ağ kopması vb. durumlarda kısa bir uyku
+                            time.sleep(0.1)
+                            
+                    time.sleep(0.01)
                 else:
                     time.sleep(0.03)
             else:
                 time.sleep(0.1)
-
-    def get_frame(self):
-        with self.lock:
-            if self.frame is None:
-                return None
-            ret, jpeg = cv2.imencode('.jpg', self.frame, [int(cv2.IMWRITE_JPEG_QUALITY), 50])
-            if ret:
-                return jpeg.tobytes()
-        return None
 
     def close(self):
         self.running = False
@@ -153,79 +161,12 @@ class CameraCapture:
 
 camera = None
 
-# ==========================================
-# 📡 HTTP MJPEG STREAMING SERVER
-# ==========================================
-class StreamingHandler(http.server.BaseHTTPRequestHandler):
-    def log_message(self, format, *args):
-        # Konsol kirliliğini önlemek için HTTP loglarını sessize alıyoruz
-        return
-
-    def do_GET(self):
-        global camera
-        if self.path == '/':
-            self.send_response(301)
-            self.send_header('Location', '/index.html')
-            self.end_headers()
-        elif self.path == '/index.html':
-            # Uygulama doğrudan /stream.mjpg adresini de çekebilir. 
-            # Tarayıcı testi için şık bir HTML sayfası
-            PAGE = """\
-            <html>
-            <head><title>Akıllı Ev - Canlı Kamera</title></head>
-            <body style="background:#0f172a; color:white; font-family:sans-serif; text-align:center; padding-top:50px;">
-                <h2>Akıllı Ev Kamera Sistemi</h2>
-                <img src="stream.mjpg" style="border: 3px solid #4a90e2; border-radius:12px; max-width:640px;" />
-                <p>Protokol: MJPEG (HTTP Stream) | Çözünürlük: 640x480 (180 Derece Çevrilmiş)</p>
-            </body>
-            </html>
-            """
-            content = PAGE.encode('utf-8')
-            self.send_response(200)
-            self.send_header('Content-Type', 'text/html')
-            self.send_header('Content-Length', len(content))
-            self.end_headers()
-            self.wfile.write(content)
-        elif self.path == '/stream.mjpg':
-            self.send_response(200)
-            self.send_header('Age', 0)
-            self.send_header('Cache-Control', 'no-cache, private')
-            self.send_header('Pragma', 'no-cache')
-            self.send_header('Content-Type', 'multipart/x-mixed-replace; boundary=frame')
-            self.end_headers()
-            try:
-                while True:
-                    if camera:
-                        frame = camera.get_frame()
-                        if frame:
-                            self.wfile.write(b'--frame\r\n')
-                            self.send_header('Content-Type', 'image/jpeg')
-                            self.send_header('Content-Length', len(frame))
-                            self.end_headers()
-                            self.wfile.write(frame)
-                            self.wfile.write(b'\r\n')
-                        else:
-                            time.sleep(0.03)
-                    else:
-                        time.sleep(0.1)
-            except Exception as e:
-                pass
-        else:
-            self.send_error(404)
-
-class StreamingServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
-    allow_reuse_address = True
-    daemon_threads = True
-
 def baslat_kamera_yayini():
     global camera
-    PORT = 8000
     try:
         camera = CameraCapture()
-        server_address = ('', PORT)
-        server = StreamingServer(server_address, StreamingHandler)
-        print(f"📡 Kamera Yayın Sunucusu Arka Planda Başlatıldı! (Port: {PORT})")
-        server.serve_forever()
+        while True:
+            time.sleep(1)
     except Exception as e:
         print(f"❌ Kamera sunucusu hatası: {e}")
 
