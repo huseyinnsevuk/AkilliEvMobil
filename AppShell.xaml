@@ -8,9 +8,9 @@
     Shell.FlyoutBehavior="Disabled"
     Title="AkilliEvMobil">
 
-    <!-- FlyoutItem (FlyoutBehavior=Disabled) sayesinde native alt sekme çubuğu (BottomNavigationView) üretilmez. 
+    <!-- FlyoutItem sayesinde native alt sekme çubuğu (BottomNavigationView) üretilmez. 
          Böylece Android tarafındaki layout/line3 şişirme ve çökme hatası kökünden çözülmüş olur. -->
-    <FlyoutItem FlyoutBehavior="Disabled">
+    <FlyoutItem>
         <ShellContent Route="MainDashboardPage" ContentTemplate="{DataTemplate views:MainDashboardPage}" />
         <ShellContent Route="AllDevicesPage" ContentTemplate="{DataTemplate views:AllDevicesPage}" />
         <ShellContent Route="AutomationPage" ContentTemplate="{DataTemplate views:AutomationPage}" />
