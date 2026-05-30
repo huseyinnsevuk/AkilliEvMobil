@@ -123,9 +123,6 @@ namespace AkilliEvMobil.Services
                 // Mevcut aktif sayfayı al
                 var activePage = Shell.Current?.CurrentPage;
                 if (activePage == null) return;
-
-                // Siren sesi eşliğinde uyarı penceresi (Premium Alert tasarımı simülasyonu)
-                // Gerçek ses çalmak için .NET MAUI MediaElement veya RingtoneManager kullanılabilir.
                 
                 // SOS Işık Kırpma / Flaşör Efekti ve Haptic Feedback
                 try
@@ -134,18 +131,16 @@ namespace AkilliEvMobil.Services
                 }
                 catch { }
 
-                bool result = await activePage.DisplayAlert(
+                // 3 parametreli tek butonlu güvenli overload kullanıyoruz.
+                // Null değerli 4. parametre Android AlertDialogBuilder tarafında IllegalArgumentException fırlatır.
+                await activePage.DisplayAlert(
                     $"🚨 {title.ToUpper()}", 
                     $"{message}\n\nBu uyarı siz kapatana kadar telefonunuzu titretmeye ve ekranı açık tutmaya devam edecektir.", 
-                    "SİRENİ SUSTUR VE DİNDİR", 
-                    null
+                    "SİRENİ SUSTUR VE DİNDİR"
                 );
 
-                if (result)
-                {
-                    StopEmergencyAlarm();
-                    await activePage.DisplayAlert("Siren Susturuldu", "Acil durum uyarısı kullanıcı tarafından doğrulandı ve cihaz sessize alındı. Lütfen ortamı havalandırın veya güvenliği kontrol edin.", "Tamam");
-                }
+                StopEmergencyAlarm();
+                await activePage.DisplayAlert("Siren Susturuldu", "Acil durum uyarısı kullanıcı tarafından doğrulandı ve cihaz sessize alındı. Lütfen ortamı havalandırın veya güvenliği kontrol edin.", "Tamam");
             });
         }
     }

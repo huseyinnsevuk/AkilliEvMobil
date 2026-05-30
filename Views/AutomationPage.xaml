@@ -39,21 +39,21 @@
                          Margin="2,0"
                          SelectionMode="None">
             <CollectionView.ItemsLayout>
-                <GridItemsLayout Orientation="Vertical" Span="2" HorizontalItemSpacing="4" VerticalItemSpacing="1" />
+                <GridItemsLayout Orientation="Vertical" Span="2" HorizontalItemSpacing="4" VerticalItemSpacing="4" />
             </CollectionView.ItemsLayout>
             <CollectionView.Header>
-                <VerticalStackLayout Padding="5,0,5,0">
+                <VerticalStackLayout Padding="10,10,20,10">
                     <Label Text="Aktif Rutinler" 
                            FontSize="20" 
                            FontAttributes="Bold" 
                            TextColor="#1E293B" 
-                           Margin="0,0,0,2" />
+                           Margin="0,0,0,10" />
                 </VerticalStackLayout>
             </CollectionView.Header>
             <CollectionView.ItemTemplate>
                 <DataTemplate>
                     <!-- ROOT GRID -->
-                    <Grid WidthRequest="190" HeightRequest="150" Margin="2">
+                    <Grid WidthRequest="190" HeightRequest="110" Margin="4">
                         <Grid.GestureRecognizers>
                             <TapGestureRecognizer Tapped="OnRoutineTapped" />
                         </Grid.GestureRecognizers>
@@ -61,16 +61,16 @@
                         <!-- KART ARKA PLANI -->
                         <Image Source="kart.png" 
                                Aspect="AspectFill" 
-                               HorizontalOptions="Fill" 
+                               HorizontalOptions="Center" 
                                VerticalOptions="Fill" />
 
                         <!-- SOL ÜST İKON -->
                         <Image Source="{Binding Icon}"
-                               WidthRequest="24"
-                               HeightRequest="24"
+                               WidthRequest="30"
+                               HeightRequest="30"
                                HorizontalOptions="Start"
                                VerticalOptions="Start"
-                               Margin="20,20,0,0" />
+                               Margin="13,7,0,0" />
 
                         <!-- METİNLER (İSİM & AÇIKLAMA) -->
                         <VerticalStackLayout HorizontalOptions="Start"

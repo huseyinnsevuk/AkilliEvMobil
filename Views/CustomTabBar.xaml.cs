@@ -70,25 +70,25 @@ namespace AkilliEvMobil.Views
         private async void OnHomeTapped(object sender, EventArgs e)
         {
             await AnimateClick(sender);
-            if (ActiveTab != "Home") await Shell.Current.GoToAsync("//MainDashboardPage");
+            if (ActiveTab != "Home") await Shell.Current.GoToAsync("//MainDashboardPage", false);
         }
 
         private async void OnGridTapped(object sender, EventArgs e)
         {
             await AnimateClick(sender);
-            if (ActiveTab != "Grid") await Shell.Current.GoToAsync("//AllDevicesPage");
+            if (ActiveTab != "Grid") await Shell.Current.GoToAsync("//AllDevicesPage", false);
         }
 
         private async void OnAutomationTapped(object sender, EventArgs e)
         {
             await AnimateClick(sender);
-            if (ActiveTab != "Automation") await Shell.Current.GoToAsync("//AutomationPage");
+            if (ActiveTab != "Automation") await Shell.Current.GoToAsync("//AutomationPage", false);
         }
 
         private async void OnSettingsTapped(object sender, EventArgs e)
         {
             await AnimateClick(sender);
-            if (ActiveTab != "Settings") await Shell.Current.GoToAsync("//SettingsPage");
+            if (ActiveTab != "Settings") await Shell.Current.GoToAsync("//SettingsPage", false);
         }
 
         private async Task AnimateClick(object sender)

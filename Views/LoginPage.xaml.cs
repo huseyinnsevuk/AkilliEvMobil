@@ -57,8 +57,14 @@ namespace AkilliEvMobil.Views
                 
                 // TEST/GELİŞTİRME AŞAMASI: SMS ve Mail Doğrulaması tamamen atlandı.
                 // Başarılı girişten hemen sonra ana menüye aktarıyoruz.
-                MainThread.BeginInvokeOnMainThread(() =>
+                MainThread.BeginInvokeOnMainThread(async () =>
                 {
+                    // Android klavyeyi kapatmak ve aktif geçişleri temizlemek için hafif bir gecikme verilir.
+                    // Bu sayede "NavigationRootManager_ElementBasedFragment" çökmesi engellenir.
+                    EmailEntry?.Unfocus();
+                    PasswordEntry?.Unfocus();
+                    await Task.Delay(250);
+                    
                     Application.Current.MainPage = new AppShell();
                 });
             }
