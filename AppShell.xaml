@@ -8,12 +8,13 @@
     Shell.FlyoutBehavior="Disabled"
     Title="AkilliEvMobil">
 
-    <!-- TabBar yapısı sayesinde hepsi arka planda sekme gibi çalışacak, ancak gizli oldukları için kendi özel Bottom Barımız kullanılacak. -->
-    <TabBar>
+    <!-- FlyoutItem (FlyoutBehavior=Disabled) sayesinde native alt sekme çubuğu (BottomNavigationView) üretilmez. 
+         Böylece Android tarafındaki layout/line3 şişirme ve çökme hatası kökünden çözülmüş olur. -->
+    <FlyoutItem FlyoutBehavior="Disabled">
         <ShellContent Route="MainDashboardPage" ContentTemplate="{DataTemplate views:MainDashboardPage}" />
         <ShellContent Route="AllDevicesPage" ContentTemplate="{DataTemplate views:AllDevicesPage}" />
         <ShellContent Route="AutomationPage" ContentTemplate="{DataTemplate views:AutomationPage}" />
         <ShellContent Route="SettingsPage" ContentTemplate="{DataTemplate views:SettingsPage}" />
-    </TabBar>
+    </FlyoutItem>
 
 </Shell>
