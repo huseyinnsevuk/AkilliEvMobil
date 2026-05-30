@@ -123,8 +123,8 @@ namespace AkilliEvMobil.Platforms.Android
                 alarmChannel.SetBypassDnd(true); // Rahatsız Etme modunu bypass eder
 
                 // Dinamik olarak custom siren sesinin Android kaynağını al ve kanala ata
-                int customSoundId = Resources.GetIdentifier("siren", "raw", PackageName);
-                if (customSoundId == 0) customSoundId = Resources.GetIdentifier("alarm", "raw", PackageName);
+                int customSoundId = Resources.GetIdentifier("alarm", "raw", PackageName);
+                if (customSoundId == 0) customSoundId = Resources.GetIdentifier("siren", "raw", PackageName);
 
                 if (customSoundId != 0)
                 {
@@ -133,7 +133,7 @@ namespace AkilliEvMobil.Platforms.Android
                         .SetUsage(AudioUsageKind.Alarm)
                         .SetContentType(AudioContentType.Music)
                         .Build());
-                    System.Diagnostics.Debug.WriteLine("📡 Bildirim kanalı için özel siren sesi atandı.");
+                    System.Diagnostics.Debug.WriteLine("📡 Bildirim kanalı için özel alarm/siren sesi atandı.");
                 }
 
                 manager.CreateNotificationChannel(alarmChannel);
@@ -227,28 +227,30 @@ namespace AkilliEvMobil.Platforms.Android
 
                 bool soundLoaded = false;
 
-                // A. Birinci Yol: MAUI Assets Klasöründen Yükle (Resources/Raw/siren.mp3)
+                // A. Birinci Yol: MAUI Assets Klasöründen Yükle (Resources/Raw/alarm.mp3)
                 try
                 {
-                    var fd = Assets.OpenFd("siren.mp3");
+                    var fd = Assets.OpenFd("alarm.mp3");
+                    if (fd == null) fd = Assets.OpenFd("siren.mp3");
+                    
                     if (fd != null)
                     {
                         _mediaPlayer.SetDataSource(fd.FileDescriptor, fd.StartOffset, fd.Length);
                         fd.Close();
                         soundLoaded = true;
-                        System.Diagnostics.Debug.WriteLine("📡 Siren ses dosyası MAUI Assets klasöründen (Resources/Raw/siren.mp3) başarıyla yüklendi.");
+                        System.Diagnostics.Debug.WriteLine("📡 Alarm ses dosyası MAUI Assets klasöründen başarıyla yüklendi.");
                     }
                 }
                 catch (Exception assetEx)
                 {
-                    System.Diagnostics.Debug.WriteLine($"MAUI Assets siren yükleme denemesi: {assetEx.Message}");
+                    System.Diagnostics.Debug.WriteLine($"MAUI Assets alarm yükleme denemesi: {assetEx.Message}");
                 }
 
-                // B. İkinci Yol: Android Native Raw Klasöründen Oku (Platforms/Android/Resources/raw/siren.mp3)
+                // B. İkinci Yol: Android Native Raw Klasöründen Oku (Platforms/Android/Resources/raw/alarm.mp3)
                 if (!soundLoaded)
                 {
-                    int customSoundId = Resources.GetIdentifier("siren", "raw", PackageName);
-                    if (customSoundId == 0) customSoundId = Resources.GetIdentifier("alarm", "raw", PackageName);
+                    int customSoundId = Resources.GetIdentifier("alarm", "raw", PackageName);
+                    if (customSoundId == 0) customSoundId = Resources.GetIdentifier("siren", "raw", PackageName);
 
                     if (customSoundId != 0)
                     {
