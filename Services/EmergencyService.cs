@@ -57,6 +57,15 @@ namespace AkilliEvMobil.Services
             }
             catch { }
 
+#if ANDROID
+            // Android platformundaki arka plan servisinin siren ve titreşimini kapat
+            try
+            {
+                Platforms.Android.EmergencyForegroundService.Instance?.StopSirenAndVibration();
+            }
+            catch { }
+#endif
+
             // 2. Ekranı eski haline getir (kapanabilir)
             MainThread.BeginInvokeOnMainThread(() =>
             {
@@ -114,7 +123,7 @@ namespace AkilliEvMobil.Services
         }
 
         /// <summary>
-        /// Acil durum için premium, çarpıcı bir tam ekran modal diyalog sunar.
+        /// Acil durum için premium, çarpıcı bir tam ekran XAML modal sayfası sunar.
         /// </summary>
         private async Task ShowEmergencyModalAsync(string title, string message)
         {
@@ -131,16 +140,10 @@ namespace AkilliEvMobil.Services
                 }
                 catch { }
 
-                // 3 parametreli tek butonlu güvenli overload kullanıyoruz.
-                // Null değerli 4. parametre Android AlertDialogBuilder tarafında IllegalArgumentException fırlatır.
-                await activePage.DisplayAlert(
-                    $"🚨 {title.ToUpper()}", 
-                    $"{message}\n\nBu uyarı siz kapatana kadar telefonunuzu titretmeye ve ekranı açık tutmaya devam edecektir.", 
-                    "SİRENİ SUSTUR VE DİNDİR"
-                );
-
-                StopEmergencyAlarm();
-                await activePage.DisplayAlert("Siren Susturuldu", "Acil durum uyarısı kullanıcı tarafından doğrulandı ve cihaz sessize alındı. Lütfen ortamı havalandırın veya güvenliği kontrol edin.", "Tamam");
+                // Yeni, premium tam ekran XAML alarm sayfasını modal olarak fırlat
+                // Bu sayfa kilit ekranı aşıldığında tam ekran olarak çalar ve parlar
+                var alarmPage = new Views.EmergencyAlarmPage(title, message);
+                await activePage.Navigation.PushModalAsync(alarmPage);
             });
         }
     }

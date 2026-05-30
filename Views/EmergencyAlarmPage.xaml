@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="AkilliEvMobil.Views.EmergencyAlarmPage"
+             Shell.NavBarIsVisible="False"
+             Shell.TabBarIsVisible="False"
+             BackgroundColor="#1A0508">
+
+    <Grid>
+        <!-- Arka Plan Premium Koyu Kırmızı Degrade -->
+        <Grid.Background>
+            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                <GradientStop Color="#1E0709" Offset="0.0" />
+                <GradientStop Color="#4A050B" Offset="0.5" />
+                <GradientStop Color="#8B0000" Offset="1.0" />
+            </LinearGradientBrush>
+        </Grid.Background>
+
+        <!-- 
+            Tüm cihaz ekran boyutlarında ve yönlerinde (Dikey/Yatay) butonun 
+            asla ekrandan taşmaması ve her zaman görünür kalması için Grid kullandık.
+        -->
+        <Grid RowDefinitions="*, Auto" Padding="25, 20">
+
+            <!-- Üst Kısım: Flaşör ve Detaylar (Küçük ekranlarda kaydırılabilir olması için ScrollView içine aldık) -->
+            <ScrollView Grid.Row="0" VerticalOptions="CenterAndExpand">
+                <VerticalStackLayout Spacing="30" VerticalOptions="Center" HorizontalOptions="Center" Padding="0, 10">
+                    
+                    <!-- Bölüm 1: Yanıp Sönen Flaşör / Pulsing Alarm İkonu -->
+                    <Grid HeightRequest="150" WidthRequest="150" HorizontalOptions="Center">
+                        <!-- Arka Plandaki Yayılan Parlaklık Çemberleri -->
+                        <Border x:Name="PulseRing1" BackgroundColor="#E53E3E" Opacity="0.2" HeightRequest="150" WidthRequest="150" StrokeThickness="0">
+                            <Border.StrokeShape><RoundRectangle CornerRadius="75" /></Border.StrokeShape>
+                        </Border>
+                        <Border x:Name="PulseRing2" BackgroundColor="#E53E3E" Opacity="0.3" HeightRequest="110" WidthRequest="110" StrokeThickness="0" HorizontalOptions="Center" VerticalOptions="Center">
+                            <Border.StrokeShape><RoundRectangle CornerRadius="55" /></Border.StrokeShape>
+                        </Border>
+                        
+                        <!-- Merkezdeki Parlak Alarm İkonu -->
+                        <Border BackgroundColor="#E53E3E" HeightRequest="80" WidthRequest="80" StrokeThickness="0" HorizontalOptions="Center" VerticalOptions="Center">
+                            <Border.StrokeShape><RoundRectangle CornerRadius="40" /></Border.StrokeShape>
+                            <Border.Shadow>
+                                <Shadow Brush="#FF0000" Offset="0,0" Radius="25" Opacity="0.8" />
+                            </Border.Shadow>
+                            <!-- Android default alert ikonu yerine şık bir ünlem işareti -->
+                            <Label Text="⚠" TextColor="White" FontSize="36" FontAttributes="Bold" HorizontalOptions="Center" VerticalOptions="Center" TranslationY="-2" />
+                        </Border>
+                    </Grid>
+
+                    <!-- Bölüm 2: Tehlike Başlığı ve Açıklama -->
+                    <VerticalStackLayout Spacing="10" HorizontalOptions="Center">
+                        <Label Text="🚨 TEHLİKELİ GAZ SIZINTISI 🚨" 
+                               TextColor="#FFFFFF" 
+                               FontSize="22" 
+                               FontAttributes="Bold" 
+                               HorizontalOptions="Center" 
+                               HorizontalTextAlignment="Center" />
+                        
+                        <Label x:Name="AlarmTitleLabel"
+                               Text="ACİL DURUM UYARISI!" 
+                               TextColor="#FEB2B2" 
+                               FontSize="16" 
+                               FontAttributes="Bold"
+                               HorizontalOptions="Center" 
+                               HorizontalTextAlignment="Center" />
+
+                        <Border StrokeThickness="0" BackgroundColor="#2D0B0E" Padding="15,12" Margin="0,5,0,0">
+                            <Border.StrokeShape><RoundRectangle CornerRadius="12" /></Border.StrokeShape>
+                            <Label x:Name="AlarmMessageLabel"
+                                   Text="Evinizdeki akıllı emniyet sistemi yüksek düzeyde yanıcı veya zehirli GAZ algıladı. Siren çalıyor ve kilit ekranı uyanık tutuluyor." 
+                                   TextColor="#FED7D7" 
+                                   FontSize="14" 
+                                   HorizontalOptions="Center" 
+                                   HorizontalTextAlignment="Center" 
+                                   LineHeight="1.3" />
+                        </Border>
+                    </VerticalStackLayout>
+                    
+                </VerticalStackLayout>
+            </ScrollView>
+
+            <!-- Alt Kısım: Susturma Arayüzü (Her zaman ekranın en altında sabit kalır, asla kaybolmaz!) -->
+            <VerticalStackLayout Grid.Row="1" Spacing="15" Margin="0,15,0,10" HorizontalOptions="Center">
+                
+                <!-- Durum Bilgilendirme Metni -->
+                <Label Text="GELEN ACİL DURUM SİREN ÇAĞRISI..." 
+                       TextColor="#A0AABF" 
+                       FontSize="11" 
+                       CharacterSpacing="1.2"
+                       HorizontalOptions="Center" 
+                       FontAttributes="Bold" />
+
+                <!-- Dev, Parlayan Susturma Butonu -->
+                <Button Text="SİRENİ VE TİTREŞİMİ SUSTUR" 
+                        Clicked="OnSilenceClicked"
+                        BackgroundColor="#E53E3E" 
+                        TextColor="White" 
+                        HeightRequest="60" 
+                        WidthRequest="280"
+                        CornerRadius="30" 
+                        FontAttributes="Bold" 
+                        FontSize="15">
+                    <Button.Shadow>
+                        <Shadow Brush="#FF5A5A" Offset="0,4" Radius="15" Opacity="0.5" />
+                    </Button.Shadow>
+                </Button>
+                
+            </VerticalStackLayout>
+
+        </Grid>
+    </Grid>
+</ContentPage>

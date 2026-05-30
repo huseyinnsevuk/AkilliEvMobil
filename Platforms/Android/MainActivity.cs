@@ -1,20 +1,93 @@
 using Android.App;
+using Android.Content;
 using Android.Content.PM;
 using Android.OS;
 
 namespace AkilliEvMobil
 {
     [Activity(Theme = "@style/Maui.SplashTheme", MainLauncher = true, LaunchMode = LaunchMode.SingleTop, ConfigurationChanges = ConfigChanges.ScreenSize | ConfigChanges.Orientation | ConfigChanges.UiMode | ConfigChanges.ScreenLayout | ConfigChanges.SmallestScreenSize | ConfigChanges.Density)]
-    [IntentFilter(new[] { Android.Content.Intent.ActionView },
+    [IntentFilter(new[] { global::Android.Content.Intent.ActionView },
                   DataScheme = "akilliev",
                   DataHost = "payment-success",
-                  Categories = new[] { Android.Content.Intent.CategoryDefault, Android.Content.Intent.CategoryBrowsable })]
+                  Categories = new[] { global::Android.Content.Intent.CategoryDefault, global::Android.Content.Intent.CategoryBrowsable })]
     public class MainActivity : MauiAppCompatActivity
     {
-        protected override void OnNewIntent(Android.Content.Intent? intent)
+        protected override void OnCreate(Bundle? savedInstanceState)
+        {
+            base.OnCreate(savedInstanceState);
+            
+            // Ekran kilitli bile olsa uygulamanın öne fırlayıp ekranı uyandırmasını sağla
+            try
+            {
+                if (Build.VERSION.SdkInt >= BuildVersionCodes.OMr1)
+                {
+                    SetShowWhenLocked(true);
+                    SetTurnScreenOn(true);
+                    var keyguardManager = (KeyguardManager?)GetSystemService(KeyguardService);
+                    keyguardManager?.RequestDismissKeyguard(this, null);
+                }
+                else
+                {
+#pragma warning disable CS0618
+                    Window?.AddFlags(Android.Views.WindowManagerFlags.ShowWhenLocked |
+                                     Android.Views.WindowManagerFlags.TurnScreenOn |
+                                     Android.Views.WindowManagerFlags.DismissKeyguard |
+                                     Android.Views.WindowManagerFlags.KeepScreenOn);
+#pragma warning restore CS0618
+                }
+            }
+            catch (System.Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Failed to configure screen flags: {ex.Message}");
+            }
+
+            // 7/24 Arka Plan Güvenlik Koruma Servisini Başlat
+            try
+            {
+                var intent = new Intent(this, typeof(Platforms.Android.EmergencyForegroundService));
+                if (Build.VERSION.SdkInt >= BuildVersionCodes.O)
+                {
+                    StartForegroundService(intent);
+                }
+                else
+                {
+                    StartService(intent);
+                }
+            }
+            catch (System.Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Failed to start security service: {ex.Message}");
+            }
+            
+            // Soğuk başlangıçta da alarm tetikleyicisini kontrol et
+            HandleAlarmIntent(Intent);
+        }
+
+        protected override void OnNewIntent(global::Android.Content.Intent? intent)
         {
             base.OnNewIntent(intent);
             Platform.OnNewIntent(intent);
+            
+            // Sıcak başlangıçta (arka plandan çağrıldığında) kontrol et
+            HandleAlarmIntent(intent);
+        }
+
+        private void HandleAlarmIntent(global::Android.Content.Intent? intent)
+        {
+            if (intent?.GetStringExtra("trigger_alarm") == "gas")
+            {
+                // MAUI katmanındaki alarm ekranını tetikle
+                _ = System.Threading.Tasks.Task.Run(async () =>
+                {
+                    // Arayüz yerleşimlerinin oturması için çok kısa bir an bekle
+                    await System.Threading.Tasks.Task.Delay(500);
+                    
+                    await Services.EmergencyService.Instance.TriggerEmergencyAlarmAsync(
+                        "Tehlikeli Gaz Sızıntısı!",
+                        "Arka plan koruma servisi evinizde tehlikeli düzeyde GAZ TESPİT ETTİ! Siren çalıyor ve kilit ekranı aşıldı."
+                    );
+                });
+            }
         }
     }
 }
