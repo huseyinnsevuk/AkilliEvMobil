@@ -121,6 +121,21 @@ namespace AkilliEvMobil.Platforms.Android
                 };
                 alarmChannel.EnableVibration(true);
                 alarmChannel.SetBypassDnd(true); // Rahatsız Etme modunu bypass eder
+
+                // Dinamik olarak custom siren sesinin Android kaynağını al ve kanala ata
+                int customSoundId = Resources.GetIdentifier("siren", "raw", PackageName);
+                if (customSoundId == 0) customSoundId = Resources.GetIdentifier("alarm", "raw", PackageName);
+
+                if (customSoundId != 0)
+                {
+                    var soundUri = global::Android.Net.Uri.Parse($"android.resource://{PackageName}/{customSoundId}");
+                    alarmChannel.SetSound(soundUri, new AudioAttributes.Builder()
+                        .SetUsage(AudioUsageKind.Alarm)
+                        .SetContentType(AudioContentType.Music)
+                        .Build());
+                    System.Diagnostics.Debug.WriteLine("📡 Bildirim kanalı için özel siren sesi atandı.");
+                }
+
                 manager.CreateNotificationChannel(alarmChannel);
             }
         }
