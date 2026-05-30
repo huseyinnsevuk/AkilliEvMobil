@@ -60,10 +60,12 @@ KONU_HEATER    = f"{TOPIC_BASE}/command/heater"
 KONU_ISIK      = f"{TOPIC_BASE}/sensor/isik"
 KONU_SICAKLIK  = f"{TOPIC_BASE}/sensor/sicaklik"
 KONU_NEM       = f"{TOPIC_BASE}/sensor/nem"
+KONU_GAZ       = f"{TOPIC_BASE}/sensor/gaz"
 
 # Pin Ayarları
 PIN_YAGMUR = 17
 PIN_SERVO  = 18
+PIN_GAZ    = 27
 
 # Isıtıcı (Röle)
 PIN_HEATER = 16
@@ -82,6 +84,7 @@ GPIO.setmode(GPIO.BCM)
 GPIO.setup(PIN_YAGMUR, GPIO.IN)
 GPIO.setup(PIN_SERVO, GPIO.OUT)
 GPIO.setup(PIN_HEATER, GPIO.OUT)
+GPIO.setup(PIN_GAZ, GPIO.IN)
 
 # L298N Aydınlatma Pin Kurulumları
 GPIO.setup(PIN_LIGHT_PWM, GPIO.OUT)
@@ -424,6 +427,15 @@ while True:
         durum = GPIO.input(PIN_YAGMUR)
         yagmur_var_mi = "1" if durum == 0 else "0"
         client.publish(KONU_YAGMUR, yagmur_var_mi)
+        
+        # Gaz Sensörü Okuma ve Yayınlama (MQ-2)
+        gaz_durum = GPIO.input(PIN_GAZ)
+        # Genellikle MQ-2 dijital çıkışı gaz algılandığında LOW (0) olur. 
+        # Durum 0 ise gaz var ("1"), 1 ise temiz hava ("0") yayınlanır.
+        gaz_var_mi = "1" if gaz_durum == 0 else "0"
+        client.publish(KONU_GAZ, gaz_var_mi)
+        if gaz_durum == 0:
+            print("🚨 DIKKAT: Gaz sizintisi tespit edildi!")
         
         # LDR Işık Sensörü Okuma ve Yayınlama (Lux)
         lux_degeri = read_lux()

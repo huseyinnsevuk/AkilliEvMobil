@@ -15,6 +15,7 @@ namespace AkilliEvMobil.Views
     {
         private bool _isMockDataRunning;
         private Random _random = new Random();
+        private bool _lastGasDetected = false;
 
         public ObservableCollection<SmartDevice> FavoriteDevices { get; set; } = new ObservableCollection<SmartDevice>();
 
@@ -100,7 +101,25 @@ namespace AkilliEvMobil.Views
                                     // Gaz Alarmı Görselleştirme
                                     TempLabel.TextColor = gasDetected ? Colors.Red : Color.FromArgb("#1E293B");
                                     if (gasDetected) {
-                                        // Ciddi bir uyarı gerekirse buraya ekleyebiliriz
+                                        if (!_lastGasDetected)
+                                        {
+                                            _lastGasDetected = true;
+                                            _ = Task.Run(async () =>
+                                            {
+                                                await EmergencyService.Instance.TriggerEmergencyAlarmAsync(
+                                                    "Tehlikeli Gaz Sızıntısı!",
+                                                    "Evinizde tehlikeli düzeyde GAZ SIZINTISI algılandı! Telefon siren çalıyor, ekran uyanık kalacak ve telefonunuz SOS ritminde titreyecektir."
+                                                );
+                                            });
+                                        }
+                                    }
+                                    else
+                                    {
+                                        if (_lastGasDetected)
+                                        {
+                                            _lastGasDetected = false;
+                                            EmergencyService.Instance.StopEmergencyAlarm();
+                                        }
                                     }
                                 });
                             }

@@ -17,7 +17,7 @@
             </Border.StrokeShape>
             
             <Grid ColumnDefinitions="50, *">
-                <Image Source="kullaniciadi.png" HeightRequest="20" WidthRequest="20" HorizontalOptions="Center" VerticalOptions="Center" Opacity="0.5" />
+                <Image Source="search.png" HeightRequest="20" WidthRequest="20" HorizontalOptions="Center" VerticalOptions="Center" Opacity="0.5" />
                 <Entry x:Name="SearchEntry"
                        Grid.Column="1" 
                        Placeholder="Search" 

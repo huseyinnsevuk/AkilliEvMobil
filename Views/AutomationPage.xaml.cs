@@ -16,9 +16,9 @@ namespace AkilliEvMobil.Views
             
             Routines = new ObservableCollection<Routine>
             {
-                new Routine { Name = "Karşılama Modu", Description = "Siz eve gelmeden konfor şartlarını hazırlar.", Icon = "home_on.png", IconBackground = "#4A9EF7" },
-                new Routine { Name = "Tasarruf Modu", Description = "Enerji tüketimini minimuma indirir.", Icon = "power.png", IconBackground = "#34C759" },
-                new Routine { Name = "Tatil Modu", Description = "Güvenliği maksimize eder ve varlık simülasyonu yapar.", Icon = "lock.png", IconBackground = "#FF9500" }
+                new Routine { Name = "Karşılama Modu", Description = "Siz eve gelmeden konfor şartlarını hazırlar.", Icon = "arrivals.png", IconBackground = "#4A9EF7" },
+                new Routine { Name = "Tasarruf Modu", Description = "Enerji tüketimini minimuma indirir.", Icon = "power_plug.png", IconBackground = "#34C759" },
+                new Routine { Name = "Tatil Modu", Description = "Güvenliği maksimize eder ve varlık simülasyonu yapar.", Icon = "luggage.png", IconBackground = "#FF9500" }
             };
 
             FilteredRoutines = new ObservableCollection<Routine>(Routines);

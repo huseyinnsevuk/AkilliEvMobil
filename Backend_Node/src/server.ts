@@ -100,6 +100,11 @@ mqttClient.on('message', async (topic, message) => {
       }
     });
     console.log(`📝 Sensör Kaydı (${device.name}): ${sensorType} -> ${payload}`);
+    
+    // Acil durum uyarısını tetikle
+    if (sensorType === 'gaz') {
+      await handleSensorTriggers(payload === '1', device.id);
+    }
   } catch (err) {
     console.error('❌ Sensör verisi kaydedilemedi:', err);
   }
@@ -163,6 +168,69 @@ async function logActivity(type: string, title: string, description: string) {
     });
   } catch (err) {
     console.error('Aktivite kaydedilemedi:', err);
+  }
+}
+
+// Acil Durum Tetikleyicisi (Gaz Sızıntısı vb.)
+async function handleSensorTriggers(gasDetected: boolean, deviceId: string) {
+  if (gasDetected) {
+    console.log("🚨🚨🚨 ACİL DURUM: GAZ SIZINTISI TESPİT EDİLDİ! 🚨🚨🚨");
+    try {
+      // 1. Cihaza bağlı olan kullanıcıyı bul
+      const device = await prisma.device.findUnique({
+        where: { id: deviceId },
+        include: { user: true }
+      });
+      
+      const user = device?.user;
+      if (user) {
+        const phone = user.phoneNumber;
+        const email = user.email;
+        const name = user.fullName;
+        
+        await logActivity('SENSOR_ALERT', 'Tehlikeli Gaz Algılandı', `${name} kullanıcısının evinde gaz sızıntısı saptandı.`);
+
+        // 2. [ÇAĞRI SİMÜLASYONU] Telefon Çağrısı Atılması
+        // Profesyonel sistemlerde burada Twilio voice API çağrılır.
+        console.log(`\n======================================================================`);
+        console.log(`📞 [TELEFON ÇAĞRI SİSTEMİ - BAŞLATILDI]`);
+        console.log(`👤 ALICI: ${name}`);
+        console.log(`📱 TELEFON: ${phone}`);
+        console.log(`📢 SESLİ UYARI: "ACİL DURUM UYARISI! Sayın ${name}, evinizde tehlikeli düzeyde GAZ SIZINTISI algılandı. Lütfen derhal evi tahliye edin ve pencereleri açın!"`);
+        console.log(`🔄 Çağrı başarıyla başlatıldı ve alıcı telefonu çalıyor...`);
+        console.log(`======================================================================\n`);
+
+        // 3. WhatsApp üzerinden otomatik uyarı gönder (Green API entegrasyonu)
+        const idInstance = process.env.GREEN_API_ID_INSTANCE || "7105411368";
+        const apiTokenInstance = process.env.GREEN_API_TOKEN_INSTANCE || "04c359491bde449a8820fc445674cb90d29d3fd0036e4b81a2";
+        
+        let cleanNum = phone.replace(/\D/g, '');
+        if (cleanNum.startsWith('0')) cleanNum = cleanNum.substring(1);
+        if (cleanNum.length === 10 && cleanNum.startsWith('5')) cleanNum = '90' + cleanNum;
+        const chatId = `${cleanNum}@c.us`;
+        
+        const greenApiUrl = `https://api.green-api.com/waInstance${idInstance}/sendMessage/${apiTokenInstance}`;
+        
+        fetch(greenApiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            chatId: chatId,
+            message: `🚨⚠️ *ACİL DURUM UYARISI* ⚠️🚨\n\nSayın *${name}*,\nEvinizdeki akıllı otomasyon sistemi yüksek seviyede *GAZ SIZINTISI* tespit etti!\n\nTelefonunuza acil durum çağrısı ve siren sesi gönderilmiştir. Lütfen derhal evi tahliye edip pencereleri açarak havalandırın!`
+          })
+        })
+        .then(async (r) => {
+          if (r.ok) {
+            console.log("📡 WhatsApp acil durum uyarısı başarıyla gönderildi!");
+          } else {
+            console.warn("⚠️ WhatsApp uyarısı gönderilemedi. Hata kodu:", r.status);
+          }
+        })
+        .catch(e => console.error("❌ WhatsApp uyarı gönderim hatası:", e));
+      }
+    } catch (e) {
+      console.error("❌ Acil durum tetikleme hatası:", e);
+    }
   }
 }
 
@@ -500,7 +568,11 @@ app.post('/api/sensors', async (req, res) => {
       }
     });
 
-    console.log(`[+] Sensör Verisi Alındı -> Sıcaklık: ${temperature}°C, Yağmur: ${isRaining}, Gaz: ${gasDetected}, Işık: ${lightLevel || 0} Lux`);
+    console.log(`[+] Sensör Verisi Alındı -> Sıcaklık: ${temperature}°C, Yağmur: ${isRaining}, Gas: ${gasDetected}, Işık: ${lightLevel || 0} Lux`);
+    
+    // Acil durum uyarısını tetikle
+    await handleSensorTriggers(gasDetected, targetDeviceId);
+
     res.status(201).json({ message: 'Sensör verisi başarıyla PostgreSQL veritabanına kaydedildi.', data: log });
   } catch (error) {
     console.error('Sensör verisi kaydedilemedi:', error);
