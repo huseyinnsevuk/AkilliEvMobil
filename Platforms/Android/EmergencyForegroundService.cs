@@ -30,6 +30,7 @@ namespace AkilliEvMobil.Platforms.Android
         private CancellationTokenSource? _cts;
         private bool _isServiceRunning = false;
         private bool _lastGasState = false;
+        private bool _isAlarmAcknowledged = false; // Latch (Kilit): Kullanıcı susturunca gaz temizlenene kadar tekrar çalmayı önler
         
         // Siren ve Titreşim Kaynakları
         private MediaPlayer? _mediaPlayer;
@@ -145,7 +146,7 @@ namespace AkilliEvMobil.Platforms.Android
 
                             if (gasDetected)
                             {
-                                if (!_lastGasState)
+                                if (!_isAlarmAcknowledged && !_lastGasState)
                                 {
                                     _lastGasState = true;
                                     TriggerEmergencySystem();
@@ -153,11 +154,9 @@ namespace AkilliEvMobil.Platforms.Android
                             }
                             else
                             {
-                                if (_lastGasState)
-                                {
-                                    _lastGasState = false;
-                                    StopSirenAndVibration();
-                                }
+                                _lastGasState = false;
+                                _isAlarmAcknowledged = false; // Gaz temizlendiğinde kilidi sıfırla (Bir sonraki tehlikeye hazır olsun)
+                                StopSirenAndVibration();
                             }
                         }
                     }
@@ -186,10 +185,10 @@ namespace AkilliEvMobil.Platforms.Android
                 var powerManager = (PowerManager?)GetSystemService(PowerService);
                 if (powerManager != null)
                 {
-                    // Ekranı tam parlaklıkta aç ve 15 saniye uyanık tut
+                    // Ekranı tam güçle aç ve tuş kilidi ışıklarını yakıp 15 saniye açık tut
 #pragma warning disable CS0618 // Type or member is obsolete
                     var wakeLock = powerManager.NewWakeLock(
-                        WakeLockFlags.ScreenBright | WakeLockFlags.AcquireCausesWakeup | WakeLockFlags.OnAfterRelease, 
+                        WakeLockFlags.Full | WakeLockFlags.AcquireCausesWakeup | WakeLockFlags.OnAfterRelease, 
                         "AkilliEvMobil::EmergencyWakeLock"
                     );
 #pragma warning restore CS0618
@@ -211,30 +210,51 @@ namespace AkilliEvMobil.Platforms.Android
                     .Build());
                 _mediaPlayer.Looping = true;
 
-                // Kullanıcının attığı özel ses dosyasını (Platforms/Android/Resources/raw/siren.mp3) ara
-                int customSoundId = Resources.GetIdentifier("siren", "raw", PackageName);
-                if (customSoundId == 0)
-                {
-                    // Alternatif olarak "alarm" ismini de dene
-                    customSoundId = Resources.GetIdentifier("alarm", "raw", PackageName);
-                }
+                bool soundLoaded = false;
 
-                if (customSoundId != 0)
+                // A. Birinci Yol: MAUI Assets Klasöründen Yükle (Resources/Raw/siren.mp3)
+                try
                 {
-                    // Özel ses dosyası bulunduysa onu çal
-                    var fd = Resources.OpenRawResourceFd(customSoundId);
+                    var fd = Assets.OpenFd("siren.mp3");
                     if (fd != null)
                     {
                         _mediaPlayer.SetDataSource(fd.FileDescriptor, fd.StartOffset, fd.Length);
                         fd.Close();
+                        soundLoaded = true;
+                        System.Diagnostics.Debug.WriteLine("📡 Siren ses dosyası MAUI Assets klasöründen (Resources/Raw/siren.mp3) başarıyla yüklendi.");
                     }
                 }
-                else
+                catch (Exception assetEx)
                 {
-                    // Özel ses dosyası bulunamadıysa yerel varsayılan sistem alarm sesini çal
+                    System.Diagnostics.Debug.WriteLine($"MAUI Assets siren yükleme denemesi: {assetEx.Message}");
+                }
+
+                // B. İkinci Yol: Android Native Raw Klasöründen Oku (Platforms/Android/Resources/raw/siren.mp3)
+                if (!soundLoaded)
+                {
+                    int customSoundId = Resources.GetIdentifier("siren", "raw", PackageName);
+                    if (customSoundId == 0) customSoundId = Resources.GetIdentifier("alarm", "raw", PackageName);
+
+                    if (customSoundId != 0)
+                    {
+                        var fd = Resources.OpenRawResourceFd(customSoundId);
+                        if (fd != null)
+                        {
+                            _mediaPlayer.SetDataSource(fd.FileDescriptor, fd.StartOffset, fd.Length);
+                            fd.Close();
+                            soundLoaded = true;
+                            System.Diagnostics.Debug.WriteLine("📡 Siren ses dosyası Android Native Raw klasöründen başarıyla yüklendi.");
+                        }
+                    }
+                }
+
+                // C. Üçüncü Yol (Fallback): Sistem Varsayılan Alarm Sesi
+                if (!soundLoaded)
+                {
                     var alertUri = RingtoneManager.GetDefaultUri(RingtoneType.Alarm);
                     if (alertUri == null) alertUri = RingtoneManager.GetDefaultUri(RingtoneType.Ringtone);
                     _mediaPlayer.SetDataSource(this, alertUri);
+                    System.Diagnostics.Debug.WriteLine("📡 Özel siren sesi bulunamadı, sistem varsayılan alarm sesi yükleniyor.");
                 }
                 
                 _mediaPlayer.Prepare();
@@ -321,6 +341,8 @@ namespace AkilliEvMobil.Platforms.Android
         /// </summary>
         public void StopSirenAndVibration()
         {
+            _isAlarmAcknowledged = true; // Alarmı kullanıcı susturdu, gaz temizlenene kadar tekrar çalmayı engelle
+            
             if (!_isAlarmPlaying) return;
             _isAlarmPlaying = false;
 

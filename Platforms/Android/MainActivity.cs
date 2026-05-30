@@ -14,9 +14,8 @@ namespace AkilliEvMobil
     {
         protected override void OnCreate(Bundle? savedInstanceState)
         {
-            base.OnCreate(savedInstanceState);
-            
             // Ekran kilitli bile olsa uygulamanın öne fırlayıp ekranı uyandırmasını sağla
+            // Bu flags OnCreate'den ve base.OnCreate'den ÖNCE ayarlanmalıdır!
             try
             {
                 if (Build.VERSION.SdkInt >= BuildVersionCodes.OMr1)
@@ -26,19 +25,27 @@ namespace AkilliEvMobil
                     var keyguardManager = (KeyguardManager?)GetSystemService(KeyguardService);
                     keyguardManager?.RequestDismissKeyguard(this, null);
                 }
-                else
-                {
-#pragma warning disable CS0618
-                    Window?.AddFlags(Android.Views.WindowManagerFlags.ShowWhenLocked |
-                                     Android.Views.WindowManagerFlags.TurnScreenOn |
-                                     Android.Views.WindowManagerFlags.DismissKeyguard |
-                                     Android.Views.WindowManagerFlags.KeepScreenOn);
-#pragma warning restore CS0618
-                }
             }
             catch (System.Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Failed to configure screen flags: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Failed to configure screen flags before OnCreate: {ex.Message}");
+            }
+
+            base.OnCreate(savedInstanceState);
+            
+            // Alternatif ve eski cihaz uyumluluk bayraklarını pencere seviyesinde de ekle
+            try
+            {
+#pragma warning disable CS0618
+                Window?.AddFlags(Android.Views.WindowManagerFlags.ShowWhenLocked |
+                                 Android.Views.WindowManagerFlags.TurnScreenOn |
+                                 Android.Views.WindowManagerFlags.DismissKeyguard |
+                                 Android.Views.WindowManagerFlags.KeepScreenOn);
+#pragma warning restore CS0618
+            }
+            catch (System.Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Failed to configure screen window flags: {ex.Message}");
             }
 
             // 7/24 Arka Plan Güvenlik Koruma Servisini Başlat
