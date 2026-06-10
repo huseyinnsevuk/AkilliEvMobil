@@ -36,7 +36,7 @@ const SubscriptionsPage = () => {
 
   // Sayfa yüklendiğinde ayarları API'den getir
   useEffect(() => {
-    fetch('http://nart3d.com:3000/api/settings')
+    fetch('http://141.98.48.101:3000/api/settings')
       .then(res => res.json())
       .then(data => {
         if (data) {
@@ -72,7 +72,7 @@ const SubscriptionsPage = () => {
     setIsSaving(true);
 
     try {
-      const response = await fetch('http://nart3d.com:3000/api/settings', {
+      const response = await fetch('http://141.98.48.101:3000/api/settings', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
