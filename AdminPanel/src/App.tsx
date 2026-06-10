@@ -42,22 +42,10 @@ function App() {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        // Geçici SS verileri
-        const fakeData = {
-          metrics: {
-            activeSensors: 8,
-            activeCustomers: 2,
-            premiumCustomers: 1,
-            basicCustomers: 1,
-            totalRevenue: 500
-          },
-          latestActivities: [
-            { id: 1, type: 'PAYMENT_SUCCESS', title: 'Premium Abonelik', description: 'Hüseyin S. Premium pakete geçiş yaptı.', createdAt: new Date(Date.now() - 1000 * 60 * 15).toISOString() },
-            { id: 2, type: 'USER_REGISTER', title: 'Yeni Kullanıcı Kaydı', description: 'ahmet@example.com sisteme katıldı.', createdAt: new Date(Date.now() - 1000 * 60 * 45).toISOString() },
-            { id: 3, type: 'SENSOR_ALERT', title: 'Sensör Tetiklendi', description: 'Yağmur sensörü yağış algıladı, tente kapatıldı.', createdAt: new Date(Date.now() - 1000 * 60 * 120).toISOString() }
-          ]
-        };
-        setStats(fakeData);
+        const res = await fetch('http://141.98.48.101:3000/api/dashboard/stats');
+        if (!res.ok) throw new Error('API yanıt vermedi');
+        const data = await res.json();
+        setStats(data);
       } catch (err) {
         console.error('Stats fetch error:', err);
       } finally {
