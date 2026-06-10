@@ -402,6 +402,12 @@ def on_message(client, userdata, msg):
             
     except Exception as e:
         print(f"❌ Komut işleme hatası: {e}")
+        
+    # [LATENCY ÖLÇÜMÜ İÇİN] Her komut işlendikten sonra anında ACK (Onay) gönder
+    if msg.topic.startswith("Nest/home/command/"):
+        device_type = msg.topic.split("/")[-1]
+        client.publish(f"Nest/home/ack/{device_type}", "OK")
+        print(f"✅ ACK Gönderildi: Nest/home/ack/{device_type}")
 
 client = mqtt.Client()
 client.on_connect = on_connect

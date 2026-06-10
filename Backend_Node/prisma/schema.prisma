@@ -75,3 +75,11 @@ model ActivityLog {
   description String
   createdAt   DateTime @default(now())
 }
+
+model SystemPerformanceLog {
+  id          String   @id @default(uuid())
+  commandType String   // Hangi cihaza komut gittiği (heater, fan, vb.)
+  latencyMs   Int      // Milisaniye cinsinden gecikme
+  success     Boolean  // ACK başarılı mı?
+  createdAt   DateTime @default(now())
+}

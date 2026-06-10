@@ -56,8 +56,11 @@ namespace AkilliEvMobil.Views
             {
                 try
                 {
-                    // Hava Durumunu Güncelle (Her 30 saniyede bir veya döngü başında)
-                    await UpdateWeatherAsync();
+                    // Hava Durumunu Arka Planda Güncelle (Sensor döngüsünü engellemez)
+                    _ = Task.Run(async () =>
+                    {
+                        try { await UpdateWeatherAsync(); } catch { }
+                    });
 
                     string userId = DeviceService.Instance.CurrentUserId;
                     if (string.IsNullOrEmpty(userId))
@@ -130,7 +133,7 @@ namespace AkilliEvMobil.Views
                     System.Diagnostics.Debug.WriteLine($"Sensor Loop Error: {ex.Message}");
                 }
 
-                await Task.Delay(5000); // 5 saniyede bir güncelle
+                await Task.Delay(2000); // 2 saniyede bir güncelle (Yüksek tepki hızı)
             }
         }
 

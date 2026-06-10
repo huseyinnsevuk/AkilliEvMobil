@@ -42,9 +42,22 @@ function App() {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const res = await fetch('http://nart3d.com:3000/api/dashboard/stats');
-        const data = await res.json();
-        setStats(data);
+        // Geçici SS verileri
+        const fakeData = {
+          metrics: {
+            activeSensors: 8,
+            activeCustomers: 2,
+            premiumCustomers: 1,
+            basicCustomers: 1,
+            totalRevenue: 500
+          },
+          latestActivities: [
+            { id: 1, type: 'PAYMENT_SUCCESS', title: 'Premium Abonelik', description: 'Hüseyin S. Premium pakete geçiş yaptı.', createdAt: new Date(Date.now() - 1000 * 60 * 15).toISOString() },
+            { id: 2, type: 'USER_REGISTER', title: 'Yeni Kullanıcı Kaydı', description: 'ahmet@example.com sisteme katıldı.', createdAt: new Date(Date.now() - 1000 * 60 * 45).toISOString() },
+            { id: 3, type: 'SENSOR_ALERT', title: 'Sensör Tetiklendi', description: 'Yağmur sensörü yağış algıladı, tente kapatıldı.', createdAt: new Date(Date.now() - 1000 * 60 * 120).toISOString() }
+          ]
+        };
+        setStats(fakeData);
       } catch (err) {
         console.error('Stats fetch error:', err);
       } finally {
@@ -68,8 +81,11 @@ function App() {
 
       {/* SOL MENÜ (SIDEBAR) */}
       <aside className="sidebar">
-        <div className="sidebar-logo">
-          <h1 className="logo-text">Akıllı<span>Ev</span></h1>
+        <div className="sidebar-logo" style={{ padding: '20px 10px', display: 'flex', justifyContent: 'center' }}>
+          <h1 className="logo-text" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', lineHeight: '1' }}>
+            NEST
+            <span style={{ fontSize: '0.5em', marginTop: '4px', letterSpacing: '0.5px' }}>Admin Paneli</span>
+          </h1>
         </div>
 
         <nav className="sidebar-nav">
@@ -110,7 +126,7 @@ function App() {
         <header className="topbar">
           <div className="topbar-left">
             <h2 className="topbar-title">
-              {currentPage === 'dashboard' ? 'Dashboard Overview' :
+              {currentPage === 'dashboard' ? 'Kontrol Paneli' :
                 currentPage === 'customers' ? 'Müşteri Yönetimi' :
                   'Abonelik Yönetimi'}
             </h2>

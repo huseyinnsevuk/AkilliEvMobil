@@ -24,6 +24,11 @@ app.use(express.json());
 // MQTT Bridge Ayarları
 const mqttClient = mqtt.connect('mqtt://localhost');
 
+import { EventEmitter } from 'events';
+
+// Komut onaylarını beklemek için Event Emitter
+const ackEmitter = new EventEmitter();
+
 // Cihaz Kontrol API (Mobil -> Backend -> MQTT -> Raspi)
 app.post('/api/devices/control', async (req, res) => {
   console.log('📬 Yeni komut isteği geldi:', JSON.stringify(req.body));
@@ -35,34 +40,88 @@ app.post('/api/devices/control', async (req, res) => {
     }
     const topic = `Nest/home/command/${deviceType}`;
     const payload = JSON.stringify(data);
-    console.log(`📡 MQTT Bağlantı Durumu: ${mqttClient.connected ? 'BAĞLI' : 'BAĞLI DEĞİL'}`);
+    
     if (mqttClient.connected) {
+      // Gönderim zamanını kaydet
+      const startTime = Date.now();
+      
+      // ACK (Onay) dinleyicisini hazırla
+      const ackEventName = `ack_${deviceType}`;
+      
+      const waitForAck = new Promise((resolve, reject) => {
+        const timeout = setTimeout(() => {
+          ackEmitter.removeAllListeners(ackEventName);
+          resolve(false); // Zaman aşımı (ACK gelmedi ama çökmeyelim)
+        }, 3000); // 3 saniye içinde ACK gelmezse devam et
+
+        ackEmitter.once(ackEventName, () => {
+          clearTimeout(timeout);
+          resolve(true); // ACK başarıyla geldi
+        });
+      });
+
+      // Komutu gönder
       mqttClient.publish(topic, payload, (err) => {
         if (err) console.error('❌ MQTT Publish Hatası:', err);
-        else console.log(`🚀 Mesaj Broker'a başarıyla iletildi: ${topic} -> ${payload}`);
+        else console.log(`🚀 Mesaj Broker'a iletildi, ACK bekleniyor: ${topic}`);
       });
+
+      // ACK'yı bekle (veya timeout)
+      const ackReceived = await waitForAck;
+      const latency = Date.now() - startTime;
+      
+      if (ackReceived) {
+        console.log(`⏱️ Uçtan Uca (End-to-End) Gecikme: ${latency}ms`);
+      } else {
+        console.log(`⏱️ ACK alınamadı (Timeout). HTTP yanıtı veriliyor.`);
+      }
+
+      // 📊 Performans Ölçümünü Veritabanına (Prisma) Kaydet
+      try {
+        await prisma.systemPerformanceLog.create({
+          data: {
+            commandType: deviceType,
+            latencyMs: latency,
+            success: ackReceived ? true : false
+          }
+        });
+      } catch (logErr) {
+        console.error("Performans logu kaydedilemedi:", logErr);
+      }
+
+      await logActivity('DEVICE_CONTROL', 'Cihaz Kontrolü', `${deviceType} cihazına komut gönderildi (${latency}ms)`);
+      return res.json({ success: true, message: 'Komut iletildi', latencyMs: latency });
+
     } else {
       console.error('❌ MQTT Broker\'a bağlı değiliz! Komut gönderilemedi.');
+      return res.status(500).json({ error: 'MQTT bağlantısı yok' });
     }
-    await logActivity('DEVICE_CONTROL', 'Cihaz Kontrolü', `${deviceType} cihazına komut gönderildi.`);
-    res.json({ success: true, message: 'Komut iletildi' });
   } catch (err) {
     console.error('❌ Komut işleme hatası:', err);
     res.status(500).json({ error: 'Komut iletilemedi' });
   }
 });
 
-
-
 mqttClient.on('connect', () => {
   console.log('✅ Backend MQTT Broker\'a bağlandı!');
   mqttClient.subscribe('Nest/home/sensor/#', (err) => {
     if (!err) console.log('📡 Nest sensör kanalları dinleniyor...');
   });
+  mqttClient.subscribe('Nest/home/ack/#', (err) => {
+    if (!err) console.log('📡 Nest komut onay (ACK) kanalları dinleniyor...');
+  });
 });
 
 mqttClient.on('message', async (topic, message) => {
   const payload = message.toString();
+  
+  // ACK (Komut Onayı) Yakalama
+  if (topic.startsWith('Nest/home/ack/')) {
+    const deviceType = topic.split('/').pop();
+    ackEmitter.emit(`ack_${deviceType}`);
+    return; // Sensör işlemi yapmadan çık
+  }
+
   const sensorType = topic.split('/').pop(); // sicaklik, nem, gaz vb.
 
   try {

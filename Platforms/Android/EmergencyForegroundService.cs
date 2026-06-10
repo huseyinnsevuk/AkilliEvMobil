@@ -19,7 +19,7 @@ namespace AkilliEvMobil.Platforms.Android
     /// Android işletim sistemi üzerinde uygulama kapalı veya uyku modunda olsa dahi
     /// 7/24 gaz sızıntısı takibi yapan ve siren çalıp titreşim tetikleyen Ön Plan Servisi (Foreground Service).
     /// </summary>
-    [Service(Enabled = true, Exported = false, ForegroundServiceType = global::Android.Content.PM.ForegroundService.TypeDataSync)]
+    [Service(Name = "com.companyname.akillievmobil.EmergencyForegroundService", Enabled = true, Exported = false, ForegroundServiceType = global::Android.Content.PM.ForegroundService.TypeDataSync)]
     public class EmergencyForegroundService : Service
     {
         private const int SERVICE_NOTIFICATION_ID = 1001;
@@ -189,7 +189,7 @@ namespace AkilliEvMobil.Platforms.Android
         /// <summary>
         /// Gaz sızıntısı anında kilit ekranını aşan siren, kesintisiz titreşim ve tam ekran arama bildirimi tetikler.
         /// </summary>
-        private void TriggerEmergencySystem()
+        public void TriggerEmergencySystem()
         {
             if (_isAlarmPlaying) return;
             _isAlarmPlaying = true;
@@ -227,26 +227,50 @@ namespace AkilliEvMobil.Platforms.Android
 
                 bool soundLoaded = false;
 
-                // A. Birinci Yol: MAUI Assets Klasöründen Yükle (Resources/Raw/alarm.mp3)
+                // A. Birinci Yol: Android Native Assets'ten Yerel Önbelleğe Kopyala ve Oynat (MAUI Bağımsız ve Kesin Çözüm!)
                 try
                 {
-                    var fd = Assets.OpenFd("alarm.mp3");
-                    if (fd == null) fd = Assets.OpenFd("siren.mp3");
+                    string cachePath = System.IO.Path.Combine(CacheDir!.AbsolutePath, "alarm.mp3");
                     
-                    if (fd != null)
+                    if (!System.IO.File.Exists(cachePath))
                     {
-                        _mediaPlayer.SetDataSource(fd.FileDescriptor, fd.StartOffset, fd.Length);
-                        fd.Close();
+                        System.IO.Stream? stream = null;
+                        try
+                        {
+                            stream = Assets!.Open("alarm.mp3");
+                        }
+                        catch
+                        {
+                            try
+                            {
+                                stream = Assets!.Open("siren.mp3");
+                            }
+                            catch { }
+                        }
+
+                        if (stream != null)
+                        {
+                            using (stream)
+                            using (var fileStream = System.IO.File.Create(cachePath))
+                            {
+                                stream.CopyTo(fileStream);
+                            }
+                        }
+                    }
+
+                    if (System.IO.File.Exists(cachePath))
+                    {
+                        _mediaPlayer.SetDataSource(cachePath);
                         soundLoaded = true;
-                        System.Diagnostics.Debug.WriteLine("📡 Alarm ses dosyası MAUI Assets klasöründen başarıyla yüklendi.");
+                        System.Diagnostics.Debug.WriteLine("📡 Özel alarm sesi Android native önbellekten başarıyla yüklendi.");
                     }
                 }
                 catch (Exception assetEx)
                 {
-                    System.Diagnostics.Debug.WriteLine($"MAUI Assets alarm yükleme denemesi: {assetEx.Message}");
+                    System.Diagnostics.Debug.WriteLine($"Android Native Assets alarm yükleme veya kopyalama hatası: {assetEx.Message}");
                 }
 
-                // B. İkinci Yol: Android Native Raw Klasöründen Oku (Platforms/Android/Resources/raw/alarm.mp3)
+                // B. İkinci Yol: Android Native Raw Klasöründen Oku (Fallback)
                 if (!soundLoaded)
                 {
                     int customSoundId = Resources.GetIdentifier("alarm", "raw", PackageName);
@@ -275,6 +299,7 @@ namespace AkilliEvMobil.Platforms.Android
                 }
                 
                 _mediaPlayer.Prepare();
+                _mediaPlayer.SetVolume(0.3f, 0.3f); // Sesi %30 seviyesine çekiyoruz
                 _mediaPlayer.Start();
             }
             catch (Exception ex)
@@ -288,6 +313,7 @@ namespace AkilliEvMobil.Platforms.Android
                         _mediaPlayer = new MediaPlayer();
                         _mediaPlayer.SetDataSource(this, alertUri);
                         _mediaPlayer.Prepare();
+                        _mediaPlayer.SetVolume(0.3f, 0.3f); // Sesi %30 yapıyoruz
                         _mediaPlayer.Start();
                     }
                 }
@@ -392,6 +418,40 @@ namespace AkilliEvMobil.Platforms.Android
                 manager?.Cancel(ALARM_NOTIFICATION_ID);
             }
             catch { }
+        }
+
+        public override void OnTaskRemoved(Intent? rootIntent)
+        {
+            base.OnTaskRemoved(rootIntent);
+            
+            // Uygulama son uygulamalardan (recents) kapatılsa dahi servisin hayatta kalması veya tekrar anında başlaması için kendini tetikler
+            try
+            {
+                Intent restartServiceIntent = new Intent(ApplicationContext, typeof(EmergencyForegroundService));
+                restartServiceIntent.SetPackage(PackageName);
+                
+                var pendingIntent = PendingIntent.GetService(
+                    ApplicationContext, 
+                    1, 
+                    restartServiceIntent, 
+                    PendingIntentFlags.OneShot | PendingIntentFlags.Immutable
+                );
+                
+                var alarmService = (AlarmManager?)GetSystemService(AlarmService);
+                if (alarmService != null)
+                {
+                    // Uygulama kapatıldıktan 1 saniye sonra servisi tekrar canlandır
+                    alarmService.Set(
+                        AlarmType.ElapsedRealtimeWakeup, 
+                        SystemClock.ElapsedRealtime() + 1000, 
+                        pendingIntent
+                    );
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Failed to restart service on task removed: {ex.Message}");
+            }
         }
 
         public override void OnDestroy()

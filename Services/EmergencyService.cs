@@ -33,11 +33,23 @@ namespace AkilliEvMobil.Services
                 DeviceDisplay.Current.KeepScreenOn = true;
             });
 
-            // 2. Arka planda sürekli titreşim döngüsünü başlat (SOS Ritmi veya sürekli titreşim)
+            // 2. Android platformunda yerel Ön Plan Servisi aktifse native siren ve titreşimi tetikle
+#if ANDROID
+            try
+            {
+                Platforms.Android.EmergencyForegroundService.Instance?.TriggerEmergencySystem();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Failed to trigger native Android emergency system: {ex.Message}");
+            }
+#endif
+
+            // 3. Arka planda sürekli titreşim döngüsünü başlat (SOS Ritmi veya sürekli titreşim)
             _vibrationCts = new System.Threading.CancellationTokenSource();
             _ = Task.Run(() => RunVibrationLoop(_vibrationCts.Token));
 
-            // 3. Kullanıcıya tam ekran, premium acil durum uyarısını göster
+            // 4. Kullanıcıya tam ekran, premium acil durum uyarısını göster
             await ShowEmergencyModalAsync(title, message);
         }
 

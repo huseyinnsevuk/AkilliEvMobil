@@ -48,6 +48,39 @@ namespace AkilliEvMobil
                 System.Diagnostics.Debug.WriteLine($"Failed to configure screen window flags: {ex.Message}");
             }
 
+            // Android 13+ (API 33+) için bildirim iznini çalışma zamanında iste
+            try
+            {
+                if (Build.VERSION.SdkInt >= BuildVersionCodes.Tiramisu)
+                {
+                    if (CheckSelfPermission(Android.Manifest.Permission.PostNotifications) != Permission.Granted)
+                    {
+                        RequestPermissions(new[] { Android.Manifest.Permission.PostNotifications }, 101);
+                    }
+                }
+            }
+            catch (System.Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Failed to request notification permission: {ex.Message}");
+            }
+
+            // Pil Tasarrufu Modunun Arka Plan Servisini Kapatmasını Önle (Battery Optimization Bypass)
+            try
+            {
+                var pm = (PowerManager?)GetSystemService(PowerService);
+                if (pm != null && !pm.IsIgnoringBatteryOptimizations(PackageName))
+                {
+                    var ignoreIntent = new Intent(Android.Provider.Settings.ActionRequestIgnoreBatteryOptimizations);
+                    ignoreIntent.SetData(Android.Net.Uri.Parse($"package:{PackageName}"));
+                    ignoreIntent.AddFlags(ActivityFlags.NewTask);
+                    StartActivity(ignoreIntent);
+                }
+            }
+            catch (System.Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Failed to request battery optimization ignore: {ex.Message}");
+            }
+
             // 7/24 Arka Plan Güvenlik Koruma Servisini Başlat
             try
             {
