@@ -37,7 +37,10 @@ namespace AkilliEvMobil.Views
             ErrorLabel.Text = "";
 
             // 1. Validasyon Kontrolleri
-            if (string.IsNullOrWhiteSpace(EmailEntry.Text) || string.IsNullOrWhiteSpace(PasswordEntry.Text))
+            if (string.IsNullOrWhiteSpace(EmailEntry.Text) || 
+                string.IsNullOrWhiteSpace(PasswordEntry.Text) ||
+                string.IsNullOrWhiteSpace(NameEntry.Text) ||
+                string.IsNullOrWhiteSpace(PhoneEntry.Text))
             {
                 ErrorLabel.Text = "Lütfen tüm alanları doldurun.";
                 ErrorLabel.IsVisible = true;

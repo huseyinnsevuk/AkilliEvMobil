@@ -102,11 +102,18 @@ namespace AkilliEvMobil.Services
                     {
                         var errText = await backendRes.Content.ReadAsStringAsync();
                         System.Diagnostics.Debug.WriteLine($"Lokal backend kaydı başarısız: {backendRes.StatusCode} - {errText}");
-                        // Eğer yeni kullanıcı ise ve veri tabanına kayıt edilemediyse, kayıt sürecini durdurabiliriz.
-                        // Ancak halihazırda veritabanında varsa 400 dönecektir, bu durumda devam edebiliriz.
-                        if (isNewFirebaseUser && backendRes.StatusCode != System.Net.HttpStatusCode.BadRequest)
+                        
+                        // Kullanıcının veritabanında gerçekten olup olmadığını e-posta ile teyit edelim
+                        var checkRes = await _httpClient.GetAsync($"{baseUrl}/api/users/email/{Uri.EscapeDataString(request.Email)}");
+                        if (!checkRes.IsSuccessStatusCode)
                         {
-                            await Application.Current.MainPage.DisplayAlert("Veritabanı Hatası", "Kullanıcı veritabanına kaydedilemedi. Lütfen tekrar deneyin.", "Tamam");
+                            // Eğer veritabanında yoksa ve kayıt başarısız olduysa hata ver
+                            string errMsg = "Kullanıcı veritabanına kaydedilemedi.";
+                            if (backendRes.StatusCode == System.Net.HttpStatusCode.BadRequest)
+                            {
+                                errMsg = "Bu e-posta veya telefon numarası zaten kullanımda.";
+                            }
+                            await Application.Current.MainPage.DisplayAlert("Kayıt Hatası", errMsg, "Tamam");
                             return false;
                         }
                     }
