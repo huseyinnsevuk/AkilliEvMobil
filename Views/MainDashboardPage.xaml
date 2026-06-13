@@ -18,7 +18,7 @@
                 <Grid ColumnDefinitions="Auto, *" VerticalOptions="Center" Margin="0,-5,0,0">
                     <Border Grid.Column="0" HeightRequest="50" WidthRequest="50" StrokeThickness="0" Margin="0,0,15,0">
                         <Border.StrokeShape><RoundRectangle CornerRadius="25" /></Border.StrokeShape>
-                        <Image Source="user.png" Aspect="AspectFill" BackgroundColor="#E0E0E0" />
+                        <Image x:Name="ProfileImage" Source="user.png" Aspect="AspectFill" BackgroundColor="#E0E0E0" />
                     </Border>
                     <VerticalStackLayout Grid.Column="1" Spacing="0" VerticalOptions="Center">
                         <Label Text="Hoşgeldiniz," TextColor="#888888" FontSize="14" />

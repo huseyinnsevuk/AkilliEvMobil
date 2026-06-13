@@ -58,6 +58,7 @@ namespace AkilliEvMobil.Services
         public string CurrentUserId { get; private set; } // Aktif kullanıcı ID'si
         public string CurrentUserName { get; private set; } // Aktif kullanıcı adı
         public string CurrentPlan { get; private set; } // Basic veya Premium
+        public string CurrentUserAvatar { get; private set; } = "user.png"; // Profil Resmi
         public double PremiumPrice { get; private set; } = 250; // Varsayılan fiyat
 
         private DeviceService()
@@ -81,11 +82,16 @@ namespace AkilliEvMobil.Services
         {
             try
             {
+                var authService = Microsoft.Maui.Controls.Application.Current?.Handler?.MauiContext?.Services?.GetService<IAuthService>();
+                string activeEmail = authService?.GetCurrentUserEmail() ?? "huseyin@example.com";
+                if (string.IsNullOrEmpty(activeEmail))
+                {
+                    activeEmail = "huseyin@example.com";
+                }
+
                 using var client = new System.Net.Http.HttpClient();
                 client.Timeout = System.TimeSpan.FromSeconds(3); // 3 saniyede bağlanamazsa bekleme
                 
-                // Fiziksel Android cihazdan (USB Debug) bilgisayardaki Node.js sunucusuna ulaşabilmek için 
-                // bilgisayarın o anki Wi-Fi IP adresi gereklidir. (ipconfig'den alınan Güncel IP: 10.49.76.214)
                 string baseUrl = "http://141.98.48.101:3000";
 
                 var usersRes = await client.GetAsync($"{baseUrl}/api/users");
@@ -99,8 +105,8 @@ namespace AkilliEvMobil.Services
                     var users = System.Text.Json.JsonSerializer.Deserialize<System.Collections.Generic.List<System.Text.Json.Nodes.JsonObject>>(usersJson);
                     var settings = System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.Nodes.JsonObject>(settingsJson);
 
-                    // Hüseyin kullanıcısını bul
-                    var currentUser = users?.FirstOrDefault(u => u["email"]?.ToString() == "huseyin@example.com");
+                    // Aktif kullanıcıyı bul
+                    var currentUser = users?.FirstOrDefault(u => u["email"]?.ToString().Equals(activeEmail, System.StringComparison.OrdinalIgnoreCase) == true);
                     
                     if (currentUser != null && settings != null)
                     {
@@ -110,6 +116,11 @@ namespace AkilliEvMobil.Services
                         CurrentPlan = plan;
                         bool isActive = currentUser["isActive"]?.GetValue<bool>() ?? false;
                         PremiumPrice = settings["premiumPrice"]?.GetValue<double>() ?? 250;
+
+                        // Kullanıcının listedeki sırasına göre avatar URL üret (Admin paneli ile eşleşmesi için)
+                        int index = users?.FindIndex(u => u["email"]?.ToString().Equals(activeEmail, System.StringComparison.OrdinalIgnoreCase) == true) ?? 0;
+                        if (index < 0) index = 0;
+                        CurrentUserAvatar = $"https://i.pravatar.cc/150?img={(index % 50) + 1}";
 
                         // Eğer hesap inaktifse otomatik Basic gibi davran veya tamamen kilitle
                         if (!isActive) plan = "Basic";

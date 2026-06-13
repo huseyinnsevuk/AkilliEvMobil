@@ -29,6 +29,7 @@ namespace AkilliEvMobil.Views
         {
             base.OnAppearing();
             UserNameLabel.Text = DeviceService.Instance.CurrentUserName ?? "Değerli Müşterimiz";
+            ProfileImage.Source = DeviceService.Instance.CurrentUserAvatar ?? "user.png";
             _isMockDataRunning = true;
             StartMockDataLoop();
             RefreshFavorites();

@@ -21,9 +21,10 @@ namespace AkilliEvMobil.Views
             string email = _authService.GetCurrentUserEmail();
             string displayName = _authService.GetCurrentUserDisplayName();
 
-            UserNameLabel.Text = string.IsNullOrEmpty(displayName) ? "Hüseyin Sevuk" : displayName;
+            UserNameLabel.Text = string.IsNullOrEmpty(displayName) ? (Services.DeviceService.Instance.CurrentUserName ?? "Değerli Müşterimiz") : displayName;
             UserEmailLabel.Text = string.IsNullOrEmpty(email) ? "huseyin@example.com" : email;
             CurrentPlanLabel.Text = (Services.DeviceService.Instance.CurrentPlan ?? "Basic") + " Paket";
+            ProfileImage.Source = Services.DeviceService.Instance.CurrentUserAvatar ?? "user.png";
         }
 
         private async void OnPersonalInfoClicked(object sender, EventArgs e)

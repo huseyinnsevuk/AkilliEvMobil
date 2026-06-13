@@ -15,7 +15,7 @@
         <VerticalStackLayout Grid.Row="0" Padding="0,30,0,30" Spacing="7" HorizontalOptions="Center">
             <Border WidthRequest="70" HeightRequest="70" HorizontalOptions="Center" StrokeThickness="0">
                 <Border.StrokeShape><RoundRectangle CornerRadius="35" /></Border.StrokeShape>
-                <Image Source="user.png" Aspect="AspectFill" />
+                <Image x:Name="ProfileImage" Source="user.png" Aspect="AspectFill" />
             </Border>
             
             <Label x:Name="UserNameLabel" Text="Hüseyin Sevuk" FontSize="22" FontAttributes="Bold" TextColor="#1E293B" HorizontalOptions="Center" />
