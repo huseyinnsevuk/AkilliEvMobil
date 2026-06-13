@@ -15,12 +15,14 @@ namespace AkilliEvMobil.Views
         public RegisterPage()
         {
             InitializeComponent();
+            NavigationPage.SetHasNavigationBar(this, false);
             _authService = Application.Current.Handler.MauiContext.Services.GetRequiredService<Services.IAuthService>();
         }
 
         public RegisterPage(Services.IAuthService authService)
         {
             InitializeComponent();
+            NavigationPage.SetHasNavigationBar(this, false);
             _authService = authService;
         }
 
@@ -45,14 +47,14 @@ namespace AkilliEvMobil.Views
             // [YENİ] Cihaz internete bağlı mı kontrolü
             if (Microsoft.Maui.Networking.Connectivity.Current.NetworkAccess != Microsoft.Maui.Networking.NetworkAccess.Internet)
             {
-                ErrorLabel.Text = "🚨 Kayıt Olmak İçin Lütfen İnternet Bağlantınızı Kontrol Edin.";
+                ErrorLabel.Text = "Kayıt Olmak İçin Lütfen İnternet Bağlantınızı Kontrol Edin.";
                 ErrorLabel.IsVisible = true;
                 return;
             }
 
             if (PasswordEntry.Text != ConfirmPasswordEntry.Text)
             {
-                ErrorLabel.Text = "Şifreler uyuşmuyor!";
+                ErrorLabel.Text = "Şifreler aynı değil.";
                 ErrorLabel.IsVisible = true;
                 return;
             }
@@ -72,10 +74,8 @@ namespace AkilliEvMobil.Views
 
                 if (success)
                 {
-                    await DisplayAlert("E-posta Doğrulama", "Lütfen e-posta adresinize gönderilen linke tıklayarak hesabınızı doğrulayın. Ardından giriş yapabilirsiniz.", "Tamam");
-                    
-                    // Kullanıcıyı login sayfasına geri gönderiyoruz
-                    await Navigation.PopAsync();
+                    // Herhangi bir popup göstermeden doğrudan doğrulama ekranına yönlendir
+                    await Navigation.PushAsync(new VerifyCodePage(request.Email));
                 }
                 else
                 {

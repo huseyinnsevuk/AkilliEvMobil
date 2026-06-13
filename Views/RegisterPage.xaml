@@ -1,8 +1,11 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:ios="clr-namespace:Microsoft.Maui.Controls.PlatformConfiguration.iOSSpecific;assembly=Microsoft.Maui.Controls"
              x:Class="AkilliEvMobil.Views.RegisterPage"
+             NavigationPage.HasNavigationBar="False"
              Shell.NavBarIsVisible="False"
+             ios:Page.UseSafeArea="False"
              BackgroundColor="#F5F7FA"
              Background="#F5F7FA">
 
@@ -13,11 +16,12 @@
         <Image Grid.RowSpan="2"
                Source="logregbg1.jpg"
                Aspect="AspectFill"
-               ZIndex="-1" />
+               Margin="0"
+               VerticalOptions="Fill"/>
 
         <!-- Üst Kısım: Karşılama Metni -->
         <VerticalStackLayout Grid.Row="0"
-                             Padding="30, 15, 30, 0"
+                             Padding="30, 40, 30, 0"
                              Spacing="10"
                              VerticalOptions="Start">
             <Label Text="Hesap Oluştur"

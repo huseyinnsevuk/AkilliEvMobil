@@ -25,7 +25,7 @@
 
         <!-- Üst Kısım: Karşılama Metni -->
         <VerticalStackLayout Grid.Row="0"
-                             Padding="30, 15, 30, 0"
+                             Padding="30, 40, 30, 0"
                              Spacing="10"
                              VerticalOptions="Start">
             

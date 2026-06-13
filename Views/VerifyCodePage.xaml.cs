@@ -14,6 +14,7 @@ namespace AkilliEvMobil.Views
         public VerifyCodePage(string targetIdentifier)
         {
             InitializeComponent();
+            NavigationPage.SetHasNavigationBar(this, false);
             TargetIdentifierLabel.Text = targetIdentifier;
             _authService = Application.Current.Handler.MauiContext.Services.GetRequiredService<Services.IAuthService>();
         }
@@ -33,8 +34,13 @@ namespace AkilliEvMobil.Views
          */
         private async void OnVerifyClicked(object sender, EventArgs e)
         {
-            // Kutucuklardaki karakterleri birleştir
-            string code = Digit1.Text + Digit2.Text + Digit3.Text + Digit4.Text + Digit5.Text + Digit6.Text;
+            // Kutucuklardaki karakterleri birleştir (null değerleri güvenli şekilde boş string'e çevir)
+            string code = (Digit1.Text ?? "") + 
+                          (Digit2.Text ?? "") + 
+                          (Digit3.Text ?? "") + 
+                          (Digit4.Text ?? "") + 
+                          (Digit5.Text ?? "") + 
+                          (Digit6.Text ?? "");
             
             if (code.Length < 6)
             {
@@ -46,6 +52,25 @@ namespace AkilliEvMobil.Views
             
             if (success)
             {
+                // E-posta doğrulama durumunu veritabanında güncelle (isEmailVerified = true)
+                try
+                {
+                    using var client = new HttpClient();
+                    client.Timeout = TimeSpan.FromSeconds(3);
+                    string baseUrl = "http://nart3d.com:3000";
+                    string email = TargetIdentifierLabel.Text;
+                    
+                    var response = await client.PutAsync($"{baseUrl}/api/users/email/{Uri.EscapeDataString(email)}/verify", null);
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"Lokal backend e-posta güncelleme hatası: {response.StatusCode}");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Lokal backend e-posta doğrulama bağlantı hatası: {ex.Message}");
+                }
+
                 await DisplayAlert("Başarılı", "Hesabınız başarıyla doğrulandı.", "Tamam");
                 // Doğrulama başarılıysa ana dashboard'a yönlendirilir.
                 Application.Current.MainPage = new AppShell();
@@ -58,34 +83,71 @@ namespace AkilliEvMobil.Views
 
         /*
          * Kodu Tekrar Gönder Tıklama Olayı:
-         * WhatsApp servisini tekrar tetikler.
+         * E-posta servisini tekrar tetikler.
          */
         private async void OnResendCodeTapped(object sender, EventArgs e)
         {
             var success = await _authService.SendVerificationCodeAsync(TargetIdentifierLabel.Text);
             if (success)
-                await DisplayAlert("Bilgi", "Doğrulama kodu WhatsApp üzerinden tekrar gönderildi.", "Tamam");
+                await DisplayAlert("Bilgi", "Doğrulama kodu e-posta adresinize tekrar gönderildi.", "Tamam");
             else
-                await DisplayAlert("Hata", "Kod gönderilemedi. Lütfen numaranızı kontrol edin.", "Tamam");
+                await DisplayAlert("Hata", "Kod gönderilemedi. Lütfen e-posta adresinizi kontrol edin.", "Tamam");
         }
 
         /*
-         * Numarayı Düzenle Tıklama Olayı:
-         * Kullanıcının hatalı girdiği numarayı değiştirmesine olanak tanır.
+         * E-postayı Düzenle Tıklama Olayı:
+         * Kullanıcının hatalı girdiği e-posta adresini değiştirmesine olanak tanır.
          */
         private async void OnEditPhoneClicked(object sender, EventArgs e)
         {
-            string result = await DisplayActionSheet($"Mevcut Numara: {TargetIdentifierLabel.Text}", "İptal", null, "Numarayı Değiştir");
+            string result = await DisplayActionSheet($"Mevcut E-posta: {TargetIdentifierLabel.Text}", "İptal", null, "E-postayı Değiştir");
             
-            if (result == "Numarayı Değiştir")
+            if (result == "E-postayı Değiştir")
             {
-                string newPhone = await DisplayPromptAsync("Numarayı Güncelle", "Yeni telefon numaranızı girin:", "Güncelle", "İptal", "+90...", 13, Keyboard.Telephone);
+                string newEmail = await DisplayPromptAsync("E-postayı Güncelle", "Yeni e-posta adresinizi girin:", "Güncelle", "İptal", "email@example.com", -1, Keyboard.Email);
                 
-                if (!string.IsNullOrEmpty(newPhone))
+                if (!string.IsNullOrEmpty(newEmail))
                 {
-                    TargetIdentifierLabel.Text = newPhone;
-                    await DisplayAlert("Bilgi", "Numara güncellendi. Yeni numaranıza kod talep edebilirsiniz.", "Tamam");
+                    TargetIdentifierLabel.Text = newEmail;
+                    await DisplayAlert("Bilgi", "E-posta güncellendi. Yeni adresinize kod talep edebilirsiniz.", "Tamam");
                 }
+            }
+        }
+
+        /*
+         * Otomatik Odak Geçişi (Auto-advance & Auto-backspace):
+         * Kullanıcı bir rakam girdiğinde otomatik olarak sonraki kutucuğa odaklanır, sildiğinde ise önceki kutucuğa döner.
+         */
+        private void OnDigitTextChanged(object sender, TextChangedEventArgs e)
+        {
+            var entry = sender as Entry;
+            if (entry == null) return;
+
+            string newText = e.NewTextValue;
+
+            // Eğer kutucuğa bir karakter girildiyse
+            if (!string.IsNullOrEmpty(newText))
+            {
+                // Sonraki kutucuğa odaklan
+                if (entry == Digit1) Digit2.Focus();
+                else if (entry == Digit2) Digit3.Focus();
+                else if (entry == Digit3) Digit4.Focus();
+                else if (entry == Digit4) Digit5.Focus();
+                else if (entry == Digit5) Digit6.Focus();
+                else if (entry == Digit6)
+                {
+                    entry.Unfocus(); // Son hanede klavyeyi kapat
+                }
+            }
+            // Eğer kutucuktaki karakter silindiyse
+            else
+            {
+                // Önceki kutucuğa odaklan
+                if (entry == Digit6) Digit5.Focus();
+                else if (entry == Digit5) Digit4.Focus();
+                else if (entry == Digit4) Digit3.Focus();
+                else if (entry == Digit3) Digit2.Focus();
+                else if (entry == Digit2) Digit1.Focus();
             }
         }
 

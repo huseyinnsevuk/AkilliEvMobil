@@ -90,7 +90,7 @@ public partial class LightingPage : ContentPage
             using var client = new System.Net.Http.HttpClient();
             client.Timeout = System.TimeSpan.FromSeconds(3);
             
-            string baseUrl = "http://141.98.48.101:3000";
+            string baseUrl = "http://nart3d.com:3000";
             var response = await client.GetAsync($"{baseUrl}/api/sensors/latest");
             if (response.IsSuccessStatusCode)
             {
@@ -136,8 +136,7 @@ public partial class LightingPage : ContentPage
             var json = System.Text.Json.JsonSerializer.Serialize(payload);
             var content = new System.Net.Http.StringContent(json, System.Text.Encoding.UTF8, "application/json");
             
-            // Backend server address (Direct VDS IP as requested for reliability)
-            string baseUrl = "http://141.98.48.101:3000"; 
+            string baseUrl = "http://nart3d.com:3000"; 
             var response = await client.PostAsync($"{baseUrl}/api/devices/control", content);
             
             if (!response.IsSuccessStatusCode)

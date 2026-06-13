@@ -15,13 +15,14 @@ namespace AkilliEvMobil.Services
 
         // Doğrulama İşlemleri
         Task<bool> SendEmailVerificationAsync(string email);
-        Task<bool> SendVerificationCodeAsync(string phoneNumber);
+        Task<bool> SendVerificationCodeAsync(string target);
         
         // Kod Onaylama
         Task<bool> VerifyCodeAsync(string code);
 
         // Durum Sorgulama
         Task<bool> IsUserActiveAsync(string userId);
+        Task<bool> IsEmailVerifiedInDbAsync(string email);
         string GetCurrentUserPhone();
     }
 }

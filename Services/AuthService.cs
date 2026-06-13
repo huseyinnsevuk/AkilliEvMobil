@@ -77,37 +77,42 @@ namespace AkilliEvMobil.Services
                     return false;
                 }
 
-                // ADIM 2: Email Doğrulaması Gönderme
+                // ADIM 2: E-posta ile 6 Haneli Doğrulama Kodu Gönderme (Backend üzerinden)
                 try 
                 {
-                    string idToken = await userCredential.User.GetIdTokenAsync();
-                    bool emailSent = await InternalSendEmailVerificationAsync(idToken);
+                    bool emailSent = await SendVerificationCodeAsync(request.Email);
                     if (!emailSent)
                     {
-                        await Application.Current.MainPage.DisplayAlert("Uyarı", "Kullanıcı oluşturuldu ancak doğrulama e-postası gönderilemedi.", "Tamam");
+                        await Application.Current.MainPage.DisplayAlert("Hata", "Doğrulama kodu e-postanıza gönderilemedi. Lütfen e-posta adresinizi kontrol edin.", "Tamam");
+                        return false;
                     }
                 }
                 catch (Exception ex)
                 {
-                    await Application.Current.MainPage.DisplayAlert("E-posta Hatası", $"E-posta gönderme sırasında hata: {ex.Message}", "Tamam");
+                    await Application.Current.MainPage.DisplayAlert("Bağlantı Hatası", $"E-posta servisiyle iletişim kurulamadı: {ex.Message}", "Tamam");
+                    return false;
                 }
 
-                // ADIM 3: WhatsApp/OTP Gönderme (Green API)
-                try 
+                // ADIM 4: Lokal / VDS Postgres Veritabanına Kaydet (Admin Paneli İçin)
+                try
                 {
-                    bool wpSent = await SendVerificationCodeAsync(request.PhoneNumber);
-                    if (!wpSent)
+                    string baseUrl = "http://nart3d.com:3000";
+                    var backendPayload = new
                     {
-                        await Application.Current.MainPage.DisplayAlert("WhatsApp Hatası", "WhatsApp doğrulama kodu gönderilemedi. Lütfen servis durumunu ve numaranızı kontrol edin.", "Tamam");
-                        // WhatsApp gönderilemese bile kullanıcı oluşturulduğu için sürece devam edebiliriz veya false dönebiliriz.
-                        // Şimdilik test için false dönelim ki sorunu anlayalım.
-                        return false; 
+                        fullName = request.FullName,
+                        email = request.Email,
+                        phoneNumber = request.PhoneNumber,
+                        passwordHash = "firebase-handled"
+                    };
+                    var backendRes = await _httpClient.PostAsJsonAsync($"{baseUrl}/api/users", backendPayload);
+                    if (!backendRes.IsSuccessStatusCode)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"Lokal backend kaydı başarısız: {backendRes.StatusCode}");
                     }
                 }
                 catch (Exception ex)
                 {
-                    await Application.Current.MainPage.DisplayAlert("Green API Hatası", $"WhatsApp servisine bağlanılamadı: {ex.Message}", "Tamam");
-                    return false;
+                    System.Diagnostics.Debug.WriteLine($"Lokal backend bağlantı hatası: {ex.Message}");
                 }
 
                 return true;
@@ -170,44 +175,52 @@ namespace AkilliEvMobil.Services
 
         private string? _generatedWpCode;
 
-        public async Task<bool> SendVerificationCodeAsync(string phoneNumber)
+        public async Task<bool> SendVerificationCodeAsync(string target)
         {
             try 
             {
                 _generatedWpCode = new Random().Next(100000, 999999).ToString();
 
-                string idInstance = "7105411368";
-                string apiTokenInstance = "04c359491bde449a8820fc445674cb90d29d3fd0036e4b81a2"; 
-                
-                // TELEFON TEMİZLEME MANTIĞI:
-                string cleanNumber = new string(phoneNumber.Where(char.IsDigit).ToArray());
-                
-                // Başındaki 0'ları temizle (Örn: 0506... -> 506...)
-                while (cleanNumber.StartsWith("0")) cleanNumber = cleanNumber.Substring(1);
-                
-                // Eğer numara 5 ile başlıyorsa ve 10 haneliyse başına 90 ekle
-                if (cleanNumber.StartsWith("5") && cleanNumber.Length == 10) cleanNumber = "90" + cleanNumber;
-                
-                string chatId = $"{cleanNumber}@c.us";
-                string message = $"*Akıllı Ev Sistemi*\n\nDoğrulama Kodunuz: *{_generatedWpCode}*\n\nLütfen bu kodu kimseyle paylaşmayın.";
-
-                var url = $"https://api.green-api.com/waInstance{idInstance}/sendMessage/{apiTokenInstance}";
-                var payload = new { chatId = chatId, message = message };
-
-                var response = await _httpClient.PostAsJsonAsync(url, payload);
-                System.Diagnostics.Debug.WriteLine($"WP OTP GONDERILDI: {_generatedWpCode} -> {chatId} (Durum: {response.StatusCode})");
-                
-                if (!response.IsSuccessStatusCode)
+                if (target.Contains("@"))
                 {
-                    var errorContent = await response.Content.ReadAsStringAsync();
-                    System.Diagnostics.Debug.WriteLine($"WP HATA DETAYI: {errorContent}");
+                    // E-posta ile 6 haneli kod gönderme
+                    string baseUrl = "http://nart3d.com:3000";
+                    var payload = new { email = target, code = _generatedWpCode };
+                    var response = await _httpClient.PostAsJsonAsync($"{baseUrl}/api/auth/send-email-code", payload);
+                    System.Diagnostics.Debug.WriteLine($"EMAIL OTP GONDERILDI: {_generatedWpCode} -> {target} (Durum: {response.StatusCode})");
+                    return response.IsSuccessStatusCode;
                 }
-                
-                return response.IsSuccessStatusCode;
+                else
+                {
+                    // Telefon Numarası / WhatsApp ile Gönderme (Green API)
+                    string idInstance = "7105411368";
+                    string apiTokenInstance = "04c359491bde449a8820fc445674cb90d29d3fd0036e4b81a2"; 
+                    
+                    string cleanNumber = new string(target.Where(char.IsDigit).ToArray());
+                    while (cleanNumber.StartsWith("0")) cleanNumber = cleanNumber.Substring(1);
+                    if (cleanNumber.StartsWith("5") && cleanNumber.Length == 10) cleanNumber = "90" + cleanNumber;
+                    
+                    string chatId = $"{cleanNumber}@c.us";
+                    string message = $"*Akıllı Ev Sistemi*\n\nDoğrulama Kodunuz: *{_generatedWpCode}*\n\nLütfen bu kodu kimseyle paylaşmayın.";
+
+                    var url = $"https://api.green-api.com/waInstance{idInstance}/sendMessage/{apiTokenInstance}";
+                    var payload = new { chatId = chatId, message = message };
+
+                    var response = await _httpClient.PostAsJsonAsync(url, payload);
+                    System.Diagnostics.Debug.WriteLine($"WP OTP GONDERILDI: {_generatedWpCode} -> {chatId} (Durum: {response.StatusCode})");
+                    
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        var errorContent = await response.Content.ReadAsStringAsync();
+                        System.Diagnostics.Debug.WriteLine($"WP HATA DETAYI: {errorContent}");
+                    }
+                    
+                    return response.IsSuccessStatusCode;
+                }
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"WP Error: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Error sending OTP: {ex.Message}");
                 return false;
             }
         }
@@ -224,6 +237,39 @@ namespace AkilliEvMobil.Services
         {
             // Şimdilik Prisma üzerinden doğrulanmış kabul ediyoruz.
             return true;
+        }
+
+        public async Task<bool> IsEmailVerifiedInDbAsync(string email)
+        {
+            // Test kullanıcısı için otomatik geçiş
+            if (email == "huseyin@example.com")
+            {
+                return true;
+            }
+
+            try
+            {
+                using var client = new HttpClient();
+                client.Timeout = TimeSpan.FromSeconds(3);
+                string baseUrl = "http://nart3d.com:3000";
+                var response = await client.GetAsync($"{baseUrl}/api/users");
+                if (response.IsSuccessStatusCode)
+                {
+                    var content = await response.Content.ReadAsStringAsync();
+                    var users = System.Text.Json.JsonSerializer.Deserialize<System.Collections.Generic.List<System.Text.Json.Nodes.JsonObject>>(content);
+                    
+                    var user = users?.FirstOrDefault(u => u["email"]?.ToString().Equals(email, StringComparison.OrdinalIgnoreCase) == true);
+                    if (user != null)
+                    {
+                        return user["isEmailVerified"]?.GetValue<bool>() ?? false;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Db verification check error: {ex.Message}");
+            }
+            return false;
         }
 
         public string GetCurrentUserPhone()

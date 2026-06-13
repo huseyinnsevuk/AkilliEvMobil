@@ -14,6 +14,7 @@ namespace AkilliEvMobil.Views
         public LoginPage()
         {
             InitializeComponent();
+            NavigationPage.SetHasNavigationBar(this, false);
         }
 
         private void OnBackgroundTapped(object sender, EventArgs e)
@@ -52,20 +53,27 @@ namespace AkilliEvMobil.Views
 
             if (success)
             {
-                // Kullanıcı e-postasını doğrulamış mı?
-                bool isEmailVerified = await authService.IsUserActiveAsync(""); // "" geçici, internal fb user'a bakar
+                // Kullanıcının e-posta doğrulama durumunu veritabanından sorguluyoruz
+                bool isEmailVerified = await authService.IsEmailVerifiedInDbAsync(EmailEntry.Text);
                 
-                // TEST/GELİŞTİRME AŞAMASI: SMS ve Mail Doğrulaması tamamen atlandı.
-                // Başarılı girişten hemen sonra ana menüye aktarıyoruz.
                 MainThread.BeginInvokeOnMainThread(async () =>
                 {
                     // Android klavyeyi kapatmak ve aktif geçişleri temizlemek için hafif bir gecikme verilir.
-                    // Bu sayede "NavigationRootManager_ElementBasedFragment" çökmesi engellenir.
                     EmailEntry?.Unfocus();
                     PasswordEntry?.Unfocus();
                     await Task.Delay(250);
                     
-                    Application.Current.MainPage = new AppShell();
+                    if (isEmailVerified)
+                    {
+                        // E-posta doğrulanmış ise doğrudan ana panele geç
+                        Application.Current.MainPage = new AppShell();
+                    }
+                    else
+                    {
+                        // E-posta doğrulanmamış ise yeni bir doğrulama kodu gönder ve doğrulama ekranına yönlendir
+                        await authService.SendVerificationCodeAsync(EmailEntry.Text);
+                        await Navigation.PushAsync(new VerifyCodePage(EmailEntry.Text));
+                    }
                 });
             }
             else

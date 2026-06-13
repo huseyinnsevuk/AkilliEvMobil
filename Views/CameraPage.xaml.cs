@@ -45,7 +45,7 @@ namespace AkilliEvMobil.Views
         private void StartStream()
         {
             // VDS sunucumuzdaki statik ve kalıcı global HTML oynatıcı adresi (Doğrudan IP üzerinden)!
-            string viewUrl = "http://141.98.48.101:3000/api/camera/view";
+            string viewUrl = "http://nart3d.com:3000/api/camera/view";
             
             StreamWebView.Source = new UrlWebViewSource { Url = viewUrl };
             StreamWebView.Opacity = 1;
@@ -176,7 +176,7 @@ namespace AkilliEvMobil.Views
                 ShareLoadingView.IsVisible = true;
 
                 var payload = new { phoneNumber = phone };
-                var response = await _httpClient.PostAsJsonAsync("http://141.98.48.101:3000/api/camera/share/whatsapp", payload);
+                var response = await _httpClient.PostAsJsonAsync("http://nart3d.com:3000/api/camera/share/whatsapp", payload);
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -212,7 +212,7 @@ namespace AkilliEvMobil.Views
                 ShareLoadingView.IsVisible = true;
 
                 var payload = new { emailAddress = email };
-                var response = await _httpClient.PostAsJsonAsync("http://141.98.48.101:3000/api/camera/share/email", payload);
+                var response = await _httpClient.PostAsJsonAsync("http://nart3d.com:3000/api/camera/share/email", payload);
 
                 if (response.IsSuccessStatusCode)
                 {

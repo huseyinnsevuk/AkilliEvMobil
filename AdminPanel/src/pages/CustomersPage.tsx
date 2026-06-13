@@ -48,7 +48,7 @@ const CustomersPage = () => {
 
   // Prisma veritabanından müşterileri çekiyoruz
   useEffect(() => {
-    fetch('http://141.98.48.101:3000/api/users')
+    fetch('http://nart3d.com:3000/api/users')
       .then(res => res.json())
       .then(data => {
         const formattedUsers = data.map((u: any, index: number) => ({
@@ -68,7 +68,7 @@ const CustomersPage = () => {
       .catch(err => console.error("Kullanıcılar getirilemedi", err));
 
     // Paket ayarlarını çekiyoruz
-    fetch('http://141.98.48.101:3000/api/settings')
+    fetch('http://nart3d.com:3000/api/settings')
       .then(res => res.json())
       .then(data => {
         if (data) {
@@ -93,7 +93,7 @@ const CustomersPage = () => {
     const newStatus = !selectedCustomer.isActive;
 
     try {
-      const res = await fetch(`http://141.98.48.101:3000/api/users/${selectedCustomer.id}/status`, {
+      const res = await fetch(`http://nart3d.com:3000/api/users/${selectedCustomer.id}/status`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ isActive: newStatus })
@@ -118,7 +118,7 @@ const CustomersPage = () => {
     if (!selectedCustomer) return;
 
     try {
-      const res = await fetch(`http://141.98.48.101:3000/api/users/${selectedCustomer.id}/plan`, {
+      const res = await fetch(`http://nart3d.com:3000/api/users/${selectedCustomer.id}/plan`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ subscriptionType: newPlan })

@@ -42,7 +42,7 @@ function App() {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const res = await fetch('http://141.98.48.101:3000/api/dashboard/stats');
+        const res = await fetch('http://nart3d.com:3000/api/dashboard/stats');
         if (!res.ok) throw new Error('API yanıt vermedi');
         const data = await res.json();
         setStats(data);

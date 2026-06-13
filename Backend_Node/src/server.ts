@@ -953,7 +953,7 @@ app.post('/api/camera/share/whatsapp', async (req, res) => {
     const idInstance = process.env.GREEN_API_ID_INSTANCE || "7105411368";
     const apiTokenInstance = process.env.GREEN_API_TOKEN_INSTANCE || "04c359491bde449a8820fc445674cb90d29d3fd0036e4b81a2";
     
-    const videoUrl = `http://141.98.48.101:${PORT}/public/shares/${outputFilename}`;
+    const videoUrl = `http://nart3d.com:${PORT}/public/shares/${outputFilename}`;
     const greenApiUrl = `https://api.green-api.com/waInstance${idInstance}/sendFileByUrl/${apiTokenInstance}`;
     
     console.log(`📡 WhatsApp paylaşımı başlatılıyor: ${chatId} -> ${videoUrl}`);
@@ -1026,6 +1026,69 @@ app.post('/api/camera/share/email', async (req, res) => {
   } catch (err: any) {
     console.error("E-posta paylaşım hatası:", err);
     res.status(500).json({ error: 'E-posta gönderimi başarısız oldu.', details: err.message });
+  }
+});
+
+// E-posta ile 6 haneli doğrulama kodu gönderme (Mobil Uygulama İçin)
+app.post('/api/auth/send-email-code', async (req, res) => {
+  try {
+    const { email, code } = req.body;
+    if (!email || !code) {
+      return res.status(400).json({ error: 'E-posta ve doğrulama kodu gerekli.' });
+    }
+
+    console.log(`📧 E-posta doğrulama kodu gönderiliyor: ${email} -> ${code}`);
+
+    let transporter = smtpTransporter;
+    let fromEmail = process.env.SMTP_USER || 'akilliev@nart3d.com';
+
+    if (!process.env.SMTP_USER) {
+      console.warn("⚠️ SMTP_USER .env dosyasında bulunamadı. E-posta gönderme simüle ediliyor.");
+      return res.json({ 
+        success: true, 
+        simulated: true,
+        message: 'SMTP ayarları eksik olduğu için gönderim simüle edildi.' 
+      });
+    }
+
+    await transporter.sendMail({
+      from: `"Akıllı Ev Güvenlik" <${fromEmail}>`,
+      to: email,
+      subject: 'Akıllı Ev Sistemi - Giriş Doğrulama Kodu',
+      html: `
+        <div style="font-family: sans-serif; padding: 20px; color: #1E293B; background-color: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 12px; max-width: 600px; margin: auto;">
+          <h2 style="color: #4A90E2; margin-top: 0;">Akıllı Ev Güvenlik Sistemi</h2>
+          <p style="font-size: 16px; line-height: 1.5;">Merhaba,</p>
+          <p style="font-size: 16px; line-height: 1.5;">Uygulamaya kayıt/giriş yapabilmek için kullanacağınız 6 haneli doğrulama kodunuz aşağıdadır:</p>
+          <div style="background-color: #F1F5F9; padding: 15px; font-size: 32px; font-weight: bold; letter-spacing: 5px; text-align: center; color: #1E293B; border-radius: 8px; margin: 24px 0; border: 1px solid #CBD5E1;">
+            ${code}
+          </div>
+          <p style="font-size: 14px; color: #64748B; line-height: 1.5;">Lütfen bu kodu güvenlik nedeniyle kimseyle paylaşmayın. Giriş yapmaya çalışan siz değilseniz bu e-postayı görmezden gelebilirsiniz.</p>
+          <hr style="border: 0; border-top: 1px solid #E2E8F0; margin: 24px 0;" />
+          <p style="font-size: 12px; color: #94A3B8; text-align: center; margin-bottom: 0;">© 2026 Akıllı Ev Mobil. Tüm hakları saklıdır.</p>
+        </div>
+      `
+    });
+
+    res.json({ success: true, message: 'Doğrulama kodu e-posta adresinize gönderildi.' });
+  } catch (err: any) {
+    console.error("E-posta gönderme hatası:", err);
+    res.status(500).json({ error: 'E-posta gönderimi başarısız oldu.', details: err.message });
+  }
+});
+
+// E-posta doğrulama durumunu güncelleme (isEmailVerified = true)
+app.put('/api/users/email/:email/verify', async (req, res) => {
+  try {
+    const { email } = req.params;
+    const updatedUser = await prisma.user.update({
+      where: { email },
+      data: { isEmailVerified: true }
+    });
+    res.json({ success: true, user: updatedUser });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'E-posta doğrulama durumu güncellenemedi.' });
   }
 });
 
