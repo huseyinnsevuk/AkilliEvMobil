@@ -73,7 +73,7 @@ public partial class FanPage : ContentPage
             var json = System.Text.Json.JsonSerializer.Serialize(payload);
             var content = new System.Net.Http.StringContent(json, System.Text.Encoding.UTF8, "application/json");
             
-            string baseUrl = "http://nart3d.com:3000"; 
+            string baseUrl = "http://141.98.48.101:3000"; 
             var response = await client.PostAsync($"{baseUrl}/api/devices/control", content);
             
             if (!response.IsSuccessStatusCode)
@@ -97,3 +97,4 @@ public partial class FanPage : ContentPage
         base.OnDisappearing();
     }
 }
+

@@ -39,8 +39,10 @@ namespace AkilliEvMobil.Services
         {
             try
             {
-                // ADIM 1: Firebase Kullanıcı Oluşturma
+                // ADIM 1: Firebase Kullanıcı Oluşturma veya Mevcut Giriş Fallback
                 Firebase.Auth.UserCredential userCredential;
+                bool isNewFirebaseUser = true;
+
                 try 
                 {
                     userCredential = await _firebaseClient.CreateUserWithEmailAndPasswordAsync(request.Email, request.Password, request.FullName);
@@ -55,8 +57,13 @@ namespace AkilliEvMobil.Services
                             var loginResult = await _firebaseClient.SignInWithEmailAndPasswordAsync(request.Email, request.Password);
                             if (loginResult.User != null)
                             {
-                                await SendVerificationCodeAsync(request.PhoneNumber);
-                                return true; 
+                                userCredential = loginResult;
+                                isNewFirebaseUser = false;
+                            }
+                            else
+                            {
+                                await Application.Current.MainPage.DisplayAlert("Hata", "Bu e-posta adresi zaten kayıtlı. Lütfen şifrenizi kontrol edin.", "Tamam");
+                                return false;
                             }
                         }
                         catch 
@@ -65,36 +72,71 @@ namespace AkilliEvMobil.Services
                             return false;
                         }
                     }
-                    
-                    // Diğer Firebase hataları
-                    await Application.Current.MainPage.DisplayAlert("Firebase Hatası", $"Kullanıcı oluşturulamadı: {ex.Reason}\nDetay: {ex.Message}", "Tamam");
-                    return false;
+                    else
+                    {
+                        // Diğer Firebase hataları
+                        await Application.Current.MainPage.DisplayAlert("Firebase Hatası", $"Kullanıcı oluşturulamadı: {ex.Reason}\nDetay: {ex.Message}", "Tamam");
+                        return false;
+                    }
                 }
 
                 if (userCredential.User == null)
                 {
-                    await Application.Current.MainPage.DisplayAlert("Hata", "Kullanıcı oluşturuldu ancak referans alınamadı.", "Tamam");
+                    await Application.Current.MainPage.DisplayAlert("Hata", "Kullanıcı oluşturuldu/giriş yapıldı ancak referans alınamadı.", "Tamam");
                     return false;
                 }
 
-                // ADIM 2: Firebase E-posta Doğrulama Linki Gönderme
+                // ADIM 2: Lokal / VDS Postgres Veritabanına Kaydet (Admin Paneli / Prisma İçin)
+                try
+                {
+                    string baseUrl = "http://141.98.48.101:3000";
+                    var backendPayload = new
+                    {
+                        fullName = request.FullName,
+                        email = request.Email,
+                        phoneNumber = request.PhoneNumber,
+                        passwordHash = "firebase-handled"
+                    };
+                    var backendRes = await _httpClient.PostAsJsonAsync($"{baseUrl}/api/users", backendPayload);
+                    if (!backendRes.IsSuccessStatusCode)
+                    {
+                        var errText = await backendRes.Content.ReadAsStringAsync();
+                        System.Diagnostics.Debug.WriteLine($"Lokal backend kaydı başarısız: {backendRes.StatusCode} - {errText}");
+                        // Eğer yeni kullanıcı ise ve veri tabanına kayıt edilemediyse, kayıt sürecini durdurabiliriz.
+                        // Ancak halihazırda veritabanında varsa 400 dönecektir, bu durumda devam edebiliriz.
+                        if (isNewFirebaseUser && backendRes.StatusCode != System.Net.HttpStatusCode.BadRequest)
+                        {
+                            await Application.Current.MainPage.DisplayAlert("Veritabanı Hatası", "Kullanıcı veritabanına kaydedilemedi. Lütfen tekrar deneyin.", "Tamam");
+                            return false;
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Lokal backend bağlantı hatası: {ex.Message}");
+                    if (isNewFirebaseUser)
+                    {
+                        await Application.Current.MainPage.DisplayAlert("Bağlantı Hatası", "Sunucu ile bağlantı kurulamadı. Lütfen internetinizi kontrol edin.", "Tamam");
+                        return false;
+                    }
+                }
+
+                // ADIM 3: Firebase E-posta Doğrulama Linki Gönderme (Artık zorunlu/bloklayıcı değil, hata verse de devam eder)
                 try 
                 {
                     string idToken = await userCredential.User.GetIdTokenAsync();
                     bool emailSent = await InternalSendEmailVerificationAsync(idToken);
                     if (!emailSent)
                     {
-                        await Application.Current.MainPage.DisplayAlert("Hata", "Firebase doğrulama e-postası gönderilemedi.", "Tamam");
-                        return false;
+                        System.Diagnostics.Debug.WriteLine("Firebase doğrulama e-postası otomatik gönderilemedi, fakat kayıt işlemi durdurulmadı.");
                     }
                 }
                 catch (Exception ex)
                 {
-                    await Application.Current.MainPage.DisplayAlert("E-posta Hatası", $"E-posta gönderme sırasında hata: {ex.Message}", "Tamam");
-                    return false;
+                    System.Diagnostics.Debug.WriteLine($"E-posta gönderme sırasında hata: {ex.Message}");
                 }
 
-                // ADIM 3: WhatsApp ile 6 Haneli Doğrulama Kodu Gönderme (Green API)
+                // ADIM 4: WhatsApp ile 6 Haneli Doğrulama Kodu Gönderme (Green API)
                 try 
                 {
                     bool wpSent = await SendVerificationCodeAsync(request.PhoneNumber);
@@ -108,28 +150,6 @@ namespace AkilliEvMobil.Services
                 {
                     await Application.Current.MainPage.DisplayAlert("WhatsApp Hatası", $"WhatsApp servisine bağlanılamadı: {ex.Message}", "Tamam");
                     return false;
-                }
-
-                // ADIM 4: Lokal / VDS Postgres Veritabanına Kaydet (Admin Paneli İçin)
-                try
-                {
-                    string baseUrl = "http://nart3d.com:3000";
-                    var backendPayload = new
-                    {
-                        fullName = request.FullName,
-                        email = request.Email,
-                        phoneNumber = request.PhoneNumber,
-                        passwordHash = "firebase-handled"
-                    };
-                    var backendRes = await _httpClient.PostAsJsonAsync($"{baseUrl}/api/users", backendPayload);
-                    if (!backendRes.IsSuccessStatusCode)
-                    {
-                        System.Diagnostics.Debug.WriteLine($"Lokal backend kaydı başarısız: {backendRes.StatusCode}");
-                    }
-                }
-                catch (Exception ex)
-                {
-                    System.Diagnostics.Debug.WriteLine($"Lokal backend bağlantı hatası: {ex.Message}");
                 }
 
                 return true;
@@ -201,7 +221,7 @@ namespace AkilliEvMobil.Services
                 if (target.Contains("@"))
                 {
                     // E-posta ile 6 haneli kod gönderme
-                    string baseUrl = "http://nart3d.com:3000";
+                    string baseUrl = "http://141.98.48.101:3000";
                     var payload = new { email = target, code = _generatedWpCode };
                     var response = await _httpClient.PostAsJsonAsync($"{baseUrl}/api/auth/send-email-code", payload);
                     System.Diagnostics.Debug.WriteLine($"EMAIL OTP GONDERILDI: {_generatedWpCode} -> {target} (Durum: {response.StatusCode})");
@@ -267,7 +287,7 @@ namespace AkilliEvMobil.Services
             {
                 using var client = new HttpClient();
                 client.Timeout = TimeSpan.FromSeconds(3);
-                string baseUrl = "http://nart3d.com:3000";
+                string baseUrl = "http://141.98.48.101:3000";
                 var response = await client.GetAsync($"{baseUrl}/api/users");
                 if (response.IsSuccessStatusCode)
                 {
@@ -300,7 +320,7 @@ namespace AkilliEvMobil.Services
             {
                 using var client = new HttpClient();
                 client.Timeout = TimeSpan.FromSeconds(3);
-                string baseUrl = "http://nart3d.com:3000";
+                string baseUrl = "http://141.98.48.101:3000";
                 var response = await client.GetAsync($"{baseUrl}/api/users");
                 if (response.IsSuccessStatusCode)
                 {
@@ -372,3 +392,4 @@ namespace AkilliEvMobil.Services
         }
     }
 }
+

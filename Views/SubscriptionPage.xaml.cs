@@ -160,7 +160,7 @@ namespace AkilliEvMobil.Views
                 try
                 {
                     string userId = Services.DeviceService.Instance.CurrentUserId;
-                    string baseUrl = "http://nart3d.com:3000";
+                    string baseUrl = "http://141.98.48.101:3000";
 
                     using var client = new System.Net.Http.HttpClient();
                     var requestBody = new { userId = userId };
@@ -191,3 +191,4 @@ namespace AkilliEvMobil.Views
         }
     }
 }
+

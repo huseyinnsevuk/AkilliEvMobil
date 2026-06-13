@@ -43,7 +43,7 @@ namespace AkilliEvMobil.Views
             {
                 using var client = new HttpClient();
                 client.Timeout = TimeSpan.FromSeconds(3);
-                string baseUrl = "http://nart3d.com:3000";
+                string baseUrl = "http://141.98.48.101:3000";
                 var response = await client.GetAsync($"{baseUrl}/api/users");
                 if (response.IsSuccessStatusCode)
                 {
@@ -106,7 +106,7 @@ namespace AkilliEvMobil.Views
             {
                 using var client = new HttpClient();
                 client.Timeout = TimeSpan.FromSeconds(5);
-                string baseUrl = "http://nart3d.com:3000";
+                string baseUrl = "http://141.98.48.101:3000";
                 
                 var updatePayload = new { isPhoneVerified = true };
                 var response = await client.PutAsJsonAsync($"{baseUrl}/api/users/email/{Uri.EscapeDataString(_email)}/verify-both", updatePayload);
@@ -234,3 +234,4 @@ namespace AkilliEvMobil.Views
         }
     }
 }
+

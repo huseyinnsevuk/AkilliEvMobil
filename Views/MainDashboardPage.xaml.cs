@@ -70,7 +70,7 @@ namespace AkilliEvMobil.Views
                         userId = DeviceService.Instance.CurrentUserId;
                     }
 
-                        string baseUrl = "http://nart3d.com:3000";
+                        string baseUrl = "http://141.98.48.101:3000";
                         using var client = new System.Net.Http.HttpClient();
                         client.Timeout = TimeSpan.FromSeconds(5);
 
@@ -145,7 +145,7 @@ namespace AkilliEvMobil.Views
         {
             try
             {
-                string baseUrl = "http://nart3d.com:3000";
+                string baseUrl = "http://141.98.48.101:3000";
 
                 using var client = new System.Net.Http.HttpClient();
                 client.Timeout = TimeSpan.FromSeconds(5);
@@ -209,7 +209,7 @@ namespace AkilliEvMobil.Views
             {
                 try
                 {
-                    string baseUrl = "http://nart3d.com:3000";
+                    string baseUrl = "http://141.98.48.101:3000";
 
                     using var client = new System.Net.Http.HttpClient();
                     client.Timeout = TimeSpan.FromSeconds(5);
@@ -295,3 +295,4 @@ namespace AkilliEvMobil.Views
         }
     }
 }
+
