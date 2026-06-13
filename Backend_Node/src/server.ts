@@ -1092,6 +1092,25 @@ app.put('/api/users/email/:email/verify', async (req, res) => {
   }
 });
 
+// Hem e-posta hem telefon doğrulama durumunu güncelleme
+app.put('/api/users/email/:email/verify-both', async (req, res) => {
+  try {
+    const { email } = req.params;
+    const { isEmailVerified, isPhoneVerified } = req.body;
+    const updatedUser = await prisma.user.update({
+      where: { email },
+      data: { 
+        isEmailVerified: isEmailVerified ?? true,
+        isPhoneVerified: isPhoneVerified ?? true
+      }
+    });
+    res.json({ success: true, user: updatedUser });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Doğrulama durumları güncellenemedi.' });
+  }
+});
+
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Sunucu ${PORT} portunda başarıyla başlatıldı.`);
   console.log(`Tüm arayüzlerden (0.0.0.0) dinleniyor...`);

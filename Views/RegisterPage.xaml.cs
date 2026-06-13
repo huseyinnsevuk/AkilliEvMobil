@@ -75,7 +75,7 @@ namespace AkilliEvMobil.Views
                 if (success)
                 {
                     // Herhangi bir popup göstermeden doğrudan doğrulama ekranına yönlendir
-                    await Navigation.PushAsync(new VerifyCodePage(request.Email));
+                    await Navigation.PushAsync(new VerifyCodePage(request.Email, request.PhoneNumber));
                 }
                 else
                 {

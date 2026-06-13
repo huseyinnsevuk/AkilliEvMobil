@@ -23,6 +23,7 @@ namespace AkilliEvMobil.Services
         // Durum Sorgulama
         Task<bool> IsUserActiveAsync(string userId);
         Task<bool> IsEmailVerifiedInDbAsync(string email);
+        Task<bool> IsFirebaseEmailVerifiedAsync();
         string GetCurrentUserPhone();
     }
 }

@@ -1,4 +1,8 @@
 using System;
+using System.Linq;
+using System.Net.Http;
+using System.Net.Http.Json;
+using System.Threading.Tasks;
 using Microsoft.Maui.Controls;
 
 namespace AkilliEvMobil.Views
@@ -11,12 +15,53 @@ namespace AkilliEvMobil.Views
     {
         private readonly Services.IAuthService _authService;
 
-        public VerifyCodePage(string targetIdentifier)
+        private string _email;
+        private string _phone;
+
+        public VerifyCodePage(string email, string phone = "")
         {
             InitializeComponent();
             NavigationPage.SetHasNavigationBar(this, false);
-            TargetIdentifierLabel.Text = targetIdentifier;
+            _email = email;
+            _phone = phone;
+            TargetIdentifierLabel.Text = email;
             _authService = Application.Current.Handler.MauiContext.Services.GetRequiredService<Services.IAuthService>();
+        }
+
+        protected override async void OnAppearing()
+        {
+            base.OnAppearing();
+            if (string.IsNullOrEmpty(_phone))
+            {
+                _phone = await FetchPhoneFromDbAsync(_email);
+            }
+        }
+
+        private async System.Threading.Tasks.Task<string> FetchPhoneFromDbAsync(string email)
+        {
+            try
+            {
+                using var client = new HttpClient();
+                client.Timeout = TimeSpan.FromSeconds(3);
+                string baseUrl = "http://nart3d.com:3000";
+                var response = await client.GetAsync($"{baseUrl}/api/users");
+                if (response.IsSuccessStatusCode)
+                {
+                    var content = await response.Content.ReadAsStringAsync();
+                    var users = System.Text.Json.JsonSerializer.Deserialize<System.Collections.Generic.List<System.Text.Json.Nodes.JsonObject>>(content);
+                    
+                    var user = users?.FirstOrDefault(u => u["email"]?.ToString().Equals(email, StringComparison.OrdinalIgnoreCase) == true);
+                    if (user != null)
+                    {
+                        return user["phoneNumber"]?.ToString() ?? "";
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Db phone fetch error: {ex.Message}");
+            }
+            return "";
         }
 
         /*
@@ -48,37 +93,44 @@ namespace AkilliEvMobil.Views
                 return;
             }
 
-            var success = await _authService.VerifyCodeAsync(code);
-            
-            if (success)
+            // 1. WhatsApp OTP Kodu Doğrula
+            var wpSuccess = await _authService.VerifyCodeAsync(code);
+            if (!wpSuccess)
             {
-                // E-posta doğrulama durumunu veritabanında güncelle (isEmailVerified = true)
-                try
-                {
-                    using var client = new HttpClient();
-                    client.Timeout = TimeSpan.FromSeconds(3);
-                    string baseUrl = "http://nart3d.com:3000";
-                    string email = TargetIdentifierLabel.Text;
-                    
-                    var response = await client.PutAsync($"{baseUrl}/api/users/email/{Uri.EscapeDataString(email)}/verify", null);
-                    if (!response.IsSuccessStatusCode)
-                    {
-                        System.Diagnostics.Debug.WriteLine($"Lokal backend e-posta güncelleme hatası: {response.StatusCode}");
-                    }
-                }
-                catch (Exception ex)
-                {
-                    System.Diagnostics.Debug.WriteLine($"Lokal backend e-posta doğrulama bağlantı hatası: {ex.Message}");
-                }
+                await DisplayAlert("Hata", "Girdiğiniz WhatsApp doğrulama kodu hatalı veya süresi dolmuş.", "Tamam");
+                return;
+            }
 
-                await DisplayAlert("Başarılı", "Hesabınız başarıyla doğrulandı.", "Tamam");
-                // Doğrulama başarılıysa ana dashboard'a yönlendirilir.
-                Application.Current.MainPage = new AppShell();
-            }
-            else
+            // 2. Firebase E-posta Link Doğrulaması Kontrolü
+            var emailSuccess = await _authService.IsFirebaseEmailVerifiedAsync();
+            if (!emailSuccess)
             {
-                await DisplayAlert("Hata", "Girdiğiniz kod hatalı veya süresi dolmuş. Lütfen tekrar deneyin.", "Tamam");
+                await DisplayAlert("E-posta Onaylanmadı 📧", "Telefon numaranız doğrulandı! Ancak devam etmek için lütfen e-posta adresinize gönderilen doğrulama linkine tıklayın ve ardından tekrar buraya gelip Doğrula butonuna basın.", "Tamam");
+                return;
             }
+
+            // 3. İki doğrulama da başarılıysa veritabanında durumları güncelle
+            try
+            {
+                using var client = new HttpClient();
+                client.Timeout = TimeSpan.FromSeconds(5);
+                string baseUrl = "http://nart3d.com:3000";
+                
+                var updatePayload = new { isEmailVerified = true, isPhoneVerified = true };
+                var response = await client.PutAsJsonAsync($"{baseUrl}/api/users/email/{Uri.EscapeDataString(_email)}/verify-both", updatePayload);
+                if (!response.IsSuccessStatusCode)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Lokal backend e-posta/telefon güncelleme hatası: {response.StatusCode}");
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Lokal backend güncelleme bağlantı hatası: {ex.Message}");
+            }
+
+            await DisplayAlert("Başarılı", "Hesabınız başarıyla doğrulandı.", "Tamam");
+            // Doğrulama başarılıysa ana dashboard'a yönlendirilir.
+            Application.Current.MainPage = new AppShell();
         }
 
         /*
@@ -87,11 +139,36 @@ namespace AkilliEvMobil.Views
          */
         private async void OnResendCodeTapped(object sender, EventArgs e)
         {
-            var success = await _authService.SendVerificationCodeAsync(TargetIdentifierLabel.Text);
-            if (success)
-                await DisplayAlert("Bilgi", "Doğrulama kodu e-posta adresinize tekrar gönderildi.", "Tamam");
+            // 1. Firebase Email Doğrulama Linkini Tekrar Gönder
+            var emailSent = await _authService.SendEmailVerificationAsync(_email);
+            
+            // 2. WhatsApp OTP Kodunu Tekrar Gönder
+            bool wpSent = false;
+            if (!string.IsNullOrEmpty(_phone))
+            {
+                wpSent = await _authService.SendVerificationCodeAsync(_phone);
+            }
             else
-                await DisplayAlert("Hata", "Kod gönderilemedi. Lütfen e-posta adresinizi kontrol edin.", "Tamam");
+            {
+                _phone = await FetchPhoneFromDbAsync(_email);
+                if (!string.IsNullOrEmpty(_phone))
+                {
+                    wpSent = await _authService.SendVerificationCodeAsync(_phone);
+                }
+            }
+
+            if (emailSent && wpSent)
+            {
+                await DisplayAlert("Bilgi", "Doğrulama linki e-postanıza ve giriş kodu WhatsApp hattınıza tekrar gönderildi.", "Tamam");
+            }
+            else if (emailSent)
+            {
+                await DisplayAlert("Bilgi", "Doğrulama linki e-postanıza tekrar gönderildi, ancak WhatsApp kodu gönderilemedi.", "Tamam");
+            }
+            else
+            {
+                await DisplayAlert("Hata", "Doğrulama kodları gönderilemedi. Lütfen bağlantınızı kontrol edin.", "Tamam");
+            }
         }
 
         /*
@@ -109,6 +186,8 @@ namespace AkilliEvMobil.Views
                 if (!string.IsNullOrEmpty(newEmail))
                 {
                     TargetIdentifierLabel.Text = newEmail;
+                    _email = newEmail;
+                    _phone = await FetchPhoneFromDbAsync(newEmail); // Telefonu da güncelle
                     await DisplayAlert("Bilgi", "E-posta güncellendi. Yeni adresinize kod talep edebilirsiniz.", "Tamam");
                 }
             }

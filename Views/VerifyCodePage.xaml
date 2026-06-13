@@ -28,7 +28,7 @@
                    TextColor="White"
                    FontSize="30"
                    FontAttributes="Bold" />
-            <Label Text="Hesabınızı doğrulamak için e-posta adresinize gönderdiğimiz 6 haneli kodu girin."
+            <Label Text="Hesabınızı doğrulamak için e-postanıza gelen linke tıklayın ve telefonunuza gelen WhatsApp doğrulama kodunu girin."
                    TextColor="White"
                    FontSize="14"
                    Opacity="0.8" />

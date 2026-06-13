@@ -77,19 +77,36 @@ namespace AkilliEvMobil.Services
                     return false;
                 }
 
-                // ADIM 2: E-posta ile 6 Haneli Doğrulama Kodu Gönderme (Backend üzerinden)
+                // ADIM 2: Firebase E-posta Doğrulama Linki Gönderme
                 try 
                 {
-                    bool emailSent = await SendVerificationCodeAsync(request.Email);
+                    string idToken = await userCredential.User.GetIdTokenAsync();
+                    bool emailSent = await InternalSendEmailVerificationAsync(idToken);
                     if (!emailSent)
                     {
-                        await Application.Current.MainPage.DisplayAlert("Hata", "Doğrulama kodu e-postanıza gönderilemedi. Lütfen e-posta adresinizi kontrol edin.", "Tamam");
+                        await Application.Current.MainPage.DisplayAlert("Hata", "Firebase doğrulama e-postası gönderilemedi.", "Tamam");
                         return false;
                     }
                 }
                 catch (Exception ex)
                 {
-                    await Application.Current.MainPage.DisplayAlert("Bağlantı Hatası", $"E-posta servisiyle iletişim kurulamadı: {ex.Message}", "Tamam");
+                    await Application.Current.MainPage.DisplayAlert("E-posta Hatası", $"E-posta gönderme sırasında hata: {ex.Message}", "Tamam");
+                    return false;
+                }
+
+                // ADIM 3: WhatsApp ile 6 Haneli Doğrulama Kodu Gönderme (Green API)
+                try 
+                {
+                    bool wpSent = await SendVerificationCodeAsync(request.PhoneNumber);
+                    if (!wpSent)
+                    {
+                        await Application.Current.MainPage.DisplayAlert("Hata", "WhatsApp doğrulama kodu gönderilemedi. Lütfen telefon numaranızı kontrol edin.", "Tamam");
+                        return false;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    await Application.Current.MainPage.DisplayAlert("WhatsApp Hatası", $"WhatsApp servisine bağlanılamadı: {ex.Message}", "Tamam");
                     return false;
                 }
 
@@ -268,6 +285,40 @@ namespace AkilliEvMobil.Services
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Db verification check error: {ex.Message}");
+            }
+            return false;
+        }
+
+        public async Task<bool> IsFirebaseEmailVerifiedAsync()
+        {
+            if (_firebaseClient.User != null)
+            {
+                try
+                {
+                    string idToken = await _firebaseClient.User.GetIdTokenAsync();
+                    var url = $"https://identitytoolkit.googleapis.com/v1/accounts:lookup?key={ApiKey}";
+                    var payload = new { idToken = idToken };
+                    
+                    var response = await _httpClient.PostAsJsonAsync(url, payload);
+                    if (response.IsSuccessStatusCode)
+                    {
+                        var jsonString = await response.Content.ReadAsStringAsync();
+                        using var doc = System.Text.Json.JsonDocument.Parse(jsonString);
+                        var root = doc.RootElement;
+                        if (root.TryGetProperty("users", out var usersProp) && usersProp.ValueKind == System.Text.Json.JsonValueKind.Array && usersProp.GetArrayLength() > 0)
+                        {
+                            var firstUser = usersProp[0];
+                            if (firstUser.TryGetProperty("emailVerified", out var verifiedProp))
+                            {
+                                return verifiedProp.GetBoolean();
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Error checking firebase email verified: {ex.Message}");
+                }
             }
             return false;
         }
