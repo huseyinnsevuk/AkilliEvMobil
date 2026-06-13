@@ -101,26 +101,18 @@ namespace AkilliEvMobil.Views
                 return;
             }
 
-            // 2. Firebase E-posta Link Doğrulaması Kontrolü
-            var emailSuccess = await _authService.IsFirebaseEmailVerifiedAsync();
-            if (!emailSuccess)
-            {
-                await DisplayAlert("E-posta Onaylanmadı 📧", "Telefon numaranız doğrulandı! Ancak devam etmek için lütfen e-posta adresinize gönderilen doğrulama linkine tıklayın ve ardından tekrar buraya gelip Doğrula butonuna basın.", "Tamam");
-                return;
-            }
-
-            // 3. İki doğrulama da başarılıysa veritabanında durumları güncelle
+            // 2. Veritabanında telefon doğrulama durumunu güncelle (isPhoneVerified = true)
             try
             {
                 using var client = new HttpClient();
                 client.Timeout = TimeSpan.FromSeconds(5);
                 string baseUrl = "http://nart3d.com:3000";
                 
-                var updatePayload = new { isEmailVerified = true, isPhoneVerified = true };
+                var updatePayload = new { isPhoneVerified = true };
                 var response = await client.PutAsJsonAsync($"{baseUrl}/api/users/email/{Uri.EscapeDataString(_email)}/verify-both", updatePayload);
                 if (!response.IsSuccessStatusCode)
                 {
-                    System.Diagnostics.Debug.WriteLine($"Lokal backend e-posta/telefon güncelleme hatası: {response.StatusCode}");
+                    System.Diagnostics.Debug.WriteLine($"Lokal backend telefon güncelleme hatası: {response.StatusCode}");
                 }
             }
             catch (Exception ex)
@@ -128,7 +120,7 @@ namespace AkilliEvMobil.Views
                 System.Diagnostics.Debug.WriteLine($"Lokal backend güncelleme bağlantı hatası: {ex.Message}");
             }
 
-            await DisplayAlert("Başarılı", "Hesabınız başarıyla doğrulandı.", "Tamam");
+            await DisplayAlert("Başarılı", "Telefon numaranız başarıyla doğrulandı.", "Tamam");
             // Doğrulama başarılıysa ana dashboard'a yönlendirilir.
             Application.Current.MainPage = new AppShell();
         }

@@ -24,6 +24,9 @@ namespace AkilliEvMobil.Services
         Task<bool> IsUserActiveAsync(string userId);
         Task<bool> IsEmailVerifiedInDbAsync(string email);
         Task<bool> IsFirebaseEmailVerifiedAsync();
+        Task<bool> IsPhoneVerifiedInDbAsync(string email);
+        string GetCurrentUserEmail();
+        string GetCurrentUserDisplayName();
         string GetCurrentUserPhone();
     }
 }

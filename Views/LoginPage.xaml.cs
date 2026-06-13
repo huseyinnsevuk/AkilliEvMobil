@@ -1,4 +1,6 @@
 using System;
+using System.Net.Http;
+using System.Net.Http.Json;
 using Microsoft.Maui.Controls;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -53,8 +55,8 @@ namespace AkilliEvMobil.Views
 
             if (success)
             {
-                // Kullanıcının e-posta doğrulama durumunu veritabanından sorguluyoruz
-                bool isEmailVerified = await authService.IsEmailVerifiedInDbAsync(EmailEntry.Text);
+                // Kullanıcının telefon doğrulama durumunu veritabanından sorguluyoruz
+                bool isPhoneVerified = await authService.IsPhoneVerifiedInDbAsync(EmailEntry.Text);
                 
                 MainThread.BeginInvokeOnMainThread(async () =>
                 {
@@ -63,16 +65,35 @@ namespace AkilliEvMobil.Views
                     PasswordEntry?.Unfocus();
                     await Task.Delay(250);
                     
-                    if (isEmailVerified)
+                    if (isPhoneVerified)
                     {
-                        // E-posta doğrulanmış ise doğrudan ana panele geç
+                        // Telefon doğrulanmış ise doğrudan ana panele geç
                         Application.Current.MainPage = new AppShell();
                     }
                     else
                     {
-                        // E-posta doğrulanmamış ise yeni bir doğrulama kodu gönder ve doğrulama ekranına yönlendir
-                        await authService.SendVerificationCodeAsync(EmailEntry.Text);
-                        await Navigation.PushAsync(new VerifyCodePage(EmailEntry.Text));
+                        // Telefon doğrulanmamış ise yeni bir doğrulama kodu gönder ve doğrulama ekranına yönlendir
+                        // Önce veritabanından kullanıcının telefon numarasını çekelim
+                        string phone = "";
+                        try
+                        {
+                            using var client = new HttpClient();
+                            client.Timeout = TimeSpan.FromSeconds(3);
+                            string baseUrl = "http://nart3d.com:3000";
+                            var response = await client.GetAsync($"{baseUrl}/api/users/email/{Uri.EscapeDataString(EmailEntry.Text)}");
+                            if (response.IsSuccessStatusCode)
+                            {
+                                var userJson = await response.Content.ReadFromJsonAsync<System.Text.Json.Nodes.JsonObject>();
+                                phone = userJson?["phoneNumber"]?.ToString() ?? "";
+                            }
+                        }
+                        catch { }
+
+                        if (!string.IsNullOrEmpty(phone))
+                        {
+                            await authService.SendVerificationCodeAsync(phone);
+                        }
+                        await Navigation.PushAsync(new VerifyCodePage(EmailEntry.Text, phone));
                     }
                 });
             }

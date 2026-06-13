@@ -256,6 +256,38 @@ namespace AkilliEvMobil.Services
             return true;
         }
 
+        public async Task<bool> IsPhoneVerifiedInDbAsync(string email)
+        {
+            if (email == "huseyin@example.com")
+            {
+                return true;
+            }
+
+            try
+            {
+                using var client = new HttpClient();
+                client.Timeout = TimeSpan.FromSeconds(3);
+                string baseUrl = "http://nart3d.com:3000";
+                var response = await client.GetAsync($"{baseUrl}/api/users");
+                if (response.IsSuccessStatusCode)
+                {
+                    var content = await response.Content.ReadAsStringAsync();
+                    var users = System.Text.Json.JsonSerializer.Deserialize<System.Collections.Generic.List<System.Text.Json.Nodes.JsonObject>>(content);
+                    
+                    var user = users?.FirstOrDefault(u => u["email"]?.ToString().Equals(email, StringComparison.OrdinalIgnoreCase) == true);
+                    if (user != null)
+                    {
+                        return user["isPhoneVerified"]?.GetValue<bool>() ?? false;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Db phone check error: {ex.Message}");
+            }
+            return false;
+        }
+
         public async Task<bool> IsEmailVerifiedInDbAsync(string email)
         {
             // Test kullanıcısı için otomatik geçiş
@@ -321,6 +353,16 @@ namespace AkilliEvMobil.Services
                 }
             }
             return false;
+        }
+
+        public string GetCurrentUserEmail()
+        {
+            return _firebaseClient.User?.Info.Email ?? "";
+        }
+
+        public string GetCurrentUserDisplayName()
+        {
+            return _firebaseClient.User?.Info.DisplayName ?? "Kullanıcı";
         }
 
         public string GetCurrentUserPhone()

@@ -1077,6 +1077,23 @@ app.post('/api/auth/send-email-code', async (req, res) => {
   }
 });
 
+// E-posta adresine göre kullanıcı getirme
+app.get('/api/users/email/:email', async (req, res) => {
+  try {
+    const { email } = req.params;
+    const user = await prisma.user.findUnique({
+      where: { email }
+    });
+    if (!user) {
+      return res.status(404).json({ error: 'Kullanıcı bulunamadı.' });
+    }
+    res.json(user);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Kullanıcı bilgileri alınamadı.' });
+  }
+});
+
 // E-posta doğrulama durumunu güncelleme (isEmailVerified = true)
 app.put('/api/users/email/:email/verify', async (req, res) => {
   try {
@@ -1100,8 +1117,8 @@ app.put('/api/users/email/:email/verify-both', async (req, res) => {
     const updatedUser = await prisma.user.update({
       where: { email },
       data: { 
-        isEmailVerified: isEmailVerified ?? true,
-        isPhoneVerified: isPhoneVerified ?? true
+        isEmailVerified: isEmailVerified !== undefined ? isEmailVerified : undefined,
+        isPhoneVerified: isPhoneVerified !== undefined ? isPhoneVerified : undefined
       }
     });
     res.json({ success: true, user: updatedUser });
