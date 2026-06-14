@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Shield, Eye, EyeOff, Lock, User } from 'lucide-react';
+import { Home, Eye, EyeOff, Lock, User } from 'lucide-react';
 import './LoginPage.css';
 
 interface LoginPageProps {
@@ -48,7 +48,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
       <div className="login-card glass-panel-login">
         <div className="login-header">
           <div className="login-logo-container">
-            <Shield className="login-shield-icon" size={32} />
+            <Home className="login-home-icon" size={32} />
           </div>
           <h1 className="login-title">NEST</h1>
           <p className="login-subtitle">Akıllı Ev Sistem Yöneticisi Girişi</p>
