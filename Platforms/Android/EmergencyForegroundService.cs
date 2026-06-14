@@ -25,14 +25,17 @@ namespace AkilliEvMobil.Platforms.Android
         private const int SERVICE_NOTIFICATION_ID = 1001;
         private const int ALARM_NOTIFICATION_ID = 1002;
         private const int MOTION_NOTIFICATION_ID = 1003;
+        private const int RAIN_NOTIFICATION_ID = 1004;
         private const string CHANNEL_ID = "akilliev_security_channel";
         private const string ALARM_CHANNEL_ID = "akilliev_alarm_channel";
         private const string MOTION_CHANNEL_ID = "akilliev_motion_channel";
+        private const string RAIN_CHANNEL_ID = "akilliev_rain_channel";
         
         private CancellationTokenSource? _cts;
         private bool _isServiceRunning = false;
         private bool _lastGasState = false;
         private bool _lastMotionState = false;
+        private bool _lastRainState = false;
         private bool _isAlarmAcknowledged = false; // Latch (Kilit): Kullanıcı susturunca gaz temizlenene kadar tekrar çalmayı önler
         
         // Siren ve Titreşim Kaynakları
@@ -147,6 +150,13 @@ namespace AkilliEvMobil.Platforms.Android
                     Description = "Hareket algılandığında anlık bildirim göndermek için kullanılır."
                 };
                 manager.CreateNotificationChannel(motionChannel);
+
+                // 4. Yağmur Bildirim Kanalı (Yüksek önem, varsayılan ses)
+                var rainChannel = new NotificationChannel(RAIN_CHANNEL_ID, "Yağmur ve Tente Uyarıları 🚨", NotificationImportance.High)
+                {
+                    Description = "Yağmur başladığında tenteyi yönetmek için anlık bildirim göndermek için kullanılır."
+                };
+                manager.CreateNotificationChannel(rainChannel);
             }
         }
 
@@ -169,6 +179,7 @@ namespace AkilliEvMobil.Platforms.Android
                         {
                             bool gasDetected = log["gasDetected"]?.GetValue<bool>() ?? false;
                             bool motionDetected = log["motionDetected"]?.GetValue<bool>() ?? false;
+                            bool isRaining = log["isRaining"]?.GetValue<bool>() ?? false;
 
                             if (gasDetected)
                             {
@@ -196,6 +207,19 @@ namespace AkilliEvMobil.Platforms.Android
                             else
                             {
                                 _lastMotionState = false;
+                            }
+
+                            if (isRaining)
+                            {
+                                if (!_lastRainState)
+                                {
+                                    _lastRainState = true;
+                                    TriggerRainNotification();
+                                }
+                            }
+                            else
+                            {
+                                _lastRainState = false;
                             }
                         }
                     }
@@ -508,6 +532,39 @@ namespace AkilliEvMobil.Platforms.Android
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Hareket bildirimi gönderilemedi: {ex.Message}");
+            }
+        }
+
+        public void TriggerRainNotification()
+        {
+            try
+            {
+                var mainIntent = new Intent(this, typeof(MainActivity));
+                mainIntent.AddFlags(ActivityFlags.NewTask | ActivityFlags.ClearTop | ActivityFlags.SingleTop);
+                mainIntent.PutExtra("open_page", "tent");
+                
+                var pendingIntent = PendingIntent.GetActivity(
+                    this, 
+                    2, 
+                    mainIntent, 
+                    PendingIntentFlags.Immutable | PendingIntentFlags.UpdateCurrent
+                );
+
+                var rainNotification = new NotificationCompat.Builder(this, RAIN_CHANNEL_ID)
+                    .SetContentTitle("🚨 Bölgenizde yağmur başladı!")
+                    .SetContentText("Tenteyi yönetmek için dokunun.")
+                    .SetSmallIcon(global::Android.Resource.Drawable.IcDialogInfo)
+                    .SetPriority(NotificationCompat.PriorityHigh)
+                    .SetContentIntent(pendingIntent)
+                    .SetAutoCancel(true)
+                    .Build();
+
+                var manager = (NotificationManager?)GetSystemService(NotificationService);
+                manager?.Notify(RAIN_NOTIFICATION_ID, rainNotification);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Yağmur bildirimi gönderilemedi: {ex.Message}");
             }
         }
 

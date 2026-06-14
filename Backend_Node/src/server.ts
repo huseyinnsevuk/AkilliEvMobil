@@ -102,8 +102,6 @@ app.post('/api/devices/control', async (req, res) => {
   }
 });
 
-let latestMotionDetected = false;
-
 mqttClient.on('connect', () => {
   console.log('✅ Backend MQTT Broker\'a bağlandı!');
   mqttClient.subscribe('Nest/home/sensor/#', (err) => {
@@ -149,27 +147,28 @@ mqttClient.on('message', async (topic, message) => {
       });
     }
 
-    // 2. Sensör verisini logla
+    // 2. En son sensör verilerini tabandan çekip üzerine yazılmayan değerleri koruyoruz (Carry-forward)
+    const lastLog = await prisma.sensorLog.findFirst({
+      where: { deviceId: device.id },
+      orderBy: { createdAt: 'desc' }
+    });
+
     await prisma.sensorLog.create({
       data: {
         deviceId: device.id,
-        temperature: sensorType === 'sicaklik' ? parseFloat(payload) : 0,
-        humidity: sensorType === 'nem' ? parseFloat(payload) : 0,
-        isRaining: sensorType === 'yagmur' ? payload === '1' : false,
-        gasDetected: sensorType === 'gaz' ? payload === '1' : false,
-        lightLevel: sensorType === 'isik' ? parseFloat(payload) : 0,
+        temperature: sensorType === 'sicaklik' ? parseFloat(payload) : (lastLog?.temperature ?? 0),
+        humidity: sensorType === 'nem' ? parseFloat(payload) : (lastLog?.humidity ?? 0),
+        isRaining: sensorType === 'yagmur' ? (payload === '1' || payload === 'true') : (lastLog?.isRaining ?? false),
+        gasDetected: sensorType === 'gaz' ? (payload === '1' || payload === 'true') : (lastLog?.gasDetected ?? false),
+        motionDetected: sensorType === 'hareket' ? (payload === '1' || payload === 'true') : (lastLog?.motionDetected ?? false),
+        lightLevel: sensorType === 'isik' ? parseFloat(payload) : (lastLog?.lightLevel ?? 0),
       }
     });
     console.log(`📝 Sensör Kaydı (${device.name}): ${sensorType} -> ${payload}`);
-
-    if (sensorType === 'hareket') {
-      latestMotionDetected = (payload === '1' || payload === 'true');
-      console.log(`📡 Hareket algılama durumu güncellendi: ${latestMotionDetected}`);
-    }
     
     // Acil durum uyarısını tetikle
     if (sensorType === 'gaz') {
-      await handleSensorTriggers(payload === '1', device.id);
+      await handleSensorTriggers(payload === '1' || payload === 'true', device.id);
     }
   } catch (err) {
     console.error('❌ Sensör verisi kaydedilemedi:', err);
@@ -203,7 +202,7 @@ app.get('/api/sensors/latest', async (req, res) => {
       isRaining: absoluteLatestLog?.isRaining ?? false,
       gasDetected: absoluteLatestLog?.gasDetected ?? false,
       lightLevel: latestLightLog?.lightLevel ?? 250,
-      motionDetected: latestMotionDetected,
+      motionDetected: absoluteLatestLog?.motionDetected ?? false,
       createdAt: absoluteLatestLog?.createdAt ?? new Date()
     });
   } catch (err) {
@@ -596,6 +595,7 @@ app.get('/api/users/:userId/sensors/latest', async (req, res) => {
       isRaining: absoluteLatestLog?.isRaining ?? false,
       gasDetected: absoluteLatestLog?.gasDetected ?? false,
       lightLevel: latestLightLog?.lightLevel ?? 0,
+      motionDetected: absoluteLatestLog?.motionDetected ?? false,
       createdAt: absoluteLatestLog?.createdAt ?? new Date()
     });
   } catch (error) {
@@ -717,7 +717,6 @@ app.get('/api/weather', async (req, res) => {
     res.status(500).json({ error: 'Hava durumu alınamadı.' });
   }
 });
-
 // Şehir Adından Koordinat Bulma (Geocoding Proxy)
 app.get('/api/geocode', async (req, res) => {
   try {
@@ -763,12 +762,11 @@ app.post('/api/simulate/:userId', async (req, res) => {
         humidity: parseFloat((Math.random() * (60 - 30) + 30).toFixed(1)),
         isRaining: Math.random() > 0.8,
         gasDetected: Math.random() > 0.95,
+        motionDetected: Math.random() > 0.7,
         lightLevel: parseFloat((Math.random() * (600 - 150) + 150).toFixed(1)),
         deviceId: device.id
       }
     });
-
-    latestMotionDetected = Math.random() > 0.7; // Simülasyonda hareket durumunu rastgele güncelle
 
     res.json(newLog);
   } catch (error) {
@@ -802,28 +800,42 @@ app.post('/api/sensors', async (req, res) => {
        targetDeviceId = testDevice.id;
      }
 
-    // Sensör verisini PostgreSQL'e yazıyoruz
-    const log = await prisma.sensorLog.create({
-      data: {
-        temperature,
-        humidity: humidity || 0,
-        isRaining,
-        gasDetected,
-        lightLevel: lightLevel || 0,
-        deviceId: targetDeviceId
-      }
-    });
+     const lastLog = await prisma.sensorLog.findFirst({
+       where: { deviceId: targetDeviceId },
+       orderBy: { createdAt: 'desc' }
+     });
 
-    if (motionDetected !== undefined) {
-      latestMotionDetected = (motionDetected === true || motionDetected === 'true' || motionDetected === 1 || motionDetected === '1');
-    }
+     const isMotion = motionDetected !== undefined 
+       ? (motionDetected === true || motionDetected === 'true' || motionDetected === 1 || motionDetected === '1') 
+       : (lastLog?.motionDetected ?? false);
 
-    console.log(`[+] Sensör Verisi Alındı -> Sıcaklık: ${temperature}°C, Yağmur: ${isRaining}, Gas: ${gasDetected}, Işık: ${lightLevel || 0} Lux, Hareket: ${latestMotionDetected}`);
-    
-    // Acil durum uyarısını tetikle
-    await handleSensorTriggers(gasDetected, targetDeviceId);
+     const isRain = isRaining !== undefined 
+       ? (isRaining === true || isRaining === 'true' || isRaining === 1 || isRaining === '1') 
+       : (lastLog?.isRaining ?? false);
 
-    res.status(201).json({ message: 'Sensör verisi başarıyla PostgreSQL veritabanına kaydedildi.', data: log });
+     const isGas = gasDetected !== undefined 
+       ? (gasDetected === true || gasDetected === 'true' || gasDetected === 1 || gasDetected === '1') 
+       : (lastLog?.gasDetected ?? false);
+
+     // Sensör verisini PostgreSQL'e yazıyoruz
+     const log = await prisma.sensorLog.create({
+       data: {
+         temperature: temperature !== undefined ? parseFloat(temperature.toString()) : (lastLog?.temperature ?? 22),
+         humidity: humidity !== undefined ? parseFloat(humidity.toString()) : (lastLog?.humidity ?? 45),
+         isRaining: isRain,
+         gasDetected: isGas,
+         motionDetected: isMotion,
+         lightLevel: lightLevel !== undefined ? parseFloat(lightLevel.toString()) : (lastLog?.lightLevel ?? 250),
+         deviceId: targetDeviceId
+       }
+     });
+
+     console.log(`[+] Sensör Verisi Alındı -> Sıcaklık: ${log.temperature}°C, Nem: ${log.humidity}%, Yağmur: ${isRain}, Gas: ${isGas}, Işık: ${log.lightLevel} Lux, Hareket: ${isMotion}`);
+     
+     // Acil durum uyarısını tetikle
+     await handleSensorTriggers(isGas, targetDeviceId);
+
+     res.status(201).json({ message: 'Sensör verisi başarıyla PostgreSQL veritabanına kaydedildi.', data: log });
   } catch (error) {
     console.error('Sensör verisi kaydedilemedi:', error);
     res.status(500).json({ error: 'Veri kaydedilirken hata oluştu.' });

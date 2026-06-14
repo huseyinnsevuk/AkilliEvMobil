@@ -151,6 +151,29 @@ namespace AkilliEvMobil
                     }
                 });
             }
+
+            if (intent?.GetStringExtra("open_page") == "tent")
+            {
+                Microsoft.Maui.ApplicationModel.MainThread.BeginInvokeOnMainThread(async () =>
+                {
+                    try
+                    {
+                        await System.Threading.Tasks.Task.Delay(500);
+                        if (Shell.Current != null)
+                        {
+                            var currentPage = Shell.Current.CurrentPage;
+                            if (currentPage?.GetType().Name != "TentPage")
+                            {
+                                await Shell.Current.GoToAsync(nameof(Views.TentPage));
+                            }
+                        }
+                    }
+                    catch (System.Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"Failed to navigate to TentPage: {ex.Message}");
+                    }
+                });
+            }
         }
     }
 }
