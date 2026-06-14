@@ -1128,6 +1128,24 @@ app.put('/api/users/email/:email/verify-both', async (req, res) => {
   }
 });
 
+// Kullanıcının favori cihazlarını güncelleme
+app.put('/api/users/email/:email/favorites', async (req, res) => {
+  try {
+    const { email } = req.params;
+    const { favoriteDevices } = req.body; // string[]
+    const updatedUser = await prisma.user.update({
+      where: { email },
+      data: { 
+        favoriteDevices: favoriteDevices || []
+      }
+    });
+    res.json({ success: true, favoriteDevices: updatedUser.favoriteDevices });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Favori cihazlar güncellenemedi.' });
+  }
+});
+
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Sunucu ${PORT} portunda başarıyla başlatıldı.`);
   console.log(`Tüm arayüzlerden (0.0.0.0) dinleniyor...`);

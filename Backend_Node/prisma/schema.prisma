@@ -17,6 +17,7 @@ model User {
   isPhoneVerified Boolean @default(false)
   isActive       Boolean  @default(true)
   subscriptionType String @default("Basic")
+  favoriteDevices String[]
   createdDate    DateTime @default(now())
   registrationIp String?
 

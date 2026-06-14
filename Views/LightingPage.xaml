@@ -92,7 +92,7 @@
                     <Grid ColumnDefinitions="*, Auto">
                         <VerticalStackLayout Grid.Column="0" Spacing="4">
                             <Label Text="Ortam Aydınlığı" FontSize="18" FontAttributes="Bold" TextColor="#1E293B" />
-                            <Label Text="LDR Işık Sensöründen alınan güncel değer" FontSize="12" TextColor="#A0AABF" />
+                            <Label Text="Oturma odası için önerilen değer 100-300 lux" FontSize="12" TextColor="#A0AABF" />
                         </VerticalStackLayout>
                         
                         <Border Grid.Column="1" BackgroundColor="#FFF8E1" StrokeThickness="0" Padding="12,6" HorizontalOptions="End" VerticalOptions="Center">

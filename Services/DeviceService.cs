@@ -2,6 +2,8 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Net.Http;
+using System.Net.Http.Json;
 
 namespace AkilliEvMobil.Services
 {
@@ -73,9 +75,34 @@ namespace AkilliEvMobil.Services
             };
         }
 
-        public void ToggleFavorite(SmartDevice device)
+        public async System.Threading.Tasks.Task ToggleFavoriteAsync(SmartDevice device)
         {
             device.IsFavorite = !device.IsFavorite;
+
+            try
+            {
+                var authService = Microsoft.Maui.Controls.Application.Current?.Handler?.MauiContext?.Services?.GetService<IAuthService>();
+                string activeEmail = authService?.GetCurrentUserEmail() ?? "";
+                if (!string.IsNullOrEmpty(activeEmail))
+                {
+                    using var client = new System.Net.Http.HttpClient();
+                    client.Timeout = System.TimeSpan.FromSeconds(3);
+                    string baseUrl = "http://141.98.48.101:3000";
+
+                    var favoriteDeviceIds = Devices.Where(d => d.IsFavorite).Select(d => d.Id).ToList();
+                    var payload = new { favoriteDevices = favoriteDeviceIds };
+
+                    var response = await client.PutAsJsonAsync($"{baseUrl}/api/users/email/{System.Uri.EscapeDataString(activeEmail)}/favorites", payload);
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"Failed to update favorites: {response.StatusCode}");
+                    }
+                }
+            }
+            catch (System.Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error updating favorites: {ex.Message}");
+            }
         }
 
         public async System.Threading.Tasks.Task SyncWithBackendAsync()
@@ -133,9 +160,13 @@ namespace AkilliEvMobil.Services
 
                         var allowedModules = plan == "Premium" ? premiumModules : basicModules;
 
+                        var favoriteDevicesArray = currentUser["favoriteDevices"]?.AsArray();
+                        var favoriteDevicesList = favoriteDevicesArray?.Select(x => x.ToString()).ToList() ?? new System.Collections.Generic.List<string>();
+
                         foreach (var device in Devices)
                         {
                             device.IsLocked = !allowedModules.Contains(device.Id);
+                            device.IsFavorite = favoriteDevicesList.Contains(device.Id);
                             
                             // Eğer cihaz kilitlendiyse ve favorilerdeyse, otomatik olarak favorilerden çıkar
                             if (device.IsLocked && device.IsFavorite)

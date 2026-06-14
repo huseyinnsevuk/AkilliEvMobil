@@ -244,11 +244,11 @@ namespace AkilliEvMobil.Views
             }
         }
 
-        private void OnFavoriteTapped(object sender, EventArgs e)
+        private async void OnFavoriteTapped(object sender, EventArgs e)
         {
             if (sender is BindableObject bindable && bindable.BindingContext is SmartDevice device)
             {
-                DeviceService.Instance.ToggleFavorite(device);
+                await DeviceService.Instance.ToggleFavoriteAsync(device);
                 RefreshFavorites();
             }
         }
