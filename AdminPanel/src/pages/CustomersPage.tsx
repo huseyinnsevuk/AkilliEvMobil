@@ -6,7 +6,6 @@ import {
   Shield,
   Power,
   Lightbulb,
-  Fan,
   ThermometerSun,
   Warehouse,
   Flame,
@@ -26,25 +25,35 @@ interface Customer {
   isActive: boolean;
   joinDate: string;
   avatar: string;
+  daysSinceLastPayment: number;
+  lockedModules: string[];
 }
 
 const DEVICE_ACTIONS = [
   { id: 'light', name: 'Aydınlatma Kontrolü', icon: <Lightbulb size={20} /> },
-  { id: 'fan', name: 'Havalandırma (Fan)', icon: <Fan size={20} /> },
+  { id: 'fan', name: 'Havalandırma (Fan)', icon: <Power size={20} /> },
   { id: 'heater', name: 'Isıtıcı Sistemi', icon: <ThermometerSun size={20} /> },
   { id: 'tent', name: 'Tente', icon: <Warehouse size={20} /> },
   { id: 'gas', name: 'Gaz Sensörü', icon: <Flame size={20} /> },
   { id: 'camera', name: 'Güvenlik Kamerası', icon: <Camera size={20} /> },
 ];
 
-const CustomersPage = () => {
+const CustomersPage = ({ initialSelectedId }: { initialSelectedId?: string | null }) => {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [search, setSearch] = useState("");
-  const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(initialSelectedId || null);
+  const [payments, setPayments] = useState<any[]>([]);
 
   // Veritabanından gelecek paket ayarları
   const [basicPlanModules, setBasicPlanModules] = useState<string[]>(['light', 'fan', 'heater']);
   const [premiumPlanModules, setPremiumPlanModules] = useState<string[]>(['light', 'fan', 'heater', 'tent', 'gas', 'camera']);
+
+  // Focus customer when initialSelectedId changes
+  useEffect(() => {
+    if (initialSelectedId) {
+      setSelectedCustomerId(initialSelectedId);
+    }
+  }, [initialSelectedId]);
 
   // Prisma veritabanından müşterileri çekiyoruz
   useEffect(() => {
@@ -58,10 +67,12 @@ const CustomersPage = () => {
           plan: u.subscriptionType || 'Free',
           isActive: u.isActive,
           joinDate: new Date(u.createdDate).toLocaleDateString('tr-TR'),
-          avatar: `https://i.pravatar.cc/150?img=${(index % 50) + 1}`
+          avatar: `https://i.pravatar.cc/150?img=${(index % 50) + 1}`,
+          daysSinceLastPayment: u.daysSinceLastPayment || 0,
+          lockedModules: u.lockedModules || []
         }));
         setCustomers(formattedUsers);
-        if (formattedUsers.length > 0) {
+        if (formattedUsers.length > 0 && !initialSelectedId) {
           setSelectedCustomerId(formattedUsers[0].id);
         }
       })
@@ -77,7 +88,16 @@ const CustomersPage = () => {
         }
       })
       .catch(err => console.error("Ayarlar getirilemedi", err));
-  }, []);
+  }, [initialSelectedId]);
+
+  // Müşteri değiştikçe ödeme geçmişini çek
+  useEffect(() => {
+    if (!selectedCustomerId) return;
+    fetch(`http://141.98.48.101:3000/api/users/${selectedCustomerId}/payments`)
+      .then(res => res.json())
+      .then(data => setPayments(data))
+      .catch(err => console.error("Ödeme geçmişi alınamadı:", err));
+  }, [selectedCustomerId]);
 
   const selectedCustomer = customers.find(c => c.id === selectedCustomerId);
   const isPremium = selectedCustomer?.plan === 'Premium';
@@ -138,6 +158,62 @@ const CustomersPage = () => {
     }
   };
 
+  const handleToggleDeviceLock = async (deviceId: string) => {
+    if (!selectedCustomer) return;
+
+    const currentLocked = selectedCustomer.lockedModules || [];
+    let newLocked;
+    if (currentLocked.includes(deviceId)) {
+      newLocked = currentLocked.filter(id => id !== deviceId);
+    } else {
+      newLocked = [...currentLocked, deviceId];
+    }
+
+    try {
+      const res = await fetch(`http://141.98.48.101:3000/api/users/${selectedCustomer.id}/locked-modules`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lockedModules: newLocked })
+      });
+
+      if (res.ok) {
+        const updatedUser = await res.json();
+        setCustomers(customers.map(c =>
+          c.id === selectedCustomer.id ? {
+            ...c,
+            lockedModules: updatedUser.lockedModules
+          } : c
+        ));
+      }
+    } catch (err) {
+      console.error("Cihaz kilitleme durumu güncellenemedi:", err);
+    }
+  };
+
+  const handleUpdatePaymentDays = async (days: number) => {
+    if (!selectedCustomer) return;
+
+    try {
+      const res = await fetch(`http://141.98.48.101:3000/api/users/${selectedCustomer.id}/payment-days`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ daysSinceLastPayment: days })
+      });
+
+      if (res.ok) {
+        const updatedUser = await res.json();
+        setCustomers(customers.map(c =>
+          c.id === selectedCustomer.id ? {
+            ...c,
+            daysSinceLastPayment: updatedUser.daysSinceLastPayment
+          } : c
+        ));
+      }
+    } catch (err) {
+      console.error("Ödeme süresi güncellenemedi:", err);
+    }
+  };
+
   return (
     <div className="customers-page">
       {/* Sol Taraf: Müşteri Listesi */}
@@ -195,6 +271,26 @@ const CustomersPage = () => {
                     <span className="meta-item"><Mail size={14} /> {selectedCustomer.email}</span>
                     <span className="meta-item"><Calendar size={14} /> Katılım: {selectedCustomer.joinDate}</span>
                   </div>
+                  <div className="meta-info" style={{ marginTop: '8px' }}>
+                    <span className="meta-item">
+                      Ödemeden Geçen Süre: <strong>{selectedCustomer.daysSinceLastPayment} gün</strong>
+                      {selectedCustomer.daysSinceLastPayment > 30 && (
+                        <span className="warning-badge">Ödeme Gecikti!</span>
+                      )}
+                    </span>
+                  </div>
+                  {/* Sunum Simülasyonu Kontrolü */}
+                  <div className="payment-days-test">
+                    <span className="days-label">Süre Değiştir (Sunum Testi):</span>
+                    <input
+                      type="number"
+                      min="0"
+                      value={selectedCustomer.daysSinceLastPayment}
+                      onChange={(e) => handleUpdatePaymentDays(parseInt(e.target.value) || 0)}
+                      className="days-input"
+                    />
+                    <span>gün</span>
+                  </div>
                 </div>
               </div>
 
@@ -231,7 +327,7 @@ const CustomersPage = () => {
                 <h3>Kullanılabilir Cihaz Aksiyonları</h3>
                 <p>
                   Müşterinin mevcut ({selectedCustomer.plan}) paketi dahilinde kullanabileceği modüller aşağıdadır.
-                  {selectedCustomer.plan === 'Free' && " Ücretsiz pakette sadece temel özellikler açıktır."}
+                  Kırmızı kilit simgesi olan cihazlar yönetici tarafından kilitlenmiştir.
                 </p>
               </div>
 
@@ -240,11 +336,15 @@ const CustomersPage = () => {
                   const isSystemDisabled = !selectedCustomer.isActive;
 
                   // Kilitleme mantığını dinamik paket ayarlarına göre yapıyoruz
-                  const isLocked = isPremium
+                  const isLockedByPlan = isPremium
                     ? !premiumPlanModules.includes(device.id)
                     : !basicPlanModules.includes(device.id);
 
-                  const lockReason = isPremium ? 'Pakete Dahil Değil' : 'Premium Gerektirir';
+                  const isManuallyLocked = selectedCustomer.lockedModules?.includes(device.id) || false;
+                  const isLocked = isLockedByPlan || isManuallyLocked;
+                  const lockReason = isLockedByPlan 
+                    ? (isPremium ? 'Pakete Dahil Değil' : 'Premium Gerektirir') 
+                    : 'Yönetici Tarafından Kilitli';
 
                   return (
                     <div
@@ -264,13 +364,57 @@ const CustomersPage = () => {
                           <span className="device-status success"><Power size={12} /> Aktif</span>
                         )}
                       </div>
-                      {/* Temsili Switch */}
-                      <div className={`mock-switch ${(!isLocked && !isSystemDisabled) ? 'switch-on' : 'switch-off'}`}>
-                        <div className="switch-knob"></div>
-                      </div>
+                      {/* Aktif Kilitleme Butonu */}
+                      <button
+                        className={`device-toggle-btn ${isManuallyLocked ? 'locked' : 'unlocked'}`}
+                        onClick={() => handleToggleDeviceLock(device.id)}
+                        disabled={isSystemDisabled}
+                        title={isManuallyLocked ? 'Cihaz Kilidini Aç' : 'Cihazı Kilitle'}
+                      >
+                        {isManuallyLocked ? <Lock size={16} /> : <Unlock size={16} />}
+                      </button>
                     </div>
                   );
                 })}
+              </div>
+            </div>
+
+            {/* Ödeme Geçmişi */}
+            <div className="payments-card glass-panel">
+              <div className="payments-header">
+                <h3>Ödeme Geçmişi</h3>
+                <p>Müşterinin geçmişte gerçekleştirdiği tüm ödeme işlemlerinin dökümü (Tarih ve Saat detayıyla).</p>
+              </div>
+
+              <div className="payments-table-wrapper">
+                {payments && payments.length > 0 ? (
+                  <table className="payments-table">
+                    <thead>
+                      <tr>
+                        <th>Tarih & Saat</th>
+                        <th>Tutar</th>
+                        <th>Para Birimi</th>
+                        <th>Durum</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {payments.map((payment: any) => (
+                        <tr key={payment.id}>
+                          <td>{new Date(payment.createdAt).toLocaleString('tr-TR')}</td>
+                          <td>₺{payment.amount}</td>
+                          <td>{payment.currency}</td>
+                          <td>
+                            <span className={`payment-status ${payment.status.toLowerCase()}`}>
+                              {payment.status === 'Success' ? 'Başarılı' : 'Başarısız'}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                ) : (
+                  <div className="no-payments">Kayıtlı ödeme işlemi bulunmuyor.</div>
+                )}
               </div>
             </div>
           </>

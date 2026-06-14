@@ -163,9 +163,12 @@ namespace AkilliEvMobil.Services
                         var favoriteDevicesArray = currentUser["favoriteDevices"]?.AsArray();
                         var favoriteDevicesList = favoriteDevicesArray?.Select(x => x.ToString()).ToList() ?? new System.Collections.Generic.List<string>();
 
+                        var lockedModulesArray = currentUser["lockedModules"]?.AsArray();
+                        var lockedModulesList = lockedModulesArray?.Select(x => x.ToString()).ToList() ?? new System.Collections.Generic.List<string>();
+
                         foreach (var device in Devices)
                         {
-                            device.IsLocked = !allowedModules.Contains(device.Id);
+                            device.IsLocked = !allowedModules.Contains(device.Id) || lockedModulesList.Contains(device.Id);
                             device.IsFavorite = favoriteDevicesList.Contains(device.Id);
                             
                             // Eğer cihaz kilitlendiyse ve favorilerdeyse, otomatik olarak favorilerden çıkar

@@ -11,7 +11,8 @@ import {
   Home,
   FileText,
   Settings,
-  LogOut
+  LogOut,
+  AlertCircle
 } from 'lucide-react';
 import './App.css';
 import CustomersPage from './pages/CustomersPage';
@@ -33,6 +34,7 @@ interface DashboardStats {
     totalRevenue: number;
   };
   latestActivities: any[];
+  notifications?: { id: string; type: string; userId: string; message: string }[];
 }
 
 function App() {
@@ -42,6 +44,8 @@ function App() {
   const [currentPage, setCurrentPage] = useState('dashboard');
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [, setLoading] = useState(true);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [selectedOverdueUserId, setSelectedOverdueUserId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isLoggedIn) return;
@@ -109,7 +113,7 @@ function App() {
           <a
             href="#"
             className={`nav-item ${currentPage === 'customers' ? 'active' : ''}`}
-            onClick={(e) => { e.preventDefault(); setCurrentPage('customers'); }}
+            onClick={(e) => { e.preventDefault(); setSelectedOverdueUserId(null); setCurrentPage('customers'); }}
           >
             <Users size={22} /> Müşteriler
           </a>
@@ -154,10 +158,44 @@ function App() {
           </div>
 
           <div className="topbar-right">
-            <button className="icon-btn">
-              <Bell size={20} />
-              <span className="notification-dot"></span>
-            </button>
+            <div className="notification-container">
+              <button className="icon-btn" onClick={() => setShowNotifications(!showNotifications)}>
+                <Bell size={20} />
+                {stats?.notifications && stats.notifications.length > 0 && (
+                  <span className="notification-dot"></span>
+                )}
+              </button>
+
+              {showNotifications && (
+                <div className="notification-dropdown">
+                  <div className="notification-header">
+                    <h3>Bildirimler ({stats?.notifications?.length || 0})</h3>
+                  </div>
+                  <div className="notification-list">
+                    {stats?.notifications && stats.notifications.length > 0 ? (
+                      stats.notifications.map((notif: any) => (
+                        <button
+                          key={notif.id}
+                          className="notification-item"
+                          onClick={() => {
+                            setSelectedOverdueUserId(notif.userId);
+                            setCurrentPage('customers');
+                            setShowNotifications(false);
+                          }}
+                        >
+                          <div className="notification-icon-wrapper">
+                            <AlertCircle size={16} />
+                          </div>
+                          <span className="notification-message">{notif.message}</span>
+                        </button>
+                      ))
+                    ) : (
+                      <div className="no-notifications">Yeni bildirim bulunmuyor.</div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
             <button className="icon-btn">
               <Globe size={20} />
             </button>
@@ -300,7 +338,7 @@ function App() {
               </section>
             </>
           ) : currentPage === 'customers' ? (
-            <CustomersPage />
+            <CustomersPage initialSelectedId={selectedOverdueUserId} />
           ) : (
             <SubscriptionsPage />
           )}

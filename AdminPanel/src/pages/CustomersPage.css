@@ -417,3 +417,166 @@
 .no-selection svg {
   margin-bottom: 15px;
 }
+
+/* SUNUM SİMÜLASYONU YARDIMCI PROGRAMI (PAYMENT DAYS TEST) */
+.payment-days-test {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(239, 68, 68, 0.08); /* Soft red warning indicator background */
+  border: 1px dashed rgba(239, 68, 68, 0.3);
+  padding: 8px 15px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #DC2626;
+  margin-top: 15px;
+  max-width: fit-content;
+}
+.days-label {
+  white-space: nowrap;
+}
+.days-input {
+  width: 70px;
+  background: #FFFFFF;
+  border: 1px solid #FCA5A5;
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-weight: bold;
+  color: #991B1B;
+  outline: none;
+  text-align: center;
+}
+.days-input:focus {
+  border-color: #EF4444;
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2);
+}
+.warning-badge {
+  background: #EF4444;
+  color: #FFFFFF;
+  font-size: 10px;
+  font-weight: bold;
+  padding: 2px 6px;
+  border-radius: 4px;
+  animation: pulse 1.5s infinite;
+  display: inline-block;
+  margin-left: 5px;
+  vertical-align: middle;
+}
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+/* REAL DEVICE LOCK BUTTONS */
+.device-toggle-btn {
+  margin-left: auto;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+.device-toggle-btn.unlocked {
+  background: #E6FDF5;
+  color: #10B981;
+  border: 1px solid #A7F3D0;
+}
+.device-toggle-btn.unlocked:hover {
+  background: #10B981;
+  color: #FFFFFF;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(16, 185, 129, 0.25);
+}
+.device-toggle-btn.locked {
+  background: #FEF2F2;
+  color: #EF4444;
+  border: 1px solid #FECACA;
+}
+.device-toggle-btn.locked:hover {
+  background: #EF4444;
+  color: #FFFFFF;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(239, 68, 68, 0.25);
+}
+.device-toggle-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: #CBD5E1;
+  color: #64748B;
+  border: none;
+}
+
+/* ÖDEME GEÇMİŞİ KARTI */
+.payments-card {
+  padding: 30px;
+  background: #FFFFFF;
+}
+.payments-header {
+  margin-bottom: 20px;
+}
+.payments-header h3 {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 5px;
+}
+.payments-header p {
+  color: #64748B;
+  font-size: 14px;
+}
+.payments-table-wrapper {
+  overflow-x: auto;
+  border-radius: 12px;
+  border: 1px solid #E2E8F0;
+}
+.payments-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 14px;
+}
+.payments-table th {
+  background: #F8FAFC;
+  padding: 12px 18px;
+  font-weight: 600;
+  color: #475569;
+  border-bottom: 1px solid #E2E8F0;
+}
+.payments-table td {
+  padding: 14px 18px;
+  border-bottom: 1px solid #F1F5F9;
+  color: #1E293B;
+}
+.payments-table tr:last-child td {
+  border-bottom: none;
+}
+.payment-status {
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  display: inline-block;
+}
+.payment-status.success {
+  background: #DCFCE7;
+  color: #15803D;
+  border: 1px solid #BBF7D0;
+}
+.payment-status.failed {
+  background: #FEE2E2;
+  color: #991B1B;
+  border: 1px solid #FCA5A5;
+}
+.no-payments {
+  padding: 30px;
+  text-align: center;
+  color: #64748B;
+  background: #F8FAFC;
+  border-radius: 12px;
+}

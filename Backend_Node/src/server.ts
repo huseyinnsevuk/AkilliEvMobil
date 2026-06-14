@@ -308,6 +308,61 @@ app.get('/api/users', async (req, res) => {
   }
 });
 
+// Müşterinin Ödeme Geçmişini Getir
+app.get('/api/users/:id/payments', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const payments = await prisma.paymentRecord.findMany({
+      where: { userId: id },
+      orderBy: { createdAt: 'desc' }
+    });
+    res.json(payments);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Ödeme geçmişi alınamadı.' });
+  }
+});
+
+// Müşterinin Kilitli Modüllerini Güncelle
+app.put('/api/users/:id/locked-modules', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { lockedModules } = req.body; // string[]
+
+    const updatedUser = await prisma.user.update({
+      where: { id },
+      data: {
+        lockedModules: lockedModules || []
+      }
+    });
+
+    res.json(updatedUser);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Kilitli cihazlar güncellenemedi.' });
+  }
+});
+
+// Müşterinin Ödeme Süresini Güncelle (Sunum testi için)
+app.put('/api/users/:id/payment-days', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { daysSinceLastPayment } = req.body;
+
+    const updatedUser = await prisma.user.update({
+      where: { id },
+      data: {
+        daysSinceLastPayment: parseInt(daysSinceLastPayment.toString())
+      }
+    });
+
+    res.json(updatedUser);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Ödeme süresi güncellenemedi.' });
+  }
+});
+
 // Yeni Kullanıcı Ekleme
 app.post('/api/users', async (req, res) => {
   try {
@@ -467,7 +522,10 @@ app.get('/api/payments/success', async (req, res) => {
         // Veritabanını güncelle
         await prisma.user.update({
             where: { id: userId.toString() },
-            data: { subscriptionType: 'Premium' }
+            data: { 
+              subscriptionType: 'Premium',
+              daysSinceLastPayment: 0
+            }
         });
 
         // Ödeme kaydı oluştur
@@ -707,6 +765,25 @@ app.get('/api/dashboard/stats', async (req, res) => {
 
     const sensorCount = await prisma.device.count(); // Şimdilik cihaz sayısı sensör sayısı gibi
 
+    // Ödemesi 30 günü geçmiş kullanıcıları bul
+    const overdueUsers = await prisma.user.findMany({
+      where: {
+        daysSinceLastPayment: { gt: 30 }
+      },
+      select: {
+        id: true,
+        fullName: true,
+        daysSinceLastPayment: true
+      }
+    });
+
+    const notifications = overdueUsers.map(u => ({
+      id: `overdue-${u.id}`,
+      type: 'payment_overdue',
+      userId: u.id,
+      message: `${u.fullName} kullanıcısının ödemesi gecikti (${u.daysSinceLastPayment} gün).`
+    }));
+
     res.json({
       metrics: {
         activeSensors: sensorCount,
@@ -715,7 +792,8 @@ app.get('/api/dashboard/stats', async (req, res) => {
         basicCustomers,
         totalRevenue: totalRevenue._sum.amount || 0
       },
-      latestActivities
+      latestActivities,
+      notifications
     });
   } catch (error) {
     console.error(error);

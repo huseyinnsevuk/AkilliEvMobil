@@ -406,3 +406,81 @@
   color: var(--text-muted);
   white-space: nowrap;
 }
+
+/* NOTIFICATION DROPDOWN STYLES */
+.notification-container {
+  position: relative;
+}
+.notification-dropdown {
+  position: absolute;
+  top: 50px;
+  right: 0;
+  width: 320px;
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 16px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+  z-index: 100;
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  animation: slideDown 0.2s ease-out;
+}
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.notification-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #F1F5F9;
+  padding-bottom: 10px;
+}
+.notification-header h3 {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+.notification-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 250px;
+  overflow-y: auto;
+}
+.notification-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px;
+  border-radius: 10px;
+  background: #FEF2F2; /* Soft red for overdue warning */
+  border: 1px solid #FEE2E2;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+.notification-item:hover {
+  background: #FEE2E2;
+  transform: translateY(-1px);
+}
+.notification-icon-wrapper {
+  color: var(--accent-danger);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.notification-message {
+  font-size: 13px;
+  color: #991B1B;
+  line-height: 1.4;
+  font-weight: 500;
+}
+.no-notifications {
+  padding: 20px 0;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 13px;
+}

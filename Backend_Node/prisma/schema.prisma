@@ -18,6 +18,8 @@ model User {
   isActive       Boolean  @default(true)
   subscriptionType String @default("Basic")
   favoriteDevices String[]
+  lockedModules   String[]
+  daysSinceLastPayment Int @default(0)
   createdDate    DateTime @default(now())
   registrationIp String?
 
