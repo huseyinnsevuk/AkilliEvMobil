@@ -292,7 +292,6 @@ const CustomersPage = ({ initialSelectedId }: { initialSelectedId?: string | nul
                 <h3>Kullanılabilir Cihaz Aksiyonları</h3>
                 <p>
                   Müşterinin mevcut ({selectedCustomer.plan}) paketi dahilinde kullanabileceği modüller aşağıdadır.
-                  Kırmızı kilit simgesi olan cihazlar yönetici tarafından kilitlenmiştir.
                 </p>
               </div>
 
@@ -307,8 +306,8 @@ const CustomersPage = ({ initialSelectedId }: { initialSelectedId?: string | nul
 
                   const isManuallyLocked = selectedCustomer.lockedModules?.includes(device.id) || false;
                   const isLocked = isLockedByPlan || isManuallyLocked;
-                  const lockReason = isLockedByPlan 
-                    ? (isPremium ? 'Pakete Dahil Değil' : 'Premium Gerektirir') 
+                  const lockReason = isLockedByPlan
+                    ? (isPremium ? 'Pakete Dahil Değil' : 'Premium Gerektirir')
                     : 'Yönetici Tarafından Kilitli';
 
                   return (
@@ -348,7 +347,6 @@ const CustomersPage = ({ initialSelectedId }: { initialSelectedId?: string | nul
             <div className="payments-card glass-panel">
               <div className="payments-header">
                 <h3>Ödeme Geçmişi</h3>
-                <p>Müşterinin geçmişte gerçekleştirdiği tüm ödeme işlemlerinin dökümü (Tarih ve Saat detayıyla).</p>
               </div>
 
               <div className="payments-table-wrapper">

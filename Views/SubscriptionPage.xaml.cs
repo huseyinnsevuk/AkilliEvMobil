@@ -131,10 +131,9 @@ namespace AkilliEvMobil.Views
             await Navigation.PopAsync();
         }
 
-        // MOK MOD: Stripe devre dışı — direkt başarı ekranı aç
         private async void OnPayButtonTapped(object sender, TappedEventArgs e)
         {
-            await ShowSuccessScreen();
+            await InitiateStripePayment();
         }
 
         private async void OnGoHomeClicked(object sender, TappedEventArgs e)
@@ -184,10 +183,57 @@ namespace AkilliEvMobil.Views
             }
         }
 
-        // Geriye dönük uyumluluk için (polling'den çağrılıyor)
         private async void OnPayClicked(object sender, EventArgs e)
         {
-            await ShowSuccessScreen();
+            await InitiateStripePayment();
+        }
+
+        private async System.Threading.Tasks.Task InitiateStripePayment()
+        {
+            try
+            {
+                string userId = Services.DeviceService.Instance.CurrentUserId;
+                if (string.IsNullOrEmpty(userId))
+                {
+                    await DisplayAlert("Hata", "Kullanıcı bilgisi alınamadı.", "Tamam");
+                    return;
+                }
+
+                string baseUrl = "http://141.98.48.101:3000";
+                using var client = new System.Net.Http.HttpClient();
+                var requestBody = new { userId = userId };
+
+                var response = await client.PostAsync($"{baseUrl}/api/payments/create-checkout-session",
+                    new System.Net.Http.StringContent(
+                        System.Text.Json.JsonSerializer.Serialize(requestBody),
+                        System.Text.Encoding.UTF8,
+                        "application/json"));
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var responseJson = await response.Content.ReadAsStringAsync();
+                    var node = System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.Nodes.JsonObject>(responseJson);
+                    string checkoutUrl = node?["url"]?.ToString();
+
+                    if (!string.IsNullOrEmpty(checkoutUrl))
+                    {
+                        // Web tarayıcısını aç ve Stripe sayfasına yönlendir
+                        await Microsoft.Maui.ApplicationModel.Browser.Default.OpenAsync(checkoutUrl, Microsoft.Maui.ApplicationModel.BrowserLaunchMode.SystemPreferred);
+                    }
+                    else
+                    {
+                        await DisplayAlert("Hata", "Ödeme oturumu adresi alınamadı.", "Tamam");
+                    }
+                }
+                else
+                {
+                    await DisplayAlert("Hata", "Ödeme sunucusuyla bağlantı kurulamadı.", "Tamam");
+                }
+            }
+            catch (Exception ex)
+            {
+                await DisplayAlert("Hata", $"Ödeme başlatılamadı: {ex.Message}", "Tamam");
+            }
         }
     }
 }
