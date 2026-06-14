@@ -166,15 +166,44 @@ namespace AkilliEvMobil.Services
                         var lockedModulesArray = currentUser["lockedModules"]?.AsArray();
                         var lockedModulesList = lockedModulesArray?.Select(x => x.ToString()).ToList() ?? new System.Collections.Generic.List<string>();
 
+                        bool favoritesModified = false;
+                        var finalFavorites = new System.Collections.Generic.List<string>();
+
                         foreach (var device in Devices)
                         {
                             device.IsLocked = !allowedModules.Contains(device.Id) || lockedModulesList.Contains(device.Id);
-                            device.IsFavorite = favoriteDevicesList.Contains(device.Id);
+                            bool isFavInDb = favoriteDevicesList.Contains(device.Id);
                             
-                            // Eğer cihaz kilitlendiyse ve favorilerdeyse, otomatik olarak favorilerden çıkar
-                            if (device.IsLocked && device.IsFavorite)
+                            if (device.IsLocked && isFavInDb)
                             {
                                 device.IsFavorite = false;
+                                favoritesModified = true;
+                            }
+                            else
+                            {
+                                device.IsFavorite = isFavInDb;
+                            }
+
+                            if (device.IsFavorite)
+                            {
+                                finalFavorites.Add(device.Id);
+                            }
+                        }
+
+                        if (favoritesModified)
+                        {
+                            try
+                            {
+                                var payload = new { favoriteDevices = finalFavorites };
+                                var favUpdateResponse = await client.PutAsJsonAsync($"{baseUrl}/api/users/email/{System.Uri.EscapeDataString(activeEmail)}/favorites", payload);
+                                if (!favUpdateResponse.IsSuccessStatusCode)
+                                {
+                                    System.Diagnostics.Debug.WriteLine($"Failed to sync removed favorites back to DB: {favUpdateResponse.StatusCode}");
+                                }
+                            }
+                            catch (System.Exception ex)
+                            {
+                                System.Diagnostics.Debug.WriteLine($"Error updating database favorites during sync: {ex.Message}");
                             }
                         }
                     }

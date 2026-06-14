@@ -294,6 +294,41 @@ namespace AkilliEvMobil.Views
             }
             await Shell.Current.GoToAsync("//SettingsPage");
         }
+
+        private async void OnDeviceTapped(object sender, EventArgs e)
+        {
+            if (sender is Border border && border.BindingContext is SmartDevice device)
+            {
+                // Noticeable Pop Effect
+                await border.ScaleTo(0.9, 100, Easing.CubicOut);
+                await border.ScaleTo(1.0, 100, Easing.CubicIn);
+
+                if (device.IsLocked)
+                {
+                    await DisplayAlert("Kilitli Özellik", "Premium üyelik veya yetki gerektirir.", "Tamam");
+                }
+                else if (device.Id == "light")
+                {
+                    await Shell.Current.GoToAsync(nameof(LightingPage));
+                }
+                else if (device.Id == "camera")
+                {
+                    await Shell.Current.GoToAsync(nameof(CameraPage));
+                }
+                else if (device.Id == "tent")
+                {
+                    await Shell.Current.GoToAsync(nameof(TentPage));
+                }
+                else if (device.Id == "fan")
+                {
+                    await Shell.Current.GoToAsync(nameof(FanPage));
+                }
+                else if (device.Id == "heater")
+                {
+                    await Shell.Current.GoToAsync(nameof(HeaterPage));
+                }
+            }
+        }
     }
 }
 
