@@ -16,6 +16,7 @@ import {
 import './App.css';
 import CustomersPage from './pages/CustomersPage';
 import SubscriptionsPage from './pages/SubscriptionsPage';
+import LoginPage from './pages/LoginPage';
 
 // Yüklenen Yeni Tasarım Varlıkları
 import sensorImg from './assets/sensor.png';
@@ -35,14 +36,19 @@ interface DashboardStats {
 }
 
 function App() {
+  const [isLoggedIn, setIsLoggedIn] = useState(() => {
+    return sessionStorage.getItem('adminIsLoggedIn') === 'true';
+  });
   const [currentPage, setCurrentPage] = useState('dashboard');
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!isLoggedIn) return;
+
     const fetchStats = async () => {
       try {
-        const res = await fetch('http://nart3d.com:3000/api/dashboard/stats');
+        const res = await fetch('http://141.98.48.101:3000/api/dashboard/stats');
         if (!res.ok) throw new Error('API yanıt vermedi');
         const data = await res.json();
         setStats(data);
@@ -58,11 +64,27 @@ function App() {
       const interval = setInterval(fetchStats, 10000); // 10 saniyede bir güncelle
       return () => clearInterval(interval);
     }
-  }, [currentPage]);
+  }, [currentPage, isLoggedIn]);
+
+  const handleLogin = (user: string) => {
+    sessionStorage.setItem('adminIsLoggedIn', 'true');
+    sessionStorage.setItem('adminUser', user);
+    setIsLoggedIn(true);
+  };
+
+  const handleLogout = () => {
+    sessionStorage.removeItem('adminIsLoggedIn');
+    sessionStorage.removeItem('adminUser');
+    setIsLoggedIn(false);
+  };
 
   const formatCurrency = (val: number) => {
     return new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(val);
   };
+
+  if (!isLoggedIn) {
+    return <LoginPage onLogin={handleLogin} />;
+  }
 
   return (
     <div className="layout-wrapper">
@@ -103,7 +125,13 @@ function App() {
         </nav>
 
         <div className="sidebar-bottom">
-          <a href="#" className="nav-item logout-item"><LogOut size={22} /> Çıkış Yap</a>
+          <a
+            href="#"
+            className="nav-item logout-item"
+            onClick={(e) => { e.preventDefault(); handleLogout(); }}
+          >
+            <LogOut size={22} /> Çıkış Yap
+          </a>
         </div>
       </aside>
 
