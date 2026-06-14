@@ -128,6 +128,29 @@ namespace AkilliEvMobil
                     );
                 });
             }
+
+            if (intent?.GetStringExtra("open_page") == "camera")
+            {
+                Microsoft.Maui.ApplicationModel.MainThread.BeginInvokeOnMainThread(async () =>
+                {
+                    try
+                    {
+                        await System.Threading.Tasks.Task.Delay(500);
+                        if (Shell.Current != null)
+                        {
+                            var currentPage = Shell.Current.CurrentPage;
+                            if (currentPage?.GetType().Name != "CameraPage")
+                            {
+                                await Shell.Current.GoToAsync(nameof(Views.CameraPage));
+                            }
+                        }
+                    }
+                    catch (System.Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"Failed to navigate to CameraPage: {ex.Message}");
+                    }
+                });
+            }
         }
     }
 }

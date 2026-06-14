@@ -102,6 +102,8 @@ app.post('/api/devices/control', async (req, res) => {
   }
 });
 
+let latestMotionDetected = false;
+
 mqttClient.on('connect', () => {
   console.log('✅ Backend MQTT Broker\'a bağlandı!');
   mqttClient.subscribe('Nest/home/sensor/#', (err) => {
@@ -159,6 +161,11 @@ mqttClient.on('message', async (topic, message) => {
       }
     });
     console.log(`📝 Sensör Kaydı (${device.name}): ${sensorType} -> ${payload}`);
+
+    if (sensorType === 'hareket') {
+      latestMotionDetected = (payload === '1' || payload === 'true');
+      console.log(`📡 Hareket algılama durumu güncellendi: ${latestMotionDetected}`);
+    }
     
     // Acil durum uyarısını tetikle
     if (sensorType === 'gaz') {
@@ -196,6 +203,7 @@ app.get('/api/sensors/latest', async (req, res) => {
       isRaining: absoluteLatestLog?.isRaining ?? false,
       gasDetected: absoluteLatestLog?.gasDetected ?? false,
       lightLevel: latestLightLog?.lightLevel ?? 250,
+      motionDetected: latestMotionDetected,
       createdAt: absoluteLatestLog?.createdAt ?? new Date()
     });
   } catch (err) {
@@ -760,6 +768,8 @@ app.post('/api/simulate/:userId', async (req, res) => {
       }
     });
 
+    latestMotionDetected = Math.random() > 0.7; // Simülasyonda hareket durumunu rastgele güncelle
+
     res.json(newLog);
   } catch (error) {
     console.error(error);
@@ -770,7 +780,7 @@ app.post('/api/simulate/:userId', async (req, res) => {
 // Sensör Verilerini Kaydetme API'si (Cihazdan Gelen)
 app.post('/api/sensors', async (req, res) => {
   try {
-    const { temperature, humidity, isRaining, gasDetected, lightLevel, deviceId } = req.body;
+    const { temperature, humidity, isRaining, gasDetected, lightLevel, motionDetected, deviceId } = req.body;
 
     // Test aşamasında "DeviceId" gelmezse, veritabanında sahte bir Test Cihazı (Dummy Device) yaratıyoruz.
     let targetDeviceId = deviceId;
@@ -804,7 +814,11 @@ app.post('/api/sensors', async (req, res) => {
       }
     });
 
-    console.log(`[+] Sensör Verisi Alındı -> Sıcaklık: ${temperature}°C, Yağmur: ${isRaining}, Gas: ${gasDetected}, Işık: ${lightLevel || 0} Lux`);
+    if (motionDetected !== undefined) {
+      latestMotionDetected = (motionDetected === true || motionDetected === 'true' || motionDetected === 1 || motionDetected === '1');
+    }
+
+    console.log(`[+] Sensör Verisi Alındı -> Sıcaklık: ${temperature}°C, Yağmur: ${isRaining}, Gas: ${gasDetected}, Işık: ${lightLevel || 0} Lux, Hareket: ${latestMotionDetected}`);
     
     // Acil durum uyarısını tetikle
     await handleSensorTriggers(gasDetected, targetDeviceId);

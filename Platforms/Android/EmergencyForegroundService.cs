@@ -24,12 +24,15 @@ namespace AkilliEvMobil.Platforms.Android
     {
         private const int SERVICE_NOTIFICATION_ID = 1001;
         private const int ALARM_NOTIFICATION_ID = 1002;
+        private const int MOTION_NOTIFICATION_ID = 1003;
         private const string CHANNEL_ID = "akilliev_security_channel";
         private const string ALARM_CHANNEL_ID = "akilliev_alarm_channel";
+        private const string MOTION_CHANNEL_ID = "akilliev_motion_channel";
         
         private CancellationTokenSource? _cts;
         private bool _isServiceRunning = false;
         private bool _lastGasState = false;
+        private bool _lastMotionState = false;
         private bool _isAlarmAcknowledged = false; // Latch (Kilit): Kullanıcı susturunca gaz temizlenene kadar tekrar çalmayı önler
         
         // Siren ve Titreşim Kaynakları
@@ -137,6 +140,13 @@ namespace AkilliEvMobil.Platforms.Android
                 }
 
                 manager.CreateNotificationChannel(alarmChannel);
+
+                // 3. Hareket Bildirim Kanalı (Yüksek önem, varsayılan ses)
+                var motionChannel = new NotificationChannel(MOTION_CHANNEL_ID, "Hareket Algılama Uyardıları 🚨", NotificationImportance.High)
+                {
+                    Description = "Hareket algılandığında anlık bildirim göndermek için kullanılır."
+                };
+                manager.CreateNotificationChannel(motionChannel);
             }
         }
 
@@ -158,6 +168,7 @@ namespace AkilliEvMobil.Platforms.Android
                         if (log != null)
                         {
                             bool gasDetected = log["gasDetected"]?.GetValue<bool>() ?? false;
+                            bool motionDetected = log["motionDetected"]?.GetValue<bool>() ?? false;
 
                             if (gasDetected)
                             {
@@ -172,6 +183,19 @@ namespace AkilliEvMobil.Platforms.Android
                                 _lastGasState = false;
                                 _isAlarmAcknowledged = false; // Gaz temizlendiğinde kilidi sıfırla (Bir sonraki tehlikeye hazır olsun)
                                 StopSirenAndVibration();
+                            }
+
+                            if (motionDetected)
+                            {
+                                if (!_lastMotionState)
+                                {
+                                    _lastMotionState = true;
+                                    TriggerMotionNotification();
+                                }
+                            }
+                            else
+                            {
+                                _lastMotionState = false;
                             }
                         }
                     }
@@ -451,6 +475,39 @@ namespace AkilliEvMobil.Platforms.Android
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Failed to restart service on task removed: {ex.Message}");
+            }
+        }
+
+        public void TriggerMotionNotification()
+        {
+            try
+            {
+                var mainIntent = new Intent(this, typeof(MainActivity));
+                mainIntent.AddFlags(ActivityFlags.NewTask | ActivityFlags.ClearTop | ActivityFlags.SingleTop);
+                mainIntent.PutExtra("open_page", "camera");
+                
+                var pendingIntent = PendingIntent.GetActivity(
+                    this, 
+                    1, 
+                    mainIntent, 
+                    PendingIntentFlags.Immutable | PendingIntentFlags.UpdateCurrent
+                );
+
+                var motionNotification = new NotificationCompat.Builder(this, MOTION_CHANNEL_ID)
+                    .SetContentTitle("🚨 Hareket Algılandı!")
+                    .SetContentText("Kamerayı açmak için dokun.")
+                    .SetSmallIcon(global::Android.Resource.Drawable.IcDialogInfo)
+                    .SetPriority(NotificationCompat.PriorityHigh)
+                    .SetContentIntent(pendingIntent)
+                    .SetAutoCancel(true)
+                    .Build();
+
+                var manager = (NotificationManager?)GetSystemService(NotificationService);
+                manager?.Notify(MOTION_NOTIFICATION_ID, motionNotification);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Hareket bildirimi gönderilemedi: {ex.Message}");
             }
         }
 

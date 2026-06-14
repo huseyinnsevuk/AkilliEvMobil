@@ -71,7 +71,7 @@
                                 <Grid.GestureRecognizers>
                                     <TapGestureRecognizer Tapped="OnSupportClicked" />
                                 </Grid.GestureRecognizers>
-                                <Image Grid.Column="0" Source="question_mark.png" HeightRequest="22" WidthRequest="22" VerticalOptions="Center" HorizontalOptions="Center" />
+                                <Image Grid.Column="0" Source="support.png" HeightRequest="22" WidthRequest="22" VerticalOptions="Center" HorizontalOptions="Center" />
                                 <Label Grid.Column="1" Text="Destek" VerticalOptions="Center" TextColor="#334155" FontSize="15" />
                                 <Label Grid.Column="2" Text="›" FontSize="24" TextColor="#CBD5E1" VerticalOptions="Center" HorizontalOptions="Center" />
                             </Grid>
