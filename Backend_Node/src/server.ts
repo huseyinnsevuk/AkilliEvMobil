@@ -363,6 +363,117 @@ app.put('/api/users/:id/payment-days', async (req, res) => {
   }
 });
 
+// Destek Talebi Oluşturma (Mobil Uygulamadan Gelen)
+app.post('/api/support/tickets', async (req, res) => {
+  try {
+    const { subject, message, userEmail, userName } = req.body;
+    if (!subject || !message || !userEmail) {
+      return res.status(400).json({ error: 'Konu, mesaj ve e-posta zorunludur.' });
+    }
+
+    const newTicket = await prisma.supportTicket.create({
+      data: {
+        subject,
+        message,
+        userEmail,
+        userName: userName || null
+      }
+    });
+
+    await logActivity('SUPPORT_TICKET_CREATE', 'Destek Talebi Oluşturuldu', `${userEmail} tarafından "${subject}" konulu destek talebi açıldı.`);
+    res.status(201).json(newTicket);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Destek talebi oluşturulamadı.' });
+  }
+});
+
+// Tüm Destek Taleplerini Getir (Admin Paneli İçin)
+app.get('/api/support/tickets', async (req, res) => {
+  try {
+    const tickets = await prisma.supportTicket.findMany({
+      orderBy: { createdAt: 'desc' }
+    });
+    res.json(tickets);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Destek talepleri alınamadı.' });
+  }
+});
+
+// Destek Talebine Cevap Yaz & Kullanıcıya E-posta Gönder
+app.post('/api/support/tickets/:id/reply', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { reply } = req.body;
+
+    if (!reply) {
+      return res.status(400).json({ error: 'Cevap alanı boş bırakılamaz.' });
+    }
+
+    // Talebi bul
+    const ticket = await prisma.supportTicket.findUnique({
+      where: { id }
+    });
+
+    if (!ticket) {
+      return res.status(404).json({ error: 'Destek talebi bulunamadı.' });
+    }
+
+    // Talebi güncelle
+    const updatedTicket = await prisma.supportTicket.update({
+      where: { id },
+      data: {
+        reply,
+        status: 'Replied'
+      }
+    });
+
+    // E-posta gönderimi
+    const fromEmail = process.env.SMTP_USER || 'akilliev@nart3d.com';
+    const emailSubject = `Destek Talebi Cevabı: ${ticket.subject}`;
+    const emailHtml = `
+      <div style="font-family: sans-serif; padding: 20px; color: #1E293B; background-color: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 12px; max-width: 600px; margin: auto;">
+        <h2 style="color: #10B981; margin-top: 0;">Akıllı Ev Destek Merkezi</h2>
+        <p style="font-size: 16px; line-height: 1.5;">Merhaba,</p>
+        <p style="font-size: 16px; line-height: 1.5;">Açmış olduğunuz destek talebi sistem yöneticimiz tarafından yanıtlanmıştır.</p>
+        
+        <div style="background-color: #F1F5F9; padding: 15px; border-radius: 8px; margin: 15px 0; border: 1px solid #CBD5E1;">
+          <strong>Destek Talebiniz:</strong><br/>
+          <span style="font-style: italic; color: #475569;">"${ticket.message}"</span>
+        </div>
+
+        <div style="background-color: #ECFDF5; padding: 15px; border-radius: 8px; margin: 15px 0; border: 1px solid #A7F3D0;">
+          <strong>Yönetici Yanıtı:</strong><br/>
+          <span style="color: #065F46; font-weight: 500;">"${reply}"</span>
+        </div>
+
+        <p style="font-size: 14px; color: #64748B; line-height: 1.5;">Herhangi bir konuda tekrar yardıma ihtiyaç duyarsanız settings sayfasından yeni bir destek talebi oluşturabilirsiniz.</p>
+        <hr style="border: 0; border-top: 1px solid #E2E8F0; margin: 24px 0;" />
+        <p style="font-size: 12px; color: #94A3B8; text-align: center; margin-bottom: 0;">© 2026 Akıllı Ev Mobil. Tüm hakları saklıdır.</p>
+      </div>
+    `;
+
+    if (process.env.SMTP_USER) {
+      await smtpTransporter.sendMail({
+        from: `"Akıllı Ev Destek" <${fromEmail}>`,
+        to: ticket.userEmail,
+        subject: emailSubject,
+        html: emailHtml
+      });
+      console.log(`📧 Destek cevabı mail ile gönderildi: ${ticket.userEmail}`);
+    } else {
+      console.warn("⚠️ SMTP_USER .env dosyasında bulunamadı. E-posta gönderimi sunucuda simüle edilerek başarılı sayılacaktır.");
+    }
+
+    await logActivity('SUPPORT_TICKET_REPLY', 'Destek Talebi Yanıtlandı', `${ticket.userEmail} e-postalı "${ticket.subject}" talebi yanıtlandı.`);
+    res.json(updatedTicket);
+  } catch (error: any) {
+    console.error(error);
+    res.status(500).json({ error: 'Cevap gönderilemedi.', details: error.message });
+  }
+});
+
 // Yeni Kullanıcı Ekleme
 app.post('/api/users', async (req, res) => {
   try {

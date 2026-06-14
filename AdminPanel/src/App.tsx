@@ -12,12 +12,14 @@ import {
   FileText,
   Settings,
   LogOut,
-  AlertCircle
+  AlertCircle,
+  MessageSquare
 } from 'lucide-react';
 import './App.css';
 import CustomersPage from './pages/CustomersPage';
 import SubscriptionsPage from './pages/SubscriptionsPage';
 import LoginPage from './pages/LoginPage';
+import SupportPage from './pages/SupportPage';
 
 // Yüklenen Yeni Tasarım Varlıkları
 import sensorImg from './assets/sensor.png';
@@ -124,6 +126,13 @@ function App() {
             onClick={(e) => { e.preventDefault(); setCurrentPage('subscriptions'); }}
           >
             <FileText size={22} /> Abonelik & Fatura
+          </a>
+          <a
+            href="#"
+            className={`nav-item ${currentPage === 'support' ? 'active' : ''}`}
+            onClick={(e) => { e.preventDefault(); setCurrentPage('support'); }}
+          >
+            <MessageSquare size={22} /> Destek Talepleri
           </a>
           <a href="#" className="nav-item"><Settings size={22} /> Ayarlar</a>
         </nav>
@@ -339,6 +348,8 @@ function App() {
             </>
           ) : currentPage === 'customers' ? (
             <CustomersPage initialSelectedId={selectedOverdueUserId} />
+          ) : currentPage === 'support' ? (
+            <SupportPage />
           ) : (
             <SubscriptionsPage />
           )}

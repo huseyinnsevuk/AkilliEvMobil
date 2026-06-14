@@ -86,3 +86,14 @@ model SystemPerformanceLog {
   success     Boolean  // ACK başarılı mı?
   createdAt   DateTime @default(now())
 }
+
+model SupportTicket {
+  id        String   @id @default(uuid())
+  subject   String
+  message   String
+  userEmail String
+  userName  String?
+  status    String   @default("Open") // Open, Replied
+  reply     String?
+  createdAt DateTime @default(now())
+}

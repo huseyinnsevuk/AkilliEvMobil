@@ -59,7 +59,6 @@
                                 <HorizontalStackLayout.GestureRecognizers>
                                     <TapGestureRecognizer Tapped="OnVerifyEmailClicked" />
                                 </HorizontalStackLayout.GestureRecognizers>
-                                <Label x:Name="EmailStatusIcon" Text="🚨" TextColor="#EF4444" FontSize="16" VerticalOptions="Center" />
                                 <Label x:Name="EmailStatusText" Text="E-postanız doğrulanmadı (Tekrar gönder)" TextColor="#EF4444" FontSize="13" FontAttributes="Bold" VerticalOptions="Center" TextDecorations="Underline" />
                             </HorizontalStackLayout>
                             
@@ -73,7 +72,6 @@
                             
                             <!-- Phone Status -->
                             <HorizontalStackLayout Spacing="5" Margin="0,5,0,0">
-                                <Label Text="✅" TextColor="#10B981" FontSize="16" VerticalOptions="Center" />
                                 <Label Text="Telefon Numarası Doğrulandı" TextColor="#10B981" FontSize="13" FontAttributes="Bold" VerticalOptions="Center" />
                             </HorizontalStackLayout>
                             
@@ -84,13 +82,7 @@
                 </Border>
 
                 <!-- Info Box -->
-                <Border BackgroundColor="#E0F2FE" StrokeThickness="0" Padding="15">
-                    <Border.StrokeShape><RoundRectangle CornerRadius="15" /></Border.StrokeShape>
-                    <Label Text="⚠️ E-postanızı doğrulamak için gelen kutunuzdaki Firebase doğrulama linkine tıklamanız ve ardından bu sayfaya tekrar girmeniz yeterlidir." 
-                           TextColor="#0369A1" 
-                           FontSize="12" 
-                           LineHeight="1.4" />
-                </Border>
+                
 
             </VerticalStackLayout>
         </ScrollView>

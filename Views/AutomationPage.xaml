@@ -53,7 +53,7 @@
             <CollectionView.ItemTemplate>
                 <DataTemplate>
                     <!-- ROOT GRID -->
-                    <Grid WidthRequest="190" HeightRequest="110" Margin="4">
+                    <Grid WidthRequest="190" HeightRequest="121" Margin="4">
                         <Grid.GestureRecognizers>
                             <TapGestureRecognizer Tapped="OnRoutineTapped" />
                         </Grid.GestureRecognizers>
@@ -66,11 +66,11 @@
 
                         <!-- SOL ÜST İKON -->
                         <Image Source="{Binding Icon}"
-                               WidthRequest="30"
-                               HeightRequest="30"
+                               WidthRequest="35"
+                               HeightRequest="35"
                                HorizontalOptions="Start"
                                VerticalOptions="Start"
-                               Margin="13,7,0,0" />
+                               Margin="10,7,0,0" />
 
                         <!-- METİNLER (İSİM & AÇIKLAMA) -->
                         <VerticalStackLayout HorizontalOptions="Start"

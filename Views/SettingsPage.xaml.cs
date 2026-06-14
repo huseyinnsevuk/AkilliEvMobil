@@ -37,6 +37,11 @@ namespace AkilliEvMobil.Views
             await Navigation.PushAsync(new SubscriptionPage());
         }
 
+        private async void OnSupportClicked(object sender, EventArgs e)
+        {
+            await Navigation.PushAsync(new SupportPage());
+        }
+
         private async void OnLogoutClicked(object sender, EventArgs e)
         {
             bool confirm = await DisplayAlert("Çıkış", "Çıkış yapmak istediğinizden emin misiniz?", "Evet", "Vazgeç");

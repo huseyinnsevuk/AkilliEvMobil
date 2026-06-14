@@ -83,14 +83,14 @@ namespace AkilliEvMobil.Views
         {
             if (_isEmailVerified)
             {
-                EmailStatusIcon.Text = "✅";
+                
                 EmailStatusText.Text = "E-posta Doğrulandı";
                 EmailStatusText.TextColor = Color.FromArgb("#10B981");
                 EmailStatusText.TextDecorations = TextDecorations.None;
             }
             else
             {
-                EmailStatusIcon.Text = "🚨";
+                
                 EmailStatusText.Text = "E-postanız doğrulanmadı (Tekrar göndermek için tıklayın)";
                 EmailStatusText.TextColor = Color.FromArgb("#EF4444");
                 EmailStatusText.TextDecorations = TextDecorations.Underline;

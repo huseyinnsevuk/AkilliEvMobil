@@ -1,0 +1,329 @@
+.support-page {
+  display: flex;
+  gap: 25px;
+  height: 100%;
+}
+
+/* Sol Taraf: Talepler Listesi */
+.tickets-sidebar {
+  width: 350px;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  background: #FFFFFF;
+}
+
+.sidebar-header h2 {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 5px;
+  color: var(--text-primary);
+}
+
+.sidebar-header p {
+  color: var(--text-secondary);
+  font-size: 13px;
+  margin-bottom: 20px;
+  line-height: 1.4;
+}
+
+.tickets-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow-y: auto;
+  flex: 1;
+  padding-right: 5px;
+}
+
+.ticket-list-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 15px;
+  border-radius: 14px;
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.ticket-list-item:hover {
+  border-color: #CBD5E1;
+  transform: translateY(-1px);
+}
+
+.ticket-list-item.active {
+  background: #F0FBAA; /* Neon-yellow/green theme color */
+  border-color: rgba(16, 185, 129, 0.2);
+}
+
+.ticket-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.ticket-list-header h4 {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+  line-height: 1.3;
+}
+
+.status-tag {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 6px;
+  text-transform: uppercase;
+}
+.status-tag.open {
+  background: #FEE2E2;
+  color: #EF4444;
+  border: 1px solid #FCA5A5;
+}
+.status-tag.replied {
+  background: #D1FAE5;
+  color: #10B981;
+  border: 1px solid #A7F3D0;
+}
+
+.ticket-excerpt {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+  margin: 0;
+}
+
+.ticket-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.no-tickets-sidebar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  color: var(--text-muted);
+  gap: 10px;
+}
+.no-tickets-sidebar p {
+  font-size: 13px;
+}
+
+/* Sağ Taraf: Detay ve Cevaplama */
+.ticket-detail-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+}
+
+.ticket-detail-card {
+  padding: 30px;
+  background: #FFFFFF;
+}
+
+.detail-header {
+  border-bottom: 1px solid #F1F5F9;
+  padding-bottom: 20px;
+  margin-bottom: 20px;
+}
+
+.header-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.header-info h2 {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.status-badge {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 20px;
+  text-transform: uppercase;
+}
+.status-badge.open {
+  background: #FEF2F2;
+  color: #EF4444;
+  border: 1px solid #FECACA;
+}
+.status-badge.replied {
+  background: #ECFDF5;
+  color: #10B981;
+  border: 1px solid #A7F3D0;
+}
+
+.sender-meta {
+  display: flex;
+  gap: 20px;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.detail-body h3 {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 10px;
+}
+
+.message-content {
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  padding: 20px;
+  border-radius: 16px;
+  color: var(--text-primary);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* Cevaplama Alanı */
+.reply-card {
+  padding: 30px;
+  background: #FFFFFF;
+}
+
+.reply-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.reply-header h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.success-icon {
+  color: #10B981;
+}
+
+.pending-icon {
+  color: #4A90E2;
+}
+
+.email-warning {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.reply-body {
+  display: flex;
+  gap: 15px;
+  background: #ECFDF5;
+  border: 1px solid #A7F3D0;
+  padding: 20px;
+  border-radius: 16px;
+}
+
+.reply-icon-wrapper {
+  color: #10B981;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.reply-content {
+  color: #065F46;
+  font-size: 14px;
+  line-height: 1.6;
+  font-weight: 500;
+}
+
+.reply-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.reply-textarea {
+  width: 100%;
+  background: #F8FAFC;
+  border: 1px solid #CBD5E1;
+  border-radius: 14px;
+  padding: 15px;
+  color: var(--text-primary);
+  font-size: 14px;
+  line-height: 1.5;
+  outline: none;
+  resize: none;
+  transition: border-color 0.2s;
+}
+
+.reply-textarea:focus {
+  border-color: #4A90E2;
+}
+
+.send-reply-btn {
+  align-self: flex-end;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 24px;
+  height: 46px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 14px;
+  background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+  color: white;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+  transition: all 0.2s ease;
+}
+
+.send-reply-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+}
+
+.send-reply-btn:disabled {
+  background: #CBD5E1;
+  color: #94A3B8;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+.no-selection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--text-muted);
+  background: #FFFFFF;
+  gap: 15px;
+}
+.no-selection h3 {
+  font-size: 16px;
+  font-weight: 600;
+}
+.no-selection p {
+  font-size: 13px;
+}
