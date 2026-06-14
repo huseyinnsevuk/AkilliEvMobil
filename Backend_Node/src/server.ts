@@ -356,6 +356,14 @@ app.put('/api/users/:id/payment-days', async (req, res) => {
       }
     });
 
+    if (updatedUser.subscriptionType === 'Premium' && updatedUser.daysSinceLastPayment > 30) {
+      await logActivity(
+        'PAYMENT_OVERDUE',
+        'Ödeme Gecikti',
+        `${updatedUser.fullName} kullanıcısının ödemesi ${updatedUser.daysSinceLastPayment - 30} gün gecikti!`
+      );
+    }
+
     res.json(updatedUser);
   } catch (error) {
     console.error(error);
@@ -869,11 +877,6 @@ app.get('/api/dashboard/stats', async (req, res) => {
       where: { status: 'Success' }
     });
 
-    const latestActivities = await prisma.activityLog.findMany({
-      orderBy: { createdAt: 'desc' },
-      take: 10
-    });
-
     const sensorCount = await prisma.device.count(); // Şimdilik cihaz sayısı sensör sayısı gibi
 
     // Ödemesi 30 günü geçmiş ve Premium olan kullanıcıları bul
@@ -881,20 +884,90 @@ app.get('/api/dashboard/stats', async (req, res) => {
       where: {
         subscriptionType: 'Premium',
         daysSinceLastPayment: { gt: 30 }
-      },
-      select: {
-        id: true,
-        fullName: true,
-        daysSinceLastPayment: true
       }
     });
 
-    const notifications = overdueUsers.map(u => ({
+    // Her geciken kullanıcı için bugün bir log atılmamışsa aktivite kaydı oluştur
+    for (const u of overdueUsers) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const existingLog = await prisma.activityLog.findFirst({
+        where: {
+          type: 'PAYMENT_OVERDUE',
+          description: {
+            contains: u.fullName
+          },
+          createdAt: {
+            gte: today
+          }
+        }
+      });
+      if (!existingLog) {
+        await logActivity(
+          'PAYMENT_OVERDUE',
+          'Ödeme Gecikti',
+          `${u.fullName} kullanıcısının ödemesi ${u.daysSinceLastPayment - 30} gün gecikti!`
+        );
+      }
+    }
+
+    // Sadece Yeni Kullanıcı (USER_REGISTER), Yeni Ödeme (PAYMENT_SUCCESS) ve Gecikmiş Ödeme (PAYMENT_OVERDUE) listelensin (Son 5 adet)
+    const latestActivities = await prisma.activityLog.findMany({
+      where: {
+        type: {
+          in: ['USER_REGISTER', 'PAYMENT_SUCCESS', 'PAYMENT_OVERDUE']
+        }
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 5
+    });
+
+    // BİLDİRİMLERİN OLUŞTURULMASI:
+    // 1. Ödemesi Geciken Premium Müşteriler
+    const overdueNotifications = overdueUsers.map(u => ({
       id: `overdue-${u.id}`,
       type: 'payment_overdue',
       userId: u.id,
       message: `${u.fullName} kullanıcısının ödemesi ${u.daysSinceLastPayment - 30} gün gecikti!`
     }));
+
+    // 2. Yeni Kayıt Olan Müşteriler (Son 5)
+    const recentUsers = await prisma.user.findMany({
+      orderBy: { createdDate: 'desc' },
+      take: 5
+    });
+    const registerNotifications = recentUsers.map(u => ({
+      id: `register-${u.id}`,
+      type: 'user_register',
+      userId: u.id,
+      message: `Yeni Kullanıcı: ${u.fullName} sisteme kayıt oldu.`
+    }));
+
+    // 3. Yeni Alınan Başarılı Ödemeler (Son 5)
+    const recentPaymentRecords = await prisma.paymentRecord.findMany({
+      where: { status: 'Success' },
+      orderBy: { createdAt: 'desc' },
+      take: 5
+    });
+    const paymentNotifications = [];
+    for (const pr of recentPaymentRecords) {
+      const u = await prisma.user.findUnique({ where: { id: pr.userId } });
+      if (u) {
+        paymentNotifications.push({
+          id: `payment-${pr.id}`,
+          type: 'payment_success',
+          userId: u.id,
+          message: `Ödeme Alındı: ${u.fullName} tarafından ₺${pr.amount} ödeme yapıldı.`
+        });
+      }
+    }
+
+    // Hepsini birleştir
+    const notifications = [
+      ...overdueNotifications,
+      ...registerNotifications,
+      ...paymentNotifications
+    ];
 
     res.json({
       metrics: {
