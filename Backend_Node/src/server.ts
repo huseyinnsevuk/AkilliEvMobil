@@ -765,9 +765,10 @@ app.get('/api/dashboard/stats', async (req, res) => {
 
     const sensorCount = await prisma.device.count(); // Şimdilik cihaz sayısı sensör sayısı gibi
 
-    // Ödemesi 30 günü geçmiş kullanıcıları bul
+    // Ödemesi 30 günü geçmiş ve Premium olan kullanıcıları bul
     const overdueUsers = await prisma.user.findMany({
       where: {
+        subscriptionType: 'Premium',
         daysSinceLastPayment: { gt: 30 }
       },
       select: {
@@ -781,7 +782,7 @@ app.get('/api/dashboard/stats', async (req, res) => {
       id: `overdue-${u.id}`,
       type: 'payment_overdue',
       userId: u.id,
-      message: `${u.fullName} kullanıcısının ödemesi gecikti (${u.daysSinceLastPayment} gün).`
+      message: `${u.fullName} kullanıcısının ödemesi ${u.daysSinceLastPayment - 30} gün gecikti!`
     }));
 
     res.json({

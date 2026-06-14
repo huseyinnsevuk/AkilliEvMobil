@@ -190,29 +190,6 @@ const CustomersPage = ({ initialSelectedId }: { initialSelectedId?: string | nul
     }
   };
 
-  const handleUpdatePaymentDays = async (days: number) => {
-    if (!selectedCustomer) return;
-
-    try {
-      const res = await fetch(`http://141.98.48.101:3000/api/users/${selectedCustomer.id}/payment-days`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ daysSinceLastPayment: days })
-      });
-
-      if (res.ok) {
-        const updatedUser = await res.json();
-        setCustomers(customers.map(c =>
-          c.id === selectedCustomer.id ? {
-            ...c,
-            daysSinceLastPayment: updatedUser.daysSinceLastPayment
-          } : c
-        ));
-      }
-    } catch (err) {
-      console.error("Ödeme süresi güncellenemedi:", err);
-    }
-  };
 
   return (
     <div className="customers-page">
@@ -275,21 +252,9 @@ const CustomersPage = ({ initialSelectedId }: { initialSelectedId?: string | nul
                     <span className="meta-item">
                       Ödemeden Geçen Süre: <strong>{selectedCustomer.daysSinceLastPayment} gün</strong>
                       {selectedCustomer.daysSinceLastPayment > 30 && (
-                        <span className="warning-badge">Ödeme Gecikti!</span>
+                        <span className="warning-badge">Ödeme {selectedCustomer.daysSinceLastPayment - 30} Gün Gecikti!</span>
                       )}
                     </span>
-                  </div>
-                  {/* Sunum Simülasyonu Kontrolü */}
-                  <div className="payment-days-test">
-                    <span className="days-label">Süre Değiştir (Sunum Testi):</span>
-                    <input
-                      type="number"
-                      min="0"
-                      value={selectedCustomer.daysSinceLastPayment}
-                      onChange={(e) => handleUpdatePaymentDays(parseInt(e.target.value) || 0)}
-                      className="days-input"
-                    />
-                    <span>gün</span>
                   </div>
                 </div>
               </div>
