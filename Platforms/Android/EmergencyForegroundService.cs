@@ -518,7 +518,7 @@ namespace AkilliEvMobil.Platforms.Android
                 );
 
                 var motionNotification = new NotificationCompat.Builder(this, MOTION_CHANNEL_ID)
-                    .SetContentTitle("🚨 Hareket Algılandı!")
+                    .SetContentTitle("Hareket Algılandı!")
                     .SetContentText("Kamerayı açmak için dokun.")
                     .SetSmallIcon(global::Android.Resource.Drawable.IcDialogInfo)
                     .SetPriority(NotificationCompat.PriorityHigh)
@@ -551,7 +551,7 @@ namespace AkilliEvMobil.Platforms.Android
                 );
 
                 var rainNotification = new NotificationCompat.Builder(this, RAIN_CHANNEL_ID)
-                    .SetContentTitle("🚨 Bölgenizde yağmur başladı!")
+                    .SetContentTitle("Bölgenizde yağmur başladı!")
                     .SetContentText("Tenteyi yönetmek için dokunun.")
                     .SetSmallIcon(global::Android.Resource.Drawable.IcDialogInfo)
                     .SetPriority(NotificationCompat.PriorityHigh)

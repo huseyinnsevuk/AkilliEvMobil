@@ -36,7 +36,7 @@ namespace AkilliEvMobil.Views.Controls
 
         private async void UpdateVisualState(bool animate)
         {
-            if (Thumb == null) return;
+            if (Thumb == null || BackgroundBorder == null) return;
 
             double targetX = IsToggled ? 26 : 0; // 54 total width - 22 thumb width - 3 margin*2 = 26 travel distance
             
@@ -49,8 +49,38 @@ namespace AkilliEvMobil.Views.Controls
                 Thumb.TranslationX = targetX;
             }
 
-            // Optional: Background color change if needed, but the gradient looks good as is
-            // BackgroundBorder.Opacity = IsToggled ? 1.0 : 0.6;
+            if (IsToggled)
+            {
+                // Active State: Soft light blue background with a vibrant blue-violet gradient thumb
+                BackgroundBorder.Background = new SolidColorBrush(Color.FromArgb("#EFF6FF"));
+                BackgroundBorder.Stroke = Color.FromArgb("#DBEAFE");
+                BackgroundBorder.StrokeThickness = 1;
+
+                var onGradient = new LinearGradientBrush
+                {
+                    StartPoint = new Point(0, 0),
+                    EndPoint = new Point(1, 1)
+                };
+                onGradient.GradientStops.Add(new GradientStop(Color.FromArgb("#60A5FA"), 0.0f)); // Soft light blue
+                onGradient.GradientStops.Add(new GradientStop(Color.FromArgb("#1D4ED8"), 1.0f)); // Deep premium blue
+                Thumb.Background = onGradient;
+            }
+            else
+            {
+                // Inactive State: Gray background and neutral white-gray gradient thumb
+                BackgroundBorder.Background = new SolidColorBrush(Color.FromArgb("#E2E8F0"));
+                BackgroundBorder.Stroke = Colors.Transparent;
+                BackgroundBorder.StrokeThickness = 0;
+
+                var offGradient = new LinearGradientBrush
+                {
+                    StartPoint = new Point(0, 0),
+                    EndPoint = new Point(1, 1)
+                };
+                offGradient.GradientStops.Add(new GradientStop(Color.FromArgb("#FFFFFF"), 0.0f));
+                offGradient.GradientStops.Add(new GradientStop(Color.FromArgb("#CBD5E1"), 1.0f));
+                Thumb.Background = offGradient;
+            }
         }
     }
 }

@@ -8,16 +8,12 @@
         <Border x:Name="BackgroundBorder" StrokeThickness="0" HorizontalOptions="Fill" VerticalOptions="Fill">
             <Border.StrokeShape><RoundRectangle CornerRadius="14" /></Border.StrokeShape>
             <Border.Background>
-                <LinearGradientBrush x:Name="ActiveGradient" StartPoint="0,0" EndPoint="1,0">
-                    <GradientStop Color="#4ADE80" Offset="0.0" /> <!-- Greenish -->
-                    <GradientStop Color="#3B82F6" Offset="1.0" /> <!-- Blue -->
-                </LinearGradientBrush>
+                <SolidColorBrush Color="#E2E8F0" />
             </Border.Background>
         </Border>
 
         <!-- Thumb -->
         <Border x:Name="Thumb" 
-                BackgroundColor="White" 
                 WidthRequest="22" 
                 HeightRequest="22" 
                 HorizontalOptions="Start" 
@@ -25,6 +21,12 @@
                 VerticalOptions="Center" 
                 StrokeThickness="0">
             <Border.StrokeShape><RoundRectangle CornerRadius="11" /></Border.StrokeShape>
+            <Border.Background>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                    <GradientStop Color="#FFFFFF" Offset="0.0" />
+                    <GradientStop Color="#E2E8F0" Offset="1.0" />
+                </LinearGradientBrush>
+            </Border.Background>
             <Border.Shadow>
                 <Shadow Brush="Black" Offset="0,2" Radius="4" Opacity="0.15" />
             </Border.Shadow>
