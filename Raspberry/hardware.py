@@ -425,36 +425,63 @@ except Exception as e:
 # Kamera yayın sunucusunu arka plan iş parçacığı (Thread) olarak başlatıyoruz
 threading.Thread(target=baslat_kamera_yayini, daemon=True).start()
 
-print("🚀 SİSTEM ÇİFT YÖNLÜ ÇALIŞIYOR...")
+try:
+    print("🚀 SİSTEM ÇİFT YÖNLÜ ÇALIŞIYOR...")
+    while True:
+        try:
+            # Yağmur Sensörü Okuma ve Yayınlama
+            durum = GPIO.input(PIN_YAGMUR)
+            yagmur_var_mi = "1" if durum == 0 else "0"
+            client.publish(KONU_YAGMUR, yagmur_var_mi)
+            
+            # Gaz Sensörü Okuma ve Yayınlama (MQ-2)
+            gaz_durum = GPIO.input(PIN_GAZ)
+            # Genellikle MQ-2 dijital çıkışı gaz algılandığında LOW (0) olur. 
+            # Durum 0 ise gaz var ("1"), 1 ise temiz hava ("0") yayınlanır.
+            gaz_var_mi = "1" if gaz_durum == 0 else "0"
+            client.publish(KONU_GAZ, gaz_var_mi)
+            if gaz_durum == 0:
+                print("🚨 DIKKAT: Gaz sizintisi tespit edildi!")
+            
+            # LDR Işık Sensörü Okuma ve Yayınlama (Lux)
+            lux_degeri = read_lux()
+            client.publish(KONU_ISIK, str(lux_degeri))
 
-while True:
+            # DHT11 Sıcaklık ve Nem Sensörü Okuma ve Yayınlama
+            temp, hum = read_dht()
+            if temp is not None:
+                client.publish(KONU_SICAKLIK, str(temp))
+                print(f"🌡️ Sıcaklık Okundu: {temp}°C")
+            if hum is not None:
+                client.publish(KONU_NEM, str(hum))
+                print(f"💧 Nem Okundu: %{hum}")
+        except Exception as e:
+            print(f"❌ Hata: {e}")
+        time.sleep(3)
+except KeyboardInterrupt:
+    print("\n🛑 Kullanıcı tarafından durduruldu.")
+finally:
+    print("🧹 Sistem temizliği başlatılıyor...")
+    
+    if dht_device is not None:
+        try:
+            dht_device.exit()
+            print("✅ DHT11 sensör bağlantısı sonlandırıldı.")
+        except Exception as e:
+            print(f"⚠️ DHT11 kapatılamadı: {e}")
+            
+    if camera is not None:
+        try:
+            camera.close()
+            print("✅ RPi Kamera bağlantısı sonlandırıldı.")
+        except Exception as e:
+            print(f"⚠️ Kamera kapatılamadı: {e}")
+            
     try:
-        # Yağmur Sensörü Okuma ve Yayınlama
-        durum = GPIO.input(PIN_YAGMUR)
-        yagmur_var_mi = "1" if durum == 0 else "0"
-        client.publish(KONU_YAGMUR, yagmur_var_mi)
-        
-        # Gaz Sensörü Okuma ve Yayınlama (MQ-2)
-        gaz_durum = GPIO.input(PIN_GAZ)
-        # Genellikle MQ-2 dijital çıkışı gaz algılandığında LOW (0) olur. 
-        # Durum 0 ise gaz var ("1"), 1 ise temiz hava ("0") yayınlanır.
-        gaz_var_mi = "1" if gaz_durum == 0 else "0"
-        client.publish(KONU_GAZ, gaz_var_mi)
-        if gaz_durum == 0:
-            print("🚨 DIKKAT: Gaz sizintisi tespit edildi!")
-        
-        # LDR Işık Sensörü Okuma ve Yayınlama (Lux)
-        lux_degeri = read_lux()
-        client.publish(KONU_ISIK, str(lux_degeri))
-
-        # DHT11 Sıcaklık ve Nem Sensörü Okuma ve Yayınlama
-        temp, hum = read_dht()
-        if temp is not None:
-            client.publish(KONU_SICAKLIK, str(temp))
-            print(f"🌡️ Sıcaklık Okundu: {temp}°C")
-        if hum is not None:
-            client.publish(KONU_NEM, str(hum))
-            print(f"💧 Nem Okundu: %{hum}")
+        pwm.stop()
+        pwm_aydinlatma.stop()
+        pwm_fan.stop()
+        GPIO.cleanup()
+        print("✅ GPIO pin temizliği tamamlandı.")
     except Exception as e:
-        print(f"❌ Hata: {e}")
-    time.sleep(3)
+        print(f"⚠️ GPIO temizlenirken hata: {e}")
