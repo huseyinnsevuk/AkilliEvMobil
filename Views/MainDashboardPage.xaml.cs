@@ -75,8 +75,10 @@ namespace AkilliEvMobil.Views
                         using var client = new System.Net.Http.HttpClient();
                         client.Timeout = TimeSpan.FromSeconds(5);
 
-                        // [GÜNCELLEME] Simülasyonu kapattık, doğrudan gerçek veriyi çekiyoruz
-                        var response = await client.GetAsync($"{baseUrl}/api/sensors/latest");
+                        string url = !string.IsNullOrEmpty(userId) 
+                            ? $"{baseUrl}/api/users/{userId}/sensors/latest" 
+                            : $"{baseUrl}/api/sensors/latest";
+                        var response = await client.GetAsync(url);
                         
                         if (response.IsSuccessStatusCode)
                         {

@@ -170,7 +170,11 @@ namespace AkilliEvMobil.Platforms.Android
             {
                 try
                 {
-                    var response = await client.GetAsync($"{baseUrl}/api/sensors/latest", token);
+                    string userId = AkilliEvMobil.Services.DeviceService.Instance.CurrentUserId;
+                    string url = !string.IsNullOrEmpty(userId) 
+                        ? $"{baseUrl}/api/users/{userId}/sensors/latest" 
+                        : $"{baseUrl}/api/sensors/latest";
+                    var response = await client.GetAsync(url, token);
                     if (response.IsSuccessStatusCode)
                     {
                         var json = await response.Content.ReadAsStringAsync(token);

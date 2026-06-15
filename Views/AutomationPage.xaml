@@ -79,14 +79,14 @@
                                              Spacing="2">
                             <Label Text="{Binding Name}"
                                    FontFamily="Quicksand"
-                                   FontSize="13"
+                                   FontSize="14"
                                    FontAttributes="Bold"
                                    TextColor="#1E293B" />
                             
                             <Label Text="{Binding Description}"
                                    FontFamily="Quicksand"
-                                   FontSize="9"
-                                   TextColor="#64748B"
+                                   FontSize="12"
+                                   TextColor="#595353"
                                    LineBreakMode="TailTruncation"
                                    MaxLines="2" />
                         </VerticalStackLayout>

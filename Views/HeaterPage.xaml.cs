@@ -75,7 +75,11 @@ public partial class HeaterPage : ContentPage, IDrawable
             client.Timeout = System.TimeSpan.FromSeconds(3);
             
             string baseUrl = "http://141.98.48.101:3000";
-            var response = await client.GetAsync($"{baseUrl}/api/sensors/latest");
+            string userId = Services.DeviceService.Instance.CurrentUserId;
+            string url = !string.IsNullOrEmpty(userId) 
+                ? $"{baseUrl}/api/users/{userId}/sensors/latest" 
+                : $"{baseUrl}/api/sensors/latest";
+            var response = await client.GetAsync(url);
             if (response.IsSuccessStatusCode)
             {
                 var jsonString = await response.Content.ReadAsStringAsync();
