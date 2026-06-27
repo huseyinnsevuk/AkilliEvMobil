@@ -77,6 +77,7 @@ namespace AkilliEvMobil.Views
                 else
                 {
                     // If turned off, reset/turn off the devices
+                    await SendDeviceCommandAsync("rutin", new { name = routine.Name, state = "OFF" });
                     await TurnOffAllDevicesAsync();
                     await DisplayAlert("Rutin Sonlandırıldı", $"{routine.Name} senaryosu kapatıldı.", "Tamam");
                 }
@@ -85,6 +86,9 @@ namespace AkilliEvMobil.Views
 
         private async System.Threading.Tasks.Task ExecuteRoutineActionsAsync(string routineName)
         {
+            // Send routine activation state log to backend
+            await SendDeviceCommandAsync("rutin", new { name = routineName, state = "ON" });
+
             if (routineName == "Karşılama Modu")
             {
                 // Aydınlatmalar %50 seviyesinde, Fan %70 hızında çalışmaya başlar

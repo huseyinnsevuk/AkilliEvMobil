@@ -40,14 +40,14 @@ app.post('/api/devices/control', async (req, res) => {
     }
     const topic = `Nest/home/command/${deviceType}`;
     const payload = JSON.stringify(data);
-    
+
     if (mqttClient.connected) {
       // Gönderim zamanını kaydet
       const startTime = Date.now();
-      
+
       // ACK (Onay) dinleyicisini hazırla
       const ackEventName = `ack_${deviceType}`;
-      
+
       const waitForAck = new Promise((resolve, reject) => {
         const timeout = setTimeout(() => {
           ackEmitter.removeAllListeners(ackEventName);
@@ -69,7 +69,7 @@ app.post('/api/devices/control', async (req, res) => {
       // ACK'yı bekle (veya timeout)
       const ackReceived = await waitForAck;
       const latency = Date.now() - startTime;
-      
+
       if (ackReceived) {
         console.log(`⏱️ Uçtan Uca (End-to-End) Gecikme: ${latency}ms`);
       } else {
@@ -114,7 +114,7 @@ mqttClient.on('connect', () => {
 
 mqttClient.on('message', async (topic, message) => {
   const payload = message.toString();
-  
+
   // ACK (Komut Onayı) Yakalama
   if (topic.startsWith('Nest/home/ack/')) {
     const deviceType = topic.split('/').pop();
@@ -127,7 +127,7 @@ mqttClient.on('message', async (topic, message) => {
   try {
     // 1. Cihazı bul, yoksa otomatik oluştur
     let device = await prisma.device.findFirst();
-    
+
     if (!device) {
       console.log('📝 İlk cihaz bulunamadı, "Ana Kontrol Birimi" oluşturuluyor...');
       // Rastgele bir kullanıcı bul (cihaz bir kullanıcıya bağlı olmalı)
@@ -165,7 +165,7 @@ mqttClient.on('message', async (topic, message) => {
       }
     });
     console.log(`📝 Sensör Kaydı (${device.name}): ${sensorType} -> ${payload}`);
-    
+
     // Acil durum uyarısını tetikle
     if (sensorType === 'gaz') {
       await handleSensorTriggers(payload === '1' || payload === 'true', device.id);
@@ -247,13 +247,13 @@ async function handleSensorTriggers(gasDetected: boolean, deviceId: string) {
         where: { id: deviceId },
         include: { user: true }
       });
-      
+
       const user = device?.user;
       if (user) {
         const phone = user.phoneNumber;
         const email = user.email;
         const name = user.fullName;
-        
+
         await logActivity('SENSOR_ALERT', 'Tehlikeli Gaz Algılandı', `${name} kullanıcısının evinde gaz sızıntısı saptandı.`);
 
         // 2. [ÇAĞRI SİMÜLASYONU] Telefon Çağrısı Atılması
@@ -269,14 +269,14 @@ async function handleSensorTriggers(gasDetected: boolean, deviceId: string) {
         // 3. WhatsApp üzerinden otomatik uyarı gönder (Green API entegrasyonu)
         const idInstance = process.env.GREEN_API_ID_INSTANCE || "7105411368";
         const apiTokenInstance = process.env.GREEN_API_TOKEN_INSTANCE || "04c359491bde449a8820fc445674cb90d29d3fd0036e4b81a2";
-        
+
         let cleanNum = phone.replace(/\D/g, '');
         if (cleanNum.startsWith('0')) cleanNum = cleanNum.substring(1);
         if (cleanNum.length === 10 && cleanNum.startsWith('5')) cleanNum = '90' + cleanNum;
         const chatId = `${cleanNum}@c.us`;
-        
+
         const greenApiUrl = `https://api.green-api.com/waInstance${idInstance}/sendMessage/${apiTokenInstance}`;
-        
+
         fetch(greenApiUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -285,14 +285,14 @@ async function handleSensorTriggers(gasDetected: boolean, deviceId: string) {
             message: `🚨⚠️ *ACİL DURUM UYARISI* ⚠️🚨\n\nSayın *${name}*,\nEvinizdeki akıllı otomasyon sistemi yüksek seviyede *GAZ SIZINTISI* tespit etti!\n\nTelefonunuza acil durum çağrısı ve siren sesi gönderilmiştir. Lütfen derhal evi tahliye edip pencereleri açarak havalandırın!`
           })
         })
-        .then(async (r) => {
-          if (r.ok) {
-            console.log("📡 WhatsApp acil durum uyarısı başarıyla gönderildi!");
-          } else {
-            console.warn("⚠️ WhatsApp uyarısı gönderilemedi. Hata kodu:", r.status);
-          }
-        })
-        .catch(e => console.error("❌ WhatsApp uyarı gönderim hatası:", e));
+          .then(async (r) => {
+            if (r.ok) {
+              console.log("📡 WhatsApp acil durum uyarısı başarıyla gönderildi!");
+            } else {
+              console.warn("⚠️ WhatsApp uyarısı gönderilemedi. Hata kodu:", r.status);
+            }
+          })
+          .catch(e => console.error("❌ WhatsApp uyarı gönderim hatası:", e));
       }
     } catch (e) {
       console.error("❌ Acil durum tetikleme hatası:", e);
@@ -493,7 +493,7 @@ app.post('/api/support/tickets/:id/reply', async (req, res) => {
 app.post('/api/users', async (req, res) => {
   try {
     const { fullName, email, phoneNumber, passwordHash } = req.body;
-    
+
     // Şimdilik varsayılan doğrulama ile kayıt diyelim
     const newUser = await prisma.user.create({
       data: {
@@ -503,7 +503,7 @@ app.post('/api/users', async (req, res) => {
         passwordHash: passwordHash || 'firebase-handled',
       }
     });
-    
+
     await logActivity('USER_REGISTER', 'Yeni Kullanıcı Kaydı', `${fullName} sisteme dahil oldu.`);
     res.status(201).json(newUser);
   } catch (error) {
@@ -519,7 +519,7 @@ app.put('/api/users/:id/status', async (req, res) => {
     const { isActive } = req.body;
 
     const updateData: any = { isActive };
-    
+
     // Eğer hesap kilitleniyorsa, otomatik olarak Basic pakete düşür
     if (isActive === false) {
       updateData.subscriptionType = 'Basic';
@@ -559,7 +559,7 @@ app.put('/api/users/:id/plan', async (req, res) => {
 app.get('/api/users/:userId/sensors/latest', async (req, res) => {
   try {
     const { userId } = req.params;
-    
+
     // Kullanıcının bir cihazını bul
     const device = await prisma.device.findFirst({
       where: { userId }
@@ -608,7 +608,7 @@ app.get('/api/users/:userId/sensors/latest', async (req, res) => {
 app.post('/api/payments/create-checkout-session', async (req, res) => {
   try {
     const { userId } = req.body;
-    
+
     // Güncel fiyatı çek
     const settings = await prisma.subscriptionSettings.findUnique({ where: { id: 'default' } });
     const amount = settings ? settings.premiumPrice : 250;
@@ -643,30 +643,30 @@ app.post('/api/payments/create-checkout-session', async (req, res) => {
 
 // Ödeme Başarılı Callback (Basit Yönlendirme)
 app.get('/api/payments/success', async (req, res) => {
-    const { userId, amount } = req.query;
-    if (userId) {
-        const user = await prisma.user.findUnique({ where: { id: userId.toString() } });
-        // Veritabanını güncelle
-        await prisma.user.update({
-            where: { id: userId.toString() },
-            data: { 
-              subscriptionType: 'Premium',
-              daysSinceLastPayment: 0
-            }
-        });
+  const { userId, amount } = req.query;
+  if (userId) {
+    const user = await prisma.user.findUnique({ where: { id: userId.toString() } });
+    // Veritabanını güncelle
+    await prisma.user.update({
+      where: { id: userId.toString() },
+      data: {
+        subscriptionType: 'Premium',
+        daysSinceLastPayment: 0
+      }
+    });
 
-        // Ödeme kaydı oluştur
-        await prisma.paymentRecord.create({
-          data: {
-            userId: userId.toString(),
-            amount: parseFloat(amount?.toString() || '0'),
-            status: 'Success'
-          }
-        });
+    // Ödeme kaydı oluştur
+    await prisma.paymentRecord.create({
+      data: {
+        userId: userId.toString(),
+        amount: parseFloat(amount?.toString() || '0'),
+        status: 'Success'
+      }
+    });
 
-        await logActivity('PAYMENT_SUCCESS', 'Ödeme Alındı', `${user?.fullName} tarafından ₺${amount} tutarında ödeme yapıldı.`);
-    }
-    res.send(`
+    await logActivity('PAYMENT_SUCCESS', 'Ödeme Alındı', `${user?.fullName} tarafından ₺${amount} tutarında ödeme yapıldı.`);
+  }
+  res.send(`
         <html>
             <body style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh; font-family:sans-serif;">
                 <h1 style="font-size:3rem;">🎉</h1>
@@ -682,24 +682,24 @@ app.get('/api/payments/success', async (req, res) => {
 
 // Abonelik İptali
 app.post('/api/payments/cancel-subscription', async (req, res) => {
-    try {
-        const { userId } = req.body;
-        if (!userId) return res.status(400).json({ error: 'UserId gerekli.' });
+  try {
+    const { userId } = req.body;
+    if (!userId) return res.status(400).json({ error: 'UserId gerekli.' });
 
-        await prisma.user.update({
-            where: { id: userId },
-            data: { subscriptionType: 'Basic' }
-        });
+    await prisma.user.update({
+      where: { id: userId },
+      data: { subscriptionType: 'Basic' }
+    });
 
-        res.json({ message: 'Abonelik başarıyla iptal edildi.' });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Abonelik iptal edilemedi.' });
-    }
+    res.json({ message: 'Abonelik başarıyla iptal edildi.' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Abonelik iptal edilemedi.' });
+  }
 });
 
 app.get('/api/payments/cancel', (req, res) => {
-    res.send('<h1>Ödeme İptal Edildi. ❌</h1>');
+  res.send('<h1>Ödeme İptal Edildi. ❌</h1>');
 });
 
 // Hava Durumu API'si (Open-Meteo entegrasyonu - API KEY Gerektirmez)
@@ -707,10 +707,10 @@ app.get('/api/weather', async (req, res) => {
   try {
     const { lat = 40.76, lon = 29.92 } = req.query; // Varsayılan: İzmit/Kocaeli
     const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`;
-    
+
     const response = await fetch(weatherUrl);
     const data = await response.json();
-    
+
     res.json(data);
   } catch (error) {
     console.error(error);
@@ -722,11 +722,11 @@ app.get('/api/geocode', async (req, res) => {
   try {
     const { name } = req.query;
     if (!name) return res.status(400).json({ error: 'Şehir adı gerekli.' });
-    
+
     const geoUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(name.toString())}&count=1&language=tr`;
     const response = await fetch(geoUrl);
     const data = await response.json();
-    
+
     if (data.results && data.results.length > 0) {
       res.json(data.results[0]);
     } else {
@@ -742,14 +742,14 @@ app.get('/api/geocode', async (req, res) => {
 app.post('/api/simulate/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
-    
+
     // Önce kullanıcıya ait bir cihaz var mı bak, yoksa oluştur
     let device = await prisma.device.findFirst({ where: { userId } });
     if (!device) {
       device = await prisma.device.create({
         data: {
           name: 'Ana Kontrol Paneli',
-          macAddress: `00:B0:D0:${Math.floor(Math.random()*100)}:${Math.floor(Math.random()*100)}`,
+          macAddress: `00:B0:D0:${Math.floor(Math.random() * 100)}:${Math.floor(Math.random() * 100)}`,
           type: 'RaspberryPi',
           userId
         }
@@ -783,59 +783,59 @@ app.post('/api/sensors', async (req, res) => {
     // Test aşamasında "DeviceId" gelmezse, veritabanında sahte bir Test Cihazı (Dummy Device) yaratıyoruz.
     let targetDeviceId = deviceId;
     if (!targetDeviceId) {
-       let testDevice = await prisma.device.findFirst({ where: { name: 'Test Cihazı' } });
-       if (!testDevice) {
-           // Önce sahte bir kullanıcı (Eğer ilk test ise)
-           let testUser = await prisma.user.findFirst();
-           if (!testUser) {
-               testUser = await prisma.user.create({
-                   data: { fullName: "Test Kullanıcı", email: "test@akilliev.com", phoneNumber: "0000", passwordHash: "test" }
-               });
-           }
-           // Sahte cihazı oluştur
-           testDevice = await prisma.device.create({
-               data: { name: 'Test Cihazı', type: 'Simulated', macAddress: '00:00:00:00:00:00', userId: testUser.id }
-           });
-       }
-       targetDeviceId = testDevice.id;
-     }
+      let testDevice = await prisma.device.findFirst({ where: { name: 'Test Cihazı' } });
+      if (!testDevice) {
+        // Önce sahte bir kullanıcı (Eğer ilk test ise)
+        let testUser = await prisma.user.findFirst();
+        if (!testUser) {
+          testUser = await prisma.user.create({
+            data: { fullName: "Test Kullanıcı", email: "test@akilliev.com", phoneNumber: "0000", passwordHash: "test" }
+          });
+        }
+        // Sahte cihazı oluştur
+        testDevice = await prisma.device.create({
+          data: { name: 'Test Cihazı', type: 'Simulated', macAddress: '00:00:00:00:00:00', userId: testUser.id }
+        });
+      }
+      targetDeviceId = testDevice.id;
+    }
 
-     const lastLog = await prisma.sensorLog.findFirst({
-       where: { deviceId: targetDeviceId },
-       orderBy: { createdAt: 'desc' }
-     });
+    const lastLog = await prisma.sensorLog.findFirst({
+      where: { deviceId: targetDeviceId },
+      orderBy: { createdAt: 'desc' }
+    });
 
-     const isMotion = motionDetected !== undefined 
-       ? (motionDetected === true || motionDetected === 'true' || motionDetected === 1 || motionDetected === '1') 
-       : (lastLog?.motionDetected ?? false);
+    const isMotion = motionDetected !== undefined
+      ? (motionDetected === true || motionDetected === 'true' || motionDetected === 1 || motionDetected === '1')
+      : (lastLog?.motionDetected ?? false);
 
-     const isRain = isRaining !== undefined 
-       ? (isRaining === true || isRaining === 'true' || isRaining === 1 || isRaining === '1') 
-       : (lastLog?.isRaining ?? false);
+    const isRain = isRaining !== undefined
+      ? (isRaining === true || isRaining === 'true' || isRaining === 1 || isRaining === '1')
+      : (lastLog?.isRaining ?? false);
 
-     const isGas = gasDetected !== undefined 
-       ? (gasDetected === true || gasDetected === 'true' || gasDetected === 1 || gasDetected === '1') 
-       : (lastLog?.gasDetected ?? false);
+    const isGas = gasDetected !== undefined
+      ? (gasDetected === true || gasDetected === 'true' || gasDetected === 1 || gasDetected === '1')
+      : (lastLog?.gasDetected ?? false);
 
-     // Sensör verisini PostgreSQL'e yazıyoruz
-     const log = await prisma.sensorLog.create({
-       data: {
-         temperature: temperature !== undefined ? parseFloat(temperature.toString()) : (lastLog?.temperature ?? 22),
-         humidity: humidity !== undefined ? parseFloat(humidity.toString()) : (lastLog?.humidity ?? 45),
-         isRaining: isRain,
-         gasDetected: isGas,
-         motionDetected: isMotion,
-         lightLevel: lightLevel !== undefined ? parseFloat(lightLevel.toString()) : (lastLog?.lightLevel ?? 250),
-         deviceId: targetDeviceId
-       }
-     });
+    // Sensör verisini PostgreSQL'e yazıyoruz
+    const log = await prisma.sensorLog.create({
+      data: {
+        temperature: temperature !== undefined ? parseFloat(temperature.toString()) : (lastLog?.temperature ?? 22),
+        humidity: humidity !== undefined ? parseFloat(humidity.toString()) : (lastLog?.humidity ?? 45),
+        isRaining: isRain,
+        gasDetected: isGas,
+        motionDetected: isMotion,
+        lightLevel: lightLevel !== undefined ? parseFloat(lightLevel.toString()) : (lastLog?.lightLevel ?? 250),
+        deviceId: targetDeviceId
+      }
+    });
 
-     console.log(`[+] Sensör Verisi Alındı -> Sıcaklık: ${log.temperature}°C, Nem: ${log.humidity}%, Yağmur: ${isRain}, Gas: ${isGas}, Işık: ${log.lightLevel} Lux, Hareket: ${isMotion}`);
-     
-     // Acil durum uyarısını tetikle
-     await handleSensorTriggers(isGas, targetDeviceId);
+    console.log(`[+] Sensör Verisi Alındı -> Sıcaklık: ${log.temperature}°C, Nem: ${log.humidity}%, Yağmur: ${isRain}, Gas: ${isGas}, Işık: ${log.lightLevel} Lux, Hareket: ${isMotion}`);
 
-     res.status(201).json({ message: 'Sensör verisi başarıyla PostgreSQL veritabanına kaydedildi.', data: log });
+    // Acil durum uyarısını tetikle
+    await handleSensorTriggers(isGas, targetDeviceId);
+
+    res.status(201).json({ message: 'Sensör verisi başarıyla PostgreSQL veritabanına kaydedildi.', data: log });
   } catch (error) {
     console.error('Sensör verisi kaydedilemedi:', error);
     res.status(500).json({ error: 'Veri kaydedilirken hata oluştu.' });
@@ -847,7 +847,7 @@ app.get('/api/settings', async (req, res) => {
     let settings = await prisma.subscriptionSettings.findUnique({
       where: { id: 'default' }
     });
-    
+
     // Eğer tablo boşsa varsayılan ayarları oluştur
     if (!settings) {
       settings = await prisma.subscriptionSettings.create({
@@ -869,7 +869,7 @@ app.get('/api/settings', async (req, res) => {
 app.put('/api/settings', async (req, res) => {
   try {
     const { basicPlanModules, premiumPlanModules, premiumPrice } = req.body;
-    
+
     const settings = await prisma.subscriptionSettings.upsert({
       where: { id: 'default' },
       update: {
@@ -884,7 +884,7 @@ app.put('/api/settings', async (req, res) => {
         premiumPrice: premiumPrice || 250
       }
     });
-    
+
     res.json(settings);
   } catch (error) {
     res.status(500).json({ error: 'Ayarlar güncellenemedi.' });
@@ -897,7 +897,7 @@ app.get('/api/dashboard/stats', async (req, res) => {
     const activeCustomers = await prisma.user.count({ where: { isActive: true } });
     const premiumCustomers = await prisma.user.count({ where: { subscriptionType: 'Premium' } });
     const basicCustomers = await prisma.user.count({ where: { subscriptionType: 'Basic' } });
-    
+
     const totalRevenue = await prisma.paymentRecord.aggregate({
       _sum: { amount: true },
       where: { status: 'Success' }
@@ -1025,12 +1025,12 @@ app.use('/public', express.static(path.join(__dirname, '../public')));
 // Raspberry Pi bu endpoint'e anlık JPEG karelerini binary olarak POST eder
 app.post('/api/camera/upload', express.raw({ type: 'image/jpeg', limit: '5mb' }), (req, res) => {
   latestCameraFrame = req.body as Buffer;
-  
+
   // Geriye dönük 10 saniyelik kareleri tamponda saklıyoruz
   const now = Date.now();
   latestCameraFrames.push({ buffer: req.body as Buffer, timestamp: now });
   latestCameraFrames = latestCameraFrames.filter(f => now - f.timestamp <= 10000);
-  
+
   // Bağlı olan tüm telefonlara bu yeni kareyi anında gönder (Gerçek zamanlı dağıtım)
   for (const client of streamClients) {
     try {
@@ -1041,7 +1041,7 @@ app.post('/api/camera/upload', express.raw({ type: 'image/jpeg', limit: '5mb' })
       streamClients.delete(client);
     }
   }
-  
+
   res.sendStatus(200);
 });
 
@@ -1116,17 +1116,17 @@ app.get('/api/camera/stream', (req, res) => {
   res.setHeader('Cache-Control', 'no-cache, private');
   res.setHeader('Pragma', 'no-cache');
   res.setHeader('Content-Type', 'multipart/x-mixed-replace; boundary=frame');
-  
+
   // Eğer hafızada ilk kare varsa hemen gönder
   if (latestCameraFrame) {
     res.write(`--frame\r\nContent-Type: image/jpeg\r\nContent-Length: ${latestCameraFrame.length}\r\n\r\n`);
     res.write(latestCameraFrame);
     res.write('\r\n');
   }
-  
+
   // İstemciyi dinleyiciler arasına ekle
   streamClients.add(res);
-  
+
   // İstemci sayfadan çıkarsa listeden çıkar ve soketi temizle
   req.on('close', () => {
     streamClients.delete(res);
@@ -1142,12 +1142,12 @@ async function compileVideo(): Promise<{ outputFilename: string; outputPath: str
   if (latestCameraFrames.length === 0) {
     throw new Error("Tamponda kaydedilmiş kamera karesi bulunamadı.");
   }
-  
+
   const sharesDir = path.join(__dirname, '../public/shares');
   if (!fs.existsSync(sharesDir)) {
     fs.mkdirSync(sharesDir, { recursive: true });
   }
-  
+
   // Eski videoları temizle (Disk dolmasını önlemek için 1 saatten eski dosyalar)
   try {
     const files = fs.readdirSync(sharesDir);
@@ -1164,27 +1164,27 @@ async function compileVideo(): Promise<{ outputFilename: string; outputPath: str
   } catch (err) {
     console.error("Eski videolar temizlenirken hata:", err);
   }
-  
+
   const tempDir = path.join(sharesDir, `temp_${Date.now()}`);
   fs.mkdirSync(tempDir, { recursive: true });
-  
+
   // Kareleri diskteki geçici klasöre sıralı olarak yazıyoruz
   latestCameraFrames.forEach((frame, idx) => {
     fs.writeFileSync(path.join(tempDir, `frame_${idx}.jpg`), frame.buffer);
   });
-  
+
   const outputFilename = `video_${Date.now()}.mp4`;
   const outputPath = path.join(sharesDir, outputFilename);
-  
+
   // Saniyede kaç kare olduğunu hesaplıyoruz (video tam 10 saniye sürsün diye)
   const fps = Math.max(1, Math.round(latestCameraFrames.length / 10));
-  
+
   return new Promise((resolve, reject) => {
     if (!ffmpegPath) {
       fs.rmSync(tempDir, { recursive: true, force: true });
       return reject(new Error("FFmpeg binary bulunamadı!"));
     }
-    
+
     // FFmpeg kullanarak görselleri H.264 MP4 videosuna birleştiriyoruz
     const args = [
       '-framerate', fps.toString(),
@@ -1194,16 +1194,16 @@ async function compileVideo(): Promise<{ outputFilename: string; outputPath: str
       '-y',
       outputPath
     ];
-    
+
     execFile(ffmpegPath, args, (err, stdout, stderr) => {
       // Geçici klasörü siliyoruz
       fs.rmSync(tempDir, { recursive: true, force: true });
-      
+
       if (err) {
         console.error("FFmpeg derleme hatası:", stderr);
         return reject(err);
       }
-      
+
       resolve({ outputFilename, outputPath });
     });
   });
@@ -1215,8 +1215,8 @@ const smtpTransporter = nodemailer.createTransport({
   port: parseInt(process.env.SMTP_PORT || '587'),
   secure: process.env.SMTP_SECURE === 'true',
   auth: {
-    user: process.env.SMTP_USER || '', 
-    pass: process.env.SMTP_PASS || '', 
+    user: process.env.SMTP_USER || '',
+    pass: process.env.SMTP_PASS || '',
   }
 });
 
@@ -1227,26 +1227,26 @@ app.post('/api/camera/share/whatsapp', async (req, res) => {
     if (!phoneNumber) {
       return res.status(400).json({ error: 'Telefon numarası gerekli.' });
     }
-    
+
     // Telefon numarasını normalize et (+90..., 90..., veya 533... girişleri desteklenir)
     let cleanNum = phoneNumber.replace(/\D/g, ''); // Sadece rakamlar
     if (cleanNum.startsWith('0')) cleanNum = cleanNum.substring(1);
     if (cleanNum.length === 10 && cleanNum.startsWith('5')) cleanNum = '90' + cleanNum;
-    
+
     const chatId = `${cleanNum}@c.us`;
-    
+
     // Videoyu derle
     const { outputFilename } = await compileVideo();
-    
+
     // Green API Credentials (Güvenlik için .env'den yüklenir, fallback olarak orijinal bilgiler)
     const idInstance = process.env.GREEN_API_ID_INSTANCE || "7105411368";
     const apiTokenInstance = process.env.GREEN_API_TOKEN_INSTANCE || "04c359491bde449a8820fc445674cb90d29d3fd0036e4b81a2";
-    
+
     const videoUrl = `http://nart3d.com:${PORT}/public/shares/${outputFilename}`;
     const greenApiUrl = `https://api.green-api.com/waInstance${idInstance}/sendFileByUrl/${apiTokenInstance}`;
-    
+
     console.log(`📡 WhatsApp paylaşımı başlatılıyor: ${chatId} -> ${videoUrl}`);
-    
+
     const response = await fetch(greenApiUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -1257,7 +1257,7 @@ app.post('/api/camera/share/whatsapp', async (req, res) => {
         caption: '📹 Akıllı Ev Güvenlik Kamerası - Son 10 Saniye Video Kaydı'
       })
     });
-    
+
     if (response.ok) {
       res.json({ success: true, message: 'Kamera kaydı WhatsApp üzerinden başarıyla gönderildi!' });
     } else {
@@ -1278,26 +1278,26 @@ app.post('/api/camera/share/email', async (req, res) => {
     if (!emailAddress) {
       return res.status(400).json({ error: 'E-posta adresi gerekli.' });
     }
-    
+
     // Videoyu derle
     const { outputPath } = await compileVideo();
-    
+
     console.log(`📧 E-posta paylaşımı başlatılıyor: ${emailAddress}`);
-    
+
     // Eğer SMTP tanımlanmamışsa mock/simülasyon yap ki uygulama tıkanmasın
     let transporter = smtpTransporter;
     let fromEmail = process.env.SMTP_USER || 'akilliev@nart3d.com';
-    
+
     if (!process.env.SMTP_USER) {
       console.warn("⚠️ SMTP_USER .env dosyasında bulunamadı. E-posta simüle edilerek başarı dönecektir.");
-      res.json({ 
-        success: true, 
+      res.json({
+        success: true,
         simulated: true,
-        message: 'Kamera kaydı başarıyla hazırlandı! (SMTP ayarları girilmediği için sunucuda simüle edildi).' 
+        message: 'Kamera kaydı başarıyla hazırlandı! (SMTP ayarları girilmediği için sunucuda simüle edildi).'
       });
       return;
     }
-    
+
     await transporter.sendMail({
       from: `"Akıllı Ev Güvenlik" <${fromEmail}>`,
       to: emailAddress,
@@ -1310,7 +1310,7 @@ app.post('/api/camera/share/email', async (req, res) => {
         }
       ]
     });
-    
+
     res.json({ success: true, message: 'Kamera kaydı e-posta adresinize başarıyla gönderildi!' });
   } catch (err: any) {
     console.error("E-posta paylaşım hatası:", err);
@@ -1333,10 +1333,10 @@ app.post('/api/auth/send-email-code', async (req, res) => {
 
     if (!process.env.SMTP_USER) {
       console.warn("⚠️ SMTP_USER .env dosyasında bulunamadı. E-posta gönderme simüle ediliyor.");
-      return res.json({ 
-        success: true, 
+      return res.json({
+        success: true,
         simulated: true,
-        message: 'SMTP ayarları eksik olduğu için gönderim simüle edildi.' 
+        message: 'SMTP ayarları eksik olduğu için gönderim simüle edildi.'
       });
     }
 
@@ -1405,7 +1405,7 @@ app.put('/api/users/email/:email/verify-both', async (req, res) => {
     const { isEmailVerified, isPhoneVerified } = req.body;
     const updatedUser = await prisma.user.update({
       where: { email },
-      data: { 
+      data: {
         isEmailVerified: isEmailVerified !== undefined ? isEmailVerified : undefined,
         isPhoneVerified: isPhoneVerified !== undefined ? isPhoneVerified : undefined
       }
@@ -1424,7 +1424,7 @@ app.put('/api/users/email/:email/favorites', async (req, res) => {
     const { favoriteDevices } = req.body; // string[]
     const updatedUser = await prisma.user.update({
       where: { email },
-      data: { 
+      data: {
         favoriteDevices: favoriteDevices || []
       }
     });
