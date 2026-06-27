@@ -1,6 +1,8 @@
 using System;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using Microsoft.Maui.Controls;
 
 namespace AkilliEvMobil.Views
@@ -48,16 +50,122 @@ namespace AkilliEvMobil.Views
                 await view.ScaleTo(0.95, 100);
                 await view.ScaleTo(1.0, 100);
 
-                await DisplayAlert("Rutin Başlatıldı", $"{routine.Name} senaryosu başarıyla çalıştırıldı.", "Tamam");
+                bool targetState = !routine.IsActive;
+
+                // Deactivate all other routines first to ensure "only one active at a time"
+                foreach (var r in Routines)
+                {
+                    r.IsActive = false;
+                }
+
+                // Set the state of the tapped routine
+                routine.IsActive = targetState;
+
+                if (routine.IsActive)
+                {
+                    // Trigger the active routine actions
+                    await ExecuteRoutineActionsAsync(routine.Name);
+                    await DisplayAlert("Rutin Başlatıldı", $"{routine.Name} senaryosu başarıyla çalıştırıldı.", "Tamam");
+                }
+                else
+                {
+                    // If turned off, reset/turn off the devices
+                    await TurnOffAllDevicesAsync();
+                    await DisplayAlert("Rutin Sonlandırıldı", $"{routine.Name} senaryosu kapatıldı.", "Tamam");
+                }
+            }
+        }
+
+        private async System.Threading.Tasks.Task ExecuteRoutineActionsAsync(string routineName)
+        {
+            if (routineName == "Karşılama Modu")
+            {
+                // Aydınlatmalar %50 seviyesinde, Fan %70 hızında çalışmaya başlar
+                await SendDeviceCommandAsync("aydinlatma", new { state = "ON", brightness = 50 });
+                await SendDeviceCommandAsync("fan", new { state = "ON", speed = 70 });
+                await SendDeviceCommandAsync("heater", new { state = "OFF" });
+            }
+            else if (routineName == "Tasarruf Modu")
+            {
+                // Enerji tüketimini minimuma indirir
+                await SendDeviceCommandAsync("aydinlatma", new { state = "ON", brightness = 10 });
+                await SendDeviceCommandAsync("fan", new { state = "OFF", speed = 0 });
+                await SendDeviceCommandAsync("heater", new { state = "OFF" });
+            }
+            else if (routineName == "Tatil Modu")
+            {
+                // Güvenliği maksimize eder ve tam koruma sağlar
+                await SendDeviceCommandAsync("aydinlatma", new { state = "OFF", brightness = 0 });
+                await SendDeviceCommandAsync("fan", new { state = "OFF", speed = 0 });
+                await SendDeviceCommandAsync("heater", new { state = "OFF" });
+                await SendDeviceCommandAsync("tente", new { position = 0, speed = 50 });
+            }
+        }
+
+        private async System.Threading.Tasks.Task TurnOffAllDevicesAsync()
+        {
+            await SendDeviceCommandAsync("aydinlatma", new { state = "OFF", brightness = 0 });
+            await SendDeviceCommandAsync("fan", new { state = "OFF", speed = 0 });
+            await SendDeviceCommandAsync("heater", new { state = "OFF" });
+        }
+
+        private async System.Threading.Tasks.Task SendDeviceCommandAsync(string deviceType, object data)
+        {
+            try
+            {
+                using var client = new System.Net.Http.HttpClient();
+                client.Timeout = System.TimeSpan.FromSeconds(5);
+                
+                var payload = new
+                {
+                    deviceType = deviceType,
+                    data = data
+                };
+                
+                var json = System.Text.Json.JsonSerializer.Serialize(payload);
+                var content = new System.Net.Http.StringContent(json, System.Text.Encoding.UTF8, "application/json");
+                
+                string baseUrl = "http://141.98.48.101:3000"; 
+                var response = await client.PostAsync($"{baseUrl}/api/devices/control", content);
+                
+                if (!response.IsSuccessStatusCode)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[Automation] HTTP Hatası ({deviceType}): {response.StatusCode}");
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[Automation] Cihaz Kontrol Hatası ({deviceType}): {ex.Message}");
             }
         }
     }
 
-    public class Routine
+    public class Routine : INotifyPropertyChanged
     {
+        private bool _isActive;
+
         public string Name { get; set; }
         public string Description { get; set; }
         public string Icon { get; set; }
         public string IconBackground { get; set; } = "#4A9EF7";
+
+        public bool IsActive
+        {
+            get => _isActive;
+            set
+            {
+                if (_isActive != value)
+                {
+                    _isActive = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+        protected void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
     }
 }

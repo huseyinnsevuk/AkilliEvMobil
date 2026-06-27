@@ -72,6 +72,26 @@
                                VerticalOptions="Start"
                                Margin="10,7,0,0" />
 
+                        <!-- SAĞ ÜST AKTİF/PASİF ROZETİ -->
+                        <Border WidthRequest="50" 
+                                HeightRequest="18" 
+                                StrokeThickness="0"
+                                HorizontalOptions="End" 
+                                VerticalOptions="Start" 
+                                Margin="0,7,10,0"
+                                IsVisible="{Binding IsActive}"
+                                BackgroundColor="#34C759">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="9" />
+                            </Border.StrokeShape>
+                            <Label Text="Aktif" 
+                                   TextColor="White" 
+                                   FontSize="10" 
+                                   FontAttributes="Bold"
+                                   HorizontalOptions="Center" 
+                                   VerticalOptions="Center" />
+                        </Border>
+
                         <!-- METİNLER (İSİM & AÇIKLAMA) -->
                         <VerticalStackLayout HorizontalOptions="Start"
                                              VerticalOptions="End"
