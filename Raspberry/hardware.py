@@ -13,7 +13,6 @@ try:
     import smbus
     import board
     import adafruit_dht
-    import pigpio
     HAS_DHT = True
     IS_PC = False
 except ImportError:
@@ -44,6 +43,10 @@ except ImportError:
     board = type('board', (), {'D4': 4})
     adafruit_dht = type('adafruit_dht', (), {'DHT11': MockDHT11})
 
+# pigpio kütüphanesini bağımsız olarak yükle (Eksikse PC modunu tetiklemesin, doğrudan RPi.GPIO fallback kullansın)
+try:
+    import pigpio
+except ImportError:
     class MockPi:
         def __init__(self):
             self.connected = True
