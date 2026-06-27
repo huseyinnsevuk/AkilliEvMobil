@@ -123,14 +123,22 @@ pwm_aydinlatma.start(0) # Başlangıçta %0 duty cycle (kapalı)
 pwm_fan = GPIO.PWM(PIN_FAN_PWM, 100) # 100 Hz
 pwm_fan.start(0) # Başlangıçta %0 duty cycle (kapalı)
 
-# pigpio daemon bağlantısı ve Servo Donanımsal PWM Ayarı
+# pigpio daemon bağlantısı ve Servo Donanımsal PWM Ayarı (Geriye Dönük Uyumluluklu)
 pi = pigpio.pi()
-if not pi.connected:
-    print("⚠️ UYARI: pigpio daemon (pigpiod) çalışmıyor! Servo çalışmayabilir.")
-    print("👉 Lütfen sunucuda 'sudo pigpiod' komutunu çalıştırın.")
-else:
-    # Başlangıçta motora giden sinyali kes (titremeyi önler)
+use_pigpio = False
+pwm_servo = None
+
+if pi.connected:
+    use_pigpio = True
+    print("✅ pigpio daemon bağlantısı başarılı! Donanımsal PWM aktif.")
     pi.set_servo_pulsewidth(PIN_SERVO, 0)
+else:
+    print("⚠️ UYARI: pigpio daemon (pigpiod) çalışmıyor!")
+    print("👉 Yazılımsal PWM (RPi.GPIO) moduna otomatik geçiş yapılıyor.")
+    print("👉 Not: Donanımsal PWM için sunucuda 'sudo pigpiod' komutunu çalıştırabilirsiniz.")
+    GPIO.setup(PIN_SERVO, GPIO.OUT)
+    pwm_servo = GPIO.PWM(PIN_SERVO, 50)
+    pwm_servo.start(0)
 
 # TSL2561 Işık Sensörü Başlatma
 TSL2561_ADDR = 0x39 
@@ -350,47 +358,53 @@ def set_servo_angle_with_speed(target_angle, speed_percent):
     if angle_diff < 1:
         return
         
-    print(f"🔄 pigpio Donanımsal Yumuşak Hareket: {current_angle} -> {target_angle}")
-    
-    # SG90 için 0 derece -> 500 µs, 180 derece -> 2500 µs
-    # Bu sınırlar donanımsal PWM için standart kalibrasyon değerleridir
-    pulse_min = 500
-    pulse_max = 2500
-    
-    def angle_to_pulse(angle):
-        return int(pulse_min + (angle / 180.0) * (pulse_max - pulse_min))
-
-    # Yumuşak Geçiş (Sweep): 2 derecelik adımlarla 18ms bekleyerek hedefe git
-    step_size = 2
-    step = step_size if target_angle > current_angle else -step_size
-    
-    temp_angle = current_angle
-    steps_list = []
-    if step > 0:
-        while temp_angle < target_angle:
-            steps_list.append(temp_angle)
-            temp_angle += step_size
-    else:
-        while temp_angle > target_angle:
-            steps_list.append(temp_angle)
-            temp_angle -= step_size
-            
-    # Son hedefi de listeye ekleyelim
-    steps_list.append(target_angle)
-    
-    for ang in steps_list:
-        pw = angle_to_pulse(ang)
-        pi.set_servo_pulsewidth(PIN_SERVO, pw)
-        time.sleep(0.018) # 18ms gecikme
+    if use_pigpio:
+        print(f"🔄 pigpio Donanımsal Yumuşak Hareket: {current_angle} -> {target_angle}")
+        pulse_min = 500
+        pulse_max = 2500
         
-    # Hedefe tam oturması için kısa bir süre daha tanıyalım
-    time.sleep(0.15)
-    
-    # Titremeyi ve vızıltıyı tamamen önlemek için sinyali kes (0)
-    pi.set_servo_pulsewidth(PIN_SERVO, 0)
-    
+        def angle_to_pulse(angle):
+            return int(pulse_min + (angle / 180.0) * (pulse_max - pulse_min))
+
+        # Yumuşak Geçiş (Sweep): 2 derecelik adımlarla 18ms bekleyerek hedefe git
+        step_size = 2
+        step = step_size if target_angle > current_angle else -step_size
+        
+        temp_angle = current_angle
+        steps_list = []
+        if step > 0:
+            while temp_angle < target_angle:
+                steps_list.append(temp_angle)
+                temp_angle += step_size
+        else:
+            while temp_angle > target_angle:
+                steps_list.append(temp_angle)
+                temp_angle -= step_size
+                
+        steps_list.append(target_angle)
+        
+        for ang in steps_list:
+            pw = angle_to_pulse(ang)
+            pi.set_servo_pulsewidth(PIN_SERVO, pw)
+            time.sleep(0.018) # 18ms gecikme
+            
+        time.sleep(0.15)
+        pi.set_servo_pulsewidth(PIN_SERVO, 0)
+    else:
+        # RPi.GPIO Yazılımsal PWM Modu Fallback (pigpiod çalışmadığında devreye girer)
+        print(f"🔄 RPi.GPIO Yazılımsal Güvenli Hareket: {current_angle} -> {target_angle}")
+        
+        # Sıkışmayı önlemek için güvenli duty cycle aralığı (3.5% - 11.5%)
+        duty = 3.5 + (target_angle / 180.0) * 8.0
+        
+        if pwm_servo:
+            pwm_servo.ChangeDutyCycle(duty)
+            travel_time = (angle_diff / 60.0) * 0.15 + 0.25
+            time.sleep(travel_time)
+            pwm_servo.ChangeDutyCycle(0)
+            
     current_angle = target_angle
-    print("✅ Hedefe ulaşıldı, donanımsal sinyal kesildi.")
+    print("✅ Hedefe ulaşıldı, sinyal kesildi.")
 
 def on_message(client, userdata, msg):
     try:
