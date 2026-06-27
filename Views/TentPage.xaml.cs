@@ -72,7 +72,7 @@ public partial class TentPage : ContentPage
             
             if (_currentOpening < 100)
             {
-                _currentOpening = Math.Min(100, _currentOpening + 10);
+                _currentOpening = Math.Min(100, _currentOpening + 25);
                 StatusLabel.Text = $"Tente Açıklığı: %{_currentOpening} | Hız: %{_currentSpeed}";
                 await SendCommand("tente", _currentOpening, _currentSpeed);
             }
@@ -88,7 +88,7 @@ public partial class TentPage : ContentPage
             
             if (_currentOpening > 0)
             {
-                _currentOpening = Math.Max(0, _currentOpening - 10);
+                _currentOpening = Math.Max(0, _currentOpening - 25);
                 StatusLabel.Text = $"Tente Açıklığı: %{_currentOpening} | Hız: %{_currentSpeed}";
                 await SendCommand("tente", _currentOpening, _currentSpeed);
             }
