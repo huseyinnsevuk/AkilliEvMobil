@@ -937,11 +937,11 @@ app.get('/api/dashboard/stats', async (req, res) => {
       }
     }
 
-    // Sadece Yeni Kullanıcı (USER_REGISTER), Yeni Ödeme (PAYMENT_SUCCESS) ve Gecikmiş Ödeme (PAYMENT_OVERDUE) listelensin (Son 5 adet)
+    // Sadece Yeni Kullanıcı, Yeni Ödeme, Gecikmiş Ödeme ve Rutin Değişikliği (ROUTINE_CHANGED) listelensin (Son 5 adet)
     const latestActivities = await prisma.activityLog.findMany({
       where: {
         type: {
-          in: ['USER_REGISTER', 'PAYMENT_SUCCESS', 'PAYMENT_OVERDUE']
+          in: ['USER_REGISTER', 'PAYMENT_SUCCESS', 'PAYMENT_OVERDUE', 'ROUTINE_CHANGED']
         }
       },
       orderBy: { createdAt: 'desc' },
