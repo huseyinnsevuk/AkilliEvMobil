@@ -329,19 +329,45 @@ current_angle = 0
 
 def set_servo_angle_with_speed(target_angle, speed_percent):
     global current_angle
-    delay = (101 - speed_percent) / 1000.0
-    step = 1 if target_angle > current_angle else -1
     
+    # 0 ile 180 derece sınırlarını koru
+    target_angle = max(0, min(180, target_angle))
+    
+    angle_diff = abs(target_angle - current_angle)
+    if angle_diff < 1:
+        return
+        
     print(f"🔄 Hareket Başladı: {current_angle} -> {target_angle} (Hız: %{speed_percent})")
     
-    for angle in range(int(current_angle), int(target_angle), step):
-        duty = angle / 18 + 2.5
+    # Eğer hız yüksekse (%80+), ara adımlarla uğraşmadan direkt hedefe gönder.
+    # Bu, Raspberry Pi yazılımsal PWM titremesini (jitter) minimuma indirir.
+    if speed_percent >= 80:
+        duty = target_angle / 18 + 2.5
         pwm.ChangeDutyCycle(duty)
-        time.sleep(delay)
-    
-    pwm.ChangeDutyCycle(target_angle / 18 + 2.5)
-    time.sleep(0.1)
-    pwm.ChangeDutyCycle(0) # Titremeyi önle
+        # SG90'ın fiziksel hedefe ulaşması için süre tanı (60 derece için ~0.15 sn + emniyet payı)
+        travel_time = (angle_diff / 60.0) * 0.15 + 0.15
+        time.sleep(travel_time)
+    else:
+        # Yumuşak geçiş için adımları 5'er derece yapıyoruz. 
+        # 1'er derece gitmek yazılımsal PWM'de tekleme ve konum kaymalarına yol açar.
+        step_size = 5
+        step = step_size if target_angle > current_angle else -step_size
+        
+        # Hız oranına göre makul bir bekleme süresi
+        delay = (101 - speed_percent) / 400.0
+        
+        for angle in range(int(current_angle), int(target_angle), step):
+            duty = angle / 18 + 2.5
+            pwm.ChangeDutyCycle(duty)
+            time.sleep(delay)
+            
+        # Son açıyı tam olarak setle
+        duty = target_angle / 18 + 2.5
+        pwm.ChangeDutyCycle(duty)
+        time.sleep(0.25) # Hedefe tam oturması için bekleme süresi
+        
+    # Titremeyi ve vızıltıyı tamamen önlemek için sinyali sıfırla (SG90 için kritiktir)
+    pwm.ChangeDutyCycle(0)
     current_angle = target_angle
     print("✅ Hedefe ulaşıldı.")
 
