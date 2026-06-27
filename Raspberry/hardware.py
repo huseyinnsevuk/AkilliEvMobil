@@ -395,15 +395,35 @@ def set_servo_angle_with_speed(target_angle, speed_percent):
         pi.set_servo_pulsewidth(PIN_SERVO, 0)
     else:
         # RPi.GPIO Yazılımsal PWM Modu Fallback (pigpiod çalışmadığında devreye girer)
-        print(f"🔄 RPi.GPIO Yazılımsal Güvenli Hareket: {current_angle} -> {target_angle}")
-        
-        # Sıkışmayı önlemek için güvenli duty cycle aralığı (3.5% - 11.5%)
-        duty = 3.5 + (target_angle / 180.0) * 8.0
+        print(f"🔄 RPi.GPIO Yazılımsal Güvenli Hareket: {current_angle} -> {target_angle} (Sweep Modu)")
         
         if pwm_servo:
-            pwm_servo.ChangeDutyCycle(duty)
-            travel_time = (angle_diff / 60.0) * 0.15 + 0.25
-            time.sleep(travel_time)
+            # Kullanıcının eski kodundaki gibi 2.0 duty (0 deg) ile ~12.0 duty (180 deg) aralığını kullanıyoruz
+            target_duty = 2.0 + (target_angle / 180.0) * 10.0
+            current_duty = 2.0 + (current_angle / 180.0) * 10.0
+            
+            # Hıza göre adımı belirliyoruz (Kullanıcının Slow, Medium, Fast mantığı)
+            if speed_percent <= 30:
+                adim = 0.02
+            elif speed_percent <= 70:
+                adim = 0.06
+            else:
+                adim = 0.20 # %100 hız (Fast)
+                
+            cur = current_duty
+            yon = 1 if target_duty > cur else -1
+            
+            while True:
+                if abs(cur - target_duty) < adim:
+                    cur = target_duty
+                    break
+                cur += (adim * yon)
+                pwm_servo.ChangeDutyCycle(cur)
+                time.sleep(0.02) # Kullanıcının sweep bekleme süresi
+                
+            # Tam hedefe yerleşip sinyali kesiyoruz
+            pwm_servo.ChangeDutyCycle(target_duty)
+            time.sleep(0.1)
             pwm_servo.ChangeDutyCycle(0)
             
     current_angle = target_angle
