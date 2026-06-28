@@ -508,42 +508,7 @@ namespace AkilliEvMobil.Platforms.Android
             catch { }
         }
 
-        public override void OnTaskRemoved(Intent? rootIntent)
-        {
-            base.OnTaskRemoved(rootIntent);
-            
-            // Uygulama son uygulamalardan (recents) kaydırılıp kapatılsa bile servisi ölümsüz yapmak için 1 saniye sonra diriltir
-            try
-            {
-                Intent restartServiceIntent = new Intent(ApplicationContext, typeof(EmergencyForegroundService));
-                restartServiceIntent.SetPackage(PackageName);
-                
-                var pendingIntent = PendingIntent.GetService(
-                    ApplicationContext, 
-                    1, 
-                    restartServiceIntent, 
-                    PendingIntentFlags.OneShot | PendingIntentFlags.Immutable
-                );
-                
-                var alarmService = (AlarmManager?)GetSystemService(AlarmService);
-                if (alarmService != null)
-                {
-                    if (Android.OS.Build.VERSION.SdkInt >= Android.OS.BuildVersionCodes.M)
-                    {
-                        // Doze modu dahi olsa kesin olarak servisi ayağa kaldır
-                        alarmService.SetExactAndAllowWhileIdle(AlarmType.ElapsedRealtimeWakeup, SystemClock.ElapsedRealtime() + 1000, pendingIntent);
-                    }
-                    else
-                    {
-                        alarmService.SetExact(AlarmType.ElapsedRealtimeWakeup, SystemClock.ElapsedRealtime() + 1000, pendingIntent);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Failed to restart service on task removed: {ex.Message}");
-            }
-        }
+
 
 
         public void TriggerMotionNotification()
