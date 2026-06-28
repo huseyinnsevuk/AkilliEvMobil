@@ -210,6 +210,47 @@ app.get('/api/sensors/latest', async (req, res) => {
   }
 });
 
+// Kullanıcıya özel en güncel sensör verilerini getir
+app.get('/api/users/:userId/sensors/latest', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const device = await prisma.device.findFirst({ where: { userId } });
+    if (!device) return res.status(404).json({ error: 'Cihaz bulunamadı' });
+
+    const latestTempLog = await prisma.sensorLog.findFirst({
+      where: { deviceId: device.id, temperature: { gt: 0 } },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    const latestHumLog = await prisma.sensorLog.findFirst({
+      where: { deviceId: device.id, humidity: { gt: 0 } },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    const latestLightLog = await prisma.sensorLog.findFirst({
+      where: { deviceId: device.id, lightLevel: { gt: 0 } },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    const absoluteLatestLog = await prisma.sensorLog.findFirst({
+      where: { deviceId: device.id },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    res.json({
+      temperature: latestTempLog?.temperature ?? 22,
+      humidity: latestHumLog?.humidity ?? 45,
+      isRaining: absoluteLatestLog?.isRaining ?? false,
+      gasDetected: absoluteLatestLog?.gasDetected ?? false,
+      lightLevel: latestLightLog?.lightLevel ?? 250,
+      motionDetected: absoluteLatestLog?.motionDetected ?? false,
+      createdAt: absoluteLatestLog?.createdAt ?? new Date()
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Sensör verisi alınamadı' });
+  }
+});
+
 
 const stripeKey = process.env.STRIPE_SECRET_KEY || 'sk_test_dummy_key';
 const stripe = new Stripe(stripeKey, {
