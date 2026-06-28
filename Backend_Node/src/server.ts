@@ -1516,7 +1516,10 @@ app.put('/api/users/email/:email/favorites', async (req, res) => {
   }
 });
 
-app.listen(PORT, '0.0.0.0', () => {
+const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`Sunucu ${PORT} portunda başarıyla başlatıldı.`);
-  console.log(`Tüm arayüzlerden (0.0.0.0) dinleniyor...`);
 });
+
+// Mobil uygulamalardaki (Android HttpClient) "Socket closed" ve "Connection reset" hatalarını önlemek için Timeout'ları yükseltiyoruz
+server.keepAliveTimeout = 65000; // 65 saniye (Varsayılan 5 saniyedir)
+server.headersTimeout = 66000; // keepAliveTimeout'tan biraz daha büyük olmalı
