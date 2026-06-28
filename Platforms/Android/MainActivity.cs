@@ -124,7 +124,7 @@ namespace AkilliEvMobil
                     
                     await Services.EmergencyService.Instance.TriggerEmergencyAlarmAsync(
                         "Tehlikeli Gaz Sızıntısı!",
-                        "Arka plan koruma servisi evinizde tehlikeli düzeyde GAZ TESPİT ETTİ! Siren çalıyor ve kilit ekranı aşıldı."
+                        "Evinizde tehlikeli olabilecek düzeyde gaz sızıntısı algılandı! lütfen ortamı havalandırın ve tehlike geçene kadar binayı terk edin."
                     );
                 });
             }

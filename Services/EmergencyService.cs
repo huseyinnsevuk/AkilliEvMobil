@@ -73,7 +73,7 @@ namespace AkilliEvMobil.Services
             // Android platformundaki arka plan servisinin siren ve titreşimini kapat
             try
             {
-                Platforms.Android.EmergencyForegroundService.Instance?.StopSirenAndVibration();
+                Platforms.Android.EmergencyForegroundService.Instance?.StopSirenAndVibration(userAcknowledged: true);
             }
             catch { }
 #endif

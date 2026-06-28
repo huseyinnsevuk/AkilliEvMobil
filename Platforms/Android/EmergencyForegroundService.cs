@@ -61,10 +61,9 @@ namespace AkilliEvMobil.Platforms.Android
 
         public override StartCommandResult OnStartCommand(Intent? intent, StartCommandFlags flags, int startId)
         {
-            // Kullanıcı alarmı manuel kapatmak için bildirimden butona bastıysa
             if (intent?.Action == "ACTION_SILENCE_ALARM")
             {
-                StopSirenAndVibration();
+                StopSirenAndVibration(userAcknowledged: true);
                 return StartCommandResult.Sticky;
             }
 
@@ -240,7 +239,7 @@ namespace AkilliEvMobil.Platforms.Android
                             {
                                 _lastGasState = false;
                                 _isAlarmAcknowledged = false; // Gaz temizlendiğinde kilidi sıfırla (Bir sonraki tehlikeye hazır olsun)
-                                StopSirenAndVibration();
+                                StopSirenAndVibration(userAcknowledged: false);
                             }
 
                             if (motionDetected)
@@ -477,9 +476,12 @@ namespace AkilliEvMobil.Platforms.Android
         /// <summary>
         /// Çalan sireni ve titreşimi tamamen durdurur, kilit ekranı acil bildirimini temizler.
         /// </summary>
-        public void StopSirenAndVibration()
+        public void StopSirenAndVibration(bool userAcknowledged = false)
         {
-            _isAlarmAcknowledged = true; // Alarmı kullanıcı susturdu, gaz temizlenene kadar tekrar çalmayı engelle
+            if (userAcknowledged)
+            {
+                _isAlarmAcknowledged = true; // Alarmı kullanıcı susturdu, gaz temizlenene kadar tekrar çalmayı engelle
+            }
             
             if (!_isAlarmPlaying) return;
             _isAlarmPlaying = false;
@@ -586,7 +588,7 @@ namespace AkilliEvMobil.Platforms.Android
 
         public override void OnDestroy()
         {
-            StopSirenAndVibration();
+            StopSirenAndVibration(userAcknowledged: false);
             _cts?.Cancel();
             _isServiceRunning = false;
             Instance = null;

@@ -49,17 +49,12 @@
 
                     <!-- Bölüm 2: Tehlike Başlığı ve Açıklama -->
                     <VerticalStackLayout Spacing="10" HorizontalOptions="Center">
-                        <Label Text="🚨 TEHLİKELİ GAZ SIZINTISI 🚨" 
-                               TextColor="#FFFFFF" 
-                               FontSize="22" 
-                               FontAttributes="Bold" 
-                               HorizontalOptions="Center" 
-                               HorizontalTextAlignment="Center" />
                         
                         <Label x:Name="AlarmTitleLabel"
-                               Text="ACİL DURUM UYARISI!" 
-                               TextColor="#FEB2B2" 
-                               FontSize="16" 
+                               Text="TEHLİKELİ GAZ SIZINTISI" 
+                               TextTransform="Uppercase"
+                               TextColor="#FFFFFF" 
+                               FontSize="22" 
                                FontAttributes="Bold"
                                HorizontalOptions="Center" 
                                HorizontalTextAlignment="Center" />
@@ -67,7 +62,7 @@
                         <Border StrokeThickness="0" BackgroundColor="#2D0B0E" Padding="15,12" Margin="0,5,0,0">
                             <Border.StrokeShape><RoundRectangle CornerRadius="12" /></Border.StrokeShape>
                             <Label x:Name="AlarmMessageLabel"
-                                   Text="Evinizdeki akıllı emniyet sistemi yüksek düzeyde yanıcı veya zehirli GAZ algıladı. Siren çalıyor ve kilit ekranı uyanık tutuluyor." 
+                                   Text="Evinizde tehlikeli düzeyde GAZ SIZINTISI algılandı! Telefon siren çalıyor, ekran uyanık kalacak ve telefonunuz SOS ritminde titreyecektir." 
                                    TextColor="#FED7D7" 
                                    FontSize="14" 
                                    HorizontalOptions="Center" 

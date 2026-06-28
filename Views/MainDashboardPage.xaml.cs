@@ -115,7 +115,7 @@ namespace AkilliEvMobil.Views
                                             {
                                                 await EmergencyService.Instance.TriggerEmergencyAlarmAsync(
                                                     "Tehlikeli Gaz Sızıntısı!",
-                                                    "Evinizde tehlikeli düzeyde GAZ SIZINTISI algılandı! Telefon siren çalıyor, ekran uyanık kalacak ve telefonunuz SOS ritminde titreyecektir."
+                                                    "Evinizde tehlikeli olabilecek düzeyde gaz sızıntısı algılandı! lütfen ortamı havalandırın ve tehlike geçene kadar binayı terk edin."
                                                 );
                                             });
                                         }

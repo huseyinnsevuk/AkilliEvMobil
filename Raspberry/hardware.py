@@ -73,11 +73,14 @@ KONU_ISIK      = f"{TOPIC_BASE}/sensor/isik"
 KONU_SICAKLIK  = f"{TOPIC_BASE}/sensor/sicaklik"
 KONU_NEM       = f"{TOPIC_BASE}/sensor/nem"
 KONU_GAZ       = f"{TOPIC_BASE}/sensor/gaz"
+KONU_HAREKET   = f"{TOPIC_BASE}/sensor/hareket"
 
 # Pin Ayarları
 PIN_YAGMUR = 17
 PIN_SERVO  = 18
 PIN_GAZ    = 27
+PIN_TRIG   = 23
+PIN_ECHO   = 24
 
 # Isıtıcı (Röle)
 PIN_HEATER = 16
@@ -96,6 +99,11 @@ GPIO.setmode(GPIO.BCM)
 GPIO.setup(PIN_YAGMUR, GPIO.IN)
 GPIO.setup(PIN_HEATER, GPIO.OUT)
 GPIO.setup(PIN_GAZ, GPIO.IN)
+
+# Mesafe Sensörü (HC-SR04)
+GPIO.setup(PIN_TRIG, GPIO.OUT)
+GPIO.setup(PIN_ECHO, GPIO.IN)
+GPIO.output(PIN_TRIG, False)
 
 # L298N Aydınlatma Pin Kurulumları
 GPIO.setup(PIN_LIGHT_PWM, GPIO.OUT)
@@ -540,6 +548,35 @@ try:
             if hum is not None:
                 client.publish(KONU_NEM, str(hum))
                 print(f"💧 Nem Okundu: %{hum}")
+                
+            # HC-SR04 Mesafe Sensörü (Hareket/Yaklaşma Algılama)
+            if not IS_PC:
+                GPIO.output(PIN_TRIG, True)
+                time.sleep(0.00001)
+                GPIO.output(PIN_TRIG, False)
+                
+                pulse_start = time.time()
+                pulse_end = time.time()
+                
+                max_time = time.time() + 0.04  # Timeout
+                
+                while GPIO.input(PIN_ECHO) == 0 and time.time() < max_time:
+                    pulse_start = time.time()
+                    
+                while GPIO.input(PIN_ECHO) == 1 and time.time() < max_time:
+                    pulse_end = time.time()
+                    
+                pulse_duration = pulse_end - pulse_start
+                distance = pulse_duration * 17150
+                distance = round(distance, 2)
+                
+                if distance > 0 and distance <= 10:
+                    hareket_var_mi = "1"
+                    print(f"🚶 HAREKET ALGILANDI! Mesafe: {distance} cm")
+                else:
+                    hareket_var_mi = "0"
+                    
+                client.publish(KONU_HAREKET, hareket_var_mi)
         except Exception as e:
             print(f"❌ Hata: {e}")
         time.sleep(3)
