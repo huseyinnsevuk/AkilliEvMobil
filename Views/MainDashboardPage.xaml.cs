@@ -51,16 +51,18 @@ namespace AkilliEvMobil.Views
             _isMockDataRunning = false;
         }
 
-        private async void StartMockDataLoop()
+        private void StartMockDataLoop()
         {
-            using var client = new System.Net.Http.HttpClient();
-            client.Timeout = TimeSpan.FromSeconds(15);
-            string baseUrl = "http://141.98.48.101:3000";
-
-            while (_isMockDataRunning)
+            _ = Task.Run(async () =>
             {
-                try
+                using var client = new System.Net.Http.HttpClient();
+                client.Timeout = TimeSpan.FromSeconds(15);
+                string baseUrl = "http://141.98.48.101:3000";
+
+                while (_isMockDataRunning)
                 {
+                    try
+                    {
                     // Hava Durumunu Arka Planda Güncelle (Sensor döngüsünü engellemez)
                     _ = Task.Run(async () =>
                     {
@@ -137,7 +139,8 @@ namespace AkilliEvMobil.Views
                 }
 
                 await Task.Delay(2000); // 2 saniyede bir güncelle (Yüksek tepki hızı)
-            }
+                }
+            });
         }
 
         private double _currentLat = 40.76;
