@@ -56,8 +56,25 @@ namespace AkilliEvMobil.Services
         private static DeviceService _instance;
         public static DeviceService Instance => _instance ??= new DeviceService();
 
-        // Socket Exhaustion (Tıkanma) hatalarını önlemek için global ve tekil HttpClient
-        private static readonly System.Net.Http.HttpClient _sharedHttpClient = new System.Net.Http.HttpClient { Timeout = System.TimeSpan.FromSeconds(5) };
+        // Socket Exhaustion hatalarını ve "Socket closed" hatalarını önlemek için özel yapılandırılmış HttpClient
+        private static readonly System.Net.Http.HttpClient _sharedHttpClient = CreateHttpClient();
+
+        private static System.Net.Http.HttpClient CreateHttpClient()
+        {
+            var handler = new System.Net.Http.SocketsHttpHandler
+            {
+                PooledConnectionLifetime = System.TimeSpan.FromSeconds(2), // Node.js'in 5 saniyelik timeout'una yakalanmadan önce bağlantıyı yenile
+                PooledConnectionIdleTimeout = System.TimeSpan.FromSeconds(2),
+                MaxConnectionsPerServer = 10
+            };
+            var client = new System.Net.Http.HttpClient(handler)
+            {
+                Timeout = System.TimeSpan.FromSeconds(5)
+            };
+            client.DefaultRequestHeaders.ConnectionClose = true; // MAUI Android'de Keep-Alive bug'ını aşmak için kapat
+            return client;
+        }
+
         public System.Net.Http.HttpClient SharedHttpClient => _sharedHttpClient;
 
         public ObservableCollection<SmartDevice> Devices { get; set; }
