@@ -198,8 +198,7 @@ namespace AkilliEvMobil.Views
         {
             try
             {
-                using var client = new System.Net.Http.HttpClient();
-                client.Timeout = System.TimeSpan.FromSeconds(5);
+                var client = Services.DeviceService.Instance.SharedHttpClient;
                 
                 var payload = new
                 {

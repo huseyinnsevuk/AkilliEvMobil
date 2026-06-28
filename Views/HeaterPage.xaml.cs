@@ -71,8 +71,7 @@ public partial class HeaterPage : ContentPage, IDrawable
     {
         try
         {
-            using var client = new System.Net.Http.HttpClient();
-            client.Timeout = System.TimeSpan.FromSeconds(3);
+            var client = Services.DeviceService.Instance.SharedHttpClient;
             
             string baseUrl = "http://141.98.48.101:3000";
             string userId = Services.DeviceService.Instance.CurrentUserId;
@@ -107,8 +106,7 @@ public partial class HeaterPage : ContentPage, IDrawable
     {
         try
         {
-            using var client = new System.Net.Http.HttpClient();
-            client.Timeout = System.TimeSpan.FromSeconds(5);
+            var client = Services.DeviceService.Instance.SharedHttpClient;
             
             var payload = new
             {

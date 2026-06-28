@@ -53,6 +53,10 @@ namespace AkilliEvMobil.Views
 
         private async void StartMockDataLoop()
         {
+            using var client = new System.Net.Http.HttpClient();
+            client.Timeout = TimeSpan.FromSeconds(5);
+            string baseUrl = "http://141.98.48.101:3000";
+
             while (_isMockDataRunning)
             {
                 try
@@ -70,10 +74,6 @@ namespace AkilliEvMobil.Views
                         await DeviceService.Instance.SyncWithBackendAsync();
                         userId = DeviceService.Instance.CurrentUserId;
                     }
-
-                        string baseUrl = "http://141.98.48.101:3000";
-                        using var client = new System.Net.Http.HttpClient();
-                        client.Timeout = TimeSpan.FromSeconds(5);
 
                         string url = !string.IsNullOrEmpty(userId) 
                             ? $"{baseUrl}/api/users/{userId}/sensors/latest" 
@@ -150,8 +150,7 @@ namespace AkilliEvMobil.Views
             {
                 string baseUrl = "http://141.98.48.101:3000";
 
-                using var client = new System.Net.Http.HttpClient();
-                client.Timeout = TimeSpan.FromSeconds(5);
+                var client = Services.DeviceService.Instance.SharedHttpClient;
                 var response = await client.GetAsync($"{baseUrl}/api/weather?lat={_currentLat.ToString(System.Globalization.CultureInfo.InvariantCulture)}&lon={_currentLon.ToString(System.Globalization.CultureInfo.InvariantCulture)}");
                 
                 if (response.IsSuccessStatusCode)
@@ -214,8 +213,7 @@ namespace AkilliEvMobil.Views
                 {
                     string baseUrl = "http://141.98.48.101:3000";
 
-                    using var client = new System.Net.Http.HttpClient();
-                    client.Timeout = TimeSpan.FromSeconds(5);
+                    var client = Services.DeviceService.Instance.SharedHttpClient;
                     
                     // Backend Proxy üzerinden koordinat bul (Daha güvenli ve stabil)
                     var geoRes = await client.GetAsync($"{baseUrl}/api/geocode?name={Uri.EscapeDataString(result)}");

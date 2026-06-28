@@ -100,7 +100,7 @@ public partial class TentPage : ContentPage
         try
         {
             string baseUrl = "http://141.98.48.101:3000";
-            using var client = new System.Net.Http.HttpClient();
+            var client = Services.DeviceService.Instance.SharedHttpClient;
             
             // Yeni veri formatı: { position: 50, speed: 50 }
             var payload = new { 

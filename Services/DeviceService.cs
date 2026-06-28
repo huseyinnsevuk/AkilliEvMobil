@@ -56,6 +56,10 @@ namespace AkilliEvMobil.Services
         private static DeviceService _instance;
         public static DeviceService Instance => _instance ??= new DeviceService();
 
+        // Socket Exhaustion (Tıkanma) hatalarını önlemek için global ve tekil HttpClient
+        private static readonly System.Net.Http.HttpClient _sharedHttpClient = new System.Net.Http.HttpClient { Timeout = System.TimeSpan.FromSeconds(5) };
+        public System.Net.Http.HttpClient SharedHttpClient => _sharedHttpClient;
+
         public ObservableCollection<SmartDevice> Devices { get; set; }
         public string CurrentUserId { get; private set; } // Aktif kullanıcı ID'si
         public string CurrentUserName { get; private set; } // Aktif kullanıcı adı
