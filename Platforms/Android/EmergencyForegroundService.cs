@@ -204,9 +204,7 @@ namespace AkilliEvMobil.Platforms.Android
 
         private async Task PollGasSensorLoopAsync(CancellationToken token)
         {
-            using var client = new HttpClient();
-            client.Timeout = TimeSpan.FromSeconds(15);
-            client.DefaultRequestHeaders.ConnectionClose = true; // Fix Socket Closed
+            var client = AkilliEvMobil.Services.DeviceService.Instance.SharedHttpClient;
             string baseUrl = "http://141.98.48.101:3000";
 
             while (!token.IsCancellationRequested)

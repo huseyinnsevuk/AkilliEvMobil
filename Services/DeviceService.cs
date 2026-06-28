@@ -56,14 +56,17 @@ namespace AkilliEvMobil.Services
         private static DeviceService _instance;
         public static DeviceService Instance => _instance ??= new DeviceService();
 
-        private static readonly System.Net.Http.HttpClient _sharedHttpClient = CreateSharedHttpClient();
-
-        private static System.Net.Http.HttpClient CreateSharedHttpClient()
+        private static readonly System.Net.Http.SocketsHttpHandler _handler = new System.Net.Http.SocketsHttpHandler
         {
-            var client = new System.Net.Http.HttpClient { Timeout = System.TimeSpan.FromSeconds(15) };
-            client.DefaultRequestHeaders.ConnectionClose = true; // Sunucunun bağlantıyı kesmesini beklemeden biz kapatıyoruz (Socket Closed hatasını çözer)
-            return client;
-        }
+            PooledConnectionLifetime = System.TimeSpan.FromMinutes(2),
+            PooledConnectionIdleTimeout = System.TimeSpan.FromSeconds(2), // Sunucunun (Node.js) 5 saniyelik limitinden önce biz kapatıyoruz
+            MaxConnectionsPerServer = 20
+        };
+
+        private static readonly System.Net.Http.HttpClient _sharedHttpClient = new System.Net.Http.HttpClient(_handler) 
+        { 
+            Timeout = System.TimeSpan.FromSeconds(15) 
+        };
 
         public System.Net.Http.HttpClient SharedHttpClient => _sharedHttpClient;
 
@@ -96,9 +99,7 @@ namespace AkilliEvMobil.Services
                 string activeEmail = authService?.GetCurrentUserEmail() ?? "";
                 if (!string.IsNullOrEmpty(activeEmail))
                 {
-                    using var client = new System.Net.Http.HttpClient();
-                    client.Timeout = System.TimeSpan.FromSeconds(3);
-                    client.DefaultRequestHeaders.ConnectionClose = true;
+                    var client = SharedHttpClient;
                     string baseUrl = "http://141.98.48.101:3000";
 
                     var favoriteDeviceIds = Devices.Where(d => d.IsFavorite).Select(d => d.Id).ToList();
@@ -128,10 +129,7 @@ namespace AkilliEvMobil.Services
                     activeEmail = "huseyin@example.com";
                 }
 
-                using var client = new System.Net.Http.HttpClient();
-                client.Timeout = System.TimeSpan.FromSeconds(3); // 3 saniyede bağlanamazsa bekleme
-                client.DefaultRequestHeaders.ConnectionClose = true;
-                
+                var client = SharedHttpClient;
                 string baseUrl = "http://141.98.48.101:3000";
 
                 var usersRes = await client.GetAsync($"{baseUrl}/api/users");
