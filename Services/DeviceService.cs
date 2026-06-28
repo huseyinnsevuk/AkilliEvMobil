@@ -56,14 +56,7 @@ namespace AkilliEvMobil.Services
         private static DeviceService _instance;
         public static DeviceService Instance => _instance ??= new DeviceService();
 
-        private static readonly System.Net.Http.SocketsHttpHandler _handler = new System.Net.Http.SocketsHttpHandler
-        {
-            PooledConnectionLifetime = System.TimeSpan.FromMinutes(2),
-            PooledConnectionIdleTimeout = System.TimeSpan.FromSeconds(2), // Sunucunun (Node.js) 5 saniyelik limitinden önce biz kapatıyoruz
-            MaxConnectionsPerServer = 20
-        };
-
-        private static readonly System.Net.Http.HttpClient _sharedHttpClient = new System.Net.Http.HttpClient(_handler) 
+        private static readonly System.Net.Http.HttpClient _sharedHttpClient = new System.Net.Http.HttpClient 
         { 
             Timeout = System.TimeSpan.FromSeconds(15) 
         };
