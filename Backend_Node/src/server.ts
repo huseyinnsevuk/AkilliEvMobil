@@ -171,6 +171,7 @@ async function processMqttQueue() {
       // Veritabanının şişmesini önlemek ve yarış koşulunu hafifletmek için:
       // Eğer son log 5 saniyeden yeni ise yeni satır oluşturmak yerine onu güncelliyoruz.
       if (lastLog && (now.getTime() - lastLog.createdAt.getTime()) < 5000) {
+        // Son log 5 saniyeden yeniyse, sadece gelen sensör verisini güncelle, diğerlerini koru
         await prisma.sensorLog.update({
           where: { id: lastLog.id },
           data: {
@@ -183,6 +184,7 @@ async function processMqttQueue() {
           }
         });
       } else {
+        // Yeni bir log satırı oluşturulurken, ESKİ DEĞERLERİ KORU (Sıfırlama!)
         await prisma.sensorLog.create({
           data: {
             deviceId: device.id,
