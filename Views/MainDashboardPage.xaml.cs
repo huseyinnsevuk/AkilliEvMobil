@@ -57,6 +57,7 @@ namespace AkilliEvMobil.Views
             {
                 using var client = new System.Net.Http.HttpClient();
                 client.Timeout = TimeSpan.FromSeconds(15);
+                client.DefaultRequestHeaders.ConnectionClose = true; // Fix Socket Closed
                 string baseUrl = "http://141.98.48.101:3000";
 
                 while (_isMockDataRunning)

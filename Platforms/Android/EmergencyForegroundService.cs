@@ -71,16 +71,27 @@ namespace AkilliEvMobil.Platforms.Android
             if (_isServiceRunning) return StartCommandResult.Sticky;
             _isServiceRunning = true;
 
-            // Ön plan servisi bildirimi oluştur (Durum çubuğunda kalıcı olarak durur ve Android'in servisi kapatmasını önler)
-            var notification = CreateServiceNotification();
-            
-            if (Build.VERSION.SdkInt >= BuildVersionCodes.Q)
+            try
             {
-                StartForeground(SERVICE_NOTIFICATION_ID, notification, global::Android.Content.PM.ForegroundService.TypeDataSync);
+                // Ön plan servisi bildirimi oluştur (Durum çubuğunda kalıcı olarak durur ve Android'in servisi kapatmasını önler)
+                var notification = CreateServiceNotification();
+                
+                if (Build.VERSION.SdkInt >= BuildVersionCodes.Q)
+                {
+                    StartForeground(SERVICE_NOTIFICATION_ID, notification, global::Android.Content.PM.ForegroundService.TypeDataSync);
+                }
+                else
+                {
+                    StartForeground(SERVICE_NOTIFICATION_ID, notification);
+                }
             }
-            else
+            catch (global::Android.App.ForegroundServiceStartNotAllowedException)
             {
-                StartForeground(SERVICE_NOTIFICATION_ID, notification);
+                System.Diagnostics.Debug.WriteLine("Android 12+: Arka plandan Foreground Service başlatılamadı. Servis normal şekilde çalışmaya devam edecek.");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"StartForeground Error: {ex.Message}");
             }
 
             // Arka plan sorgulama döngüsünü başlat (Her 3 saniyede bir gaz durumunu kontrol eder)
@@ -195,6 +206,7 @@ namespace AkilliEvMobil.Platforms.Android
         {
             using var client = new HttpClient();
             client.Timeout = TimeSpan.FromSeconds(15);
+            client.DefaultRequestHeaders.ConnectionClose = true; // Fix Socket Closed
             string baseUrl = "http://141.98.48.101:3000";
 
             while (!token.IsCancellationRequested)

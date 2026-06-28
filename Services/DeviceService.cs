@@ -56,8 +56,14 @@ namespace AkilliEvMobil.Services
         private static DeviceService _instance;
         public static DeviceService Instance => _instance ??= new DeviceService();
 
-        // Socket Exhaustion hatalarını çözmek için en sade ve en uyumlu HttpClient
-        private static readonly System.Net.Http.HttpClient _sharedHttpClient = new System.Net.Http.HttpClient { Timeout = System.TimeSpan.FromSeconds(5) };
+        private static readonly System.Net.Http.HttpClient _sharedHttpClient = CreateSharedHttpClient();
+
+        private static System.Net.Http.HttpClient CreateSharedHttpClient()
+        {
+            var client = new System.Net.Http.HttpClient { Timeout = System.TimeSpan.FromSeconds(15) };
+            client.DefaultRequestHeaders.ConnectionClose = true; // Sunucunun bağlantıyı kesmesini beklemeden biz kapatıyoruz (Socket Closed hatasını çözer)
+            return client;
+        }
 
         public System.Net.Http.HttpClient SharedHttpClient => _sharedHttpClient;
 
@@ -92,6 +98,7 @@ namespace AkilliEvMobil.Services
                 {
                     using var client = new System.Net.Http.HttpClient();
                     client.Timeout = System.TimeSpan.FromSeconds(3);
+                    client.DefaultRequestHeaders.ConnectionClose = true;
                     string baseUrl = "http://141.98.48.101:3000";
 
                     var favoriteDeviceIds = Devices.Where(d => d.IsFavorite).Select(d => d.Id).ToList();
@@ -123,6 +130,7 @@ namespace AkilliEvMobil.Services
 
                 using var client = new System.Net.Http.HttpClient();
                 client.Timeout = System.TimeSpan.FromSeconds(3); // 3 saniyede bağlanamazsa bekleme
+                client.DefaultRequestHeaders.ConnectionClose = true;
                 
                 string baseUrl = "http://141.98.48.101:3000";
 

@@ -6,7 +6,7 @@ namespace AkilliEvMobil
         {
             InitializeComponent();
 
-            MainPage = new NavigationPage(new Views.LoginPage());
+            MainPage = new Views.SplashPage();
         }
 
         protected override void OnAppLinkRequestReceived(Uri uri)

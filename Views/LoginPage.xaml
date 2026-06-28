@@ -23,22 +23,29 @@
                VerticalOptions="Fill"
                Source="logregbg1.jpg" />
 
-        <!-- Üst Kısım: Karşılama Metni -->
-        <VerticalStackLayout Grid.Row="0"
-                             Padding="30, 40, 30, 0"
-                             Spacing="10"
-                             VerticalOptions="Start">
+        <!-- Üst Kısım: Karşılama Metni ve Logo -->
+        <Grid Grid.Row="0"
+              ColumnDefinitions="*, Auto"
+              Padding="30, 40, 30, 0"
+              VerticalOptions="Start">
+            <VerticalStackLayout Grid.Column="0" Spacing="8" VerticalOptions="Center">
+                <Label Text="Merhaba!"
+                       TextColor="White"
+                       FontSize="36"
+                       FontAttributes="Bold" />
+                <Label Text="Email ve şifreniz ile güvenli bir şekilde giriş yapın."
+                       TextColor="White"
+                       FontSize="15"
+                       Opacity="0.8" />
+            </VerticalStackLayout>
             
-            <Label Text="Merhaba!"
-                   TextColor="White"
-                   FontSize="36"
-                   FontAttributes="Bold" />
-            
-            <Label Text="Email ve şifreniz ile güvenli bir şekilde giriş yapın."
-                   TextColor="White"
-                   FontSize="16"
-                   Opacity="0.8" />
-        </VerticalStackLayout>
+            <Image Grid.Column="1"
+                   Source="app_logo.png"
+                   HeightRequest="64"
+                   WidthRequest="64"
+                   VerticalOptions="Center"
+                   Margin="10,0,0,0" />
+        </Grid>
 
         <!-- Alt Kısım: Giriş Paneli (Card Design) -->
         <Border Grid.Row="1"

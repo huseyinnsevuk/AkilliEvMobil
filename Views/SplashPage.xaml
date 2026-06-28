@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:ios="clr-namespace:Microsoft.Maui.Controls.PlatformConfiguration.iOSSpecific;assembly=Microsoft.Maui.Controls"
+             x:Class="AkilliEvMobil.Views.SplashPage"
+             NavigationPage.HasNavigationBar="False"
+             ios:Page.UseSafeArea="False"
+             BackgroundColor="#0F172A">
+
+    <Grid>
+        <!-- Background Gradient -->
+        <Grid.Background>
+            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                <GradientStop Color="#0F172A" Offset="0.0" />
+                <GradientStop Color="#020617" Offset="1.0" />
+            </LinearGradientBrush>
+        </Grid.Background>
+
+        <!-- Main Content Area -->
+        <VerticalStackLayout HorizontalOptions="Center"
+                             VerticalOptions="Center"
+                             Spacing="20">
+            
+            <!-- Logo Container with a pulsing background glow -->
+            <Grid HeightRequest="220" WidthRequest="220" HorizontalOptions="Center">
+                
+                <!-- Inner soft glow ring (will be animated in code) -->
+                <Ellipse x:Name="GlowRing"
+                         WidthRequest="180"
+                         HeightRequest="180"
+                         Fill="Transparent"
+                         Stroke="#38BDF8"
+                         StrokeThickness="2"
+                         Opacity="0"
+                         Scale="0.8"
+                         HorizontalOptions="Center"
+                         VerticalOptions="Center" />
+
+                <!-- Logo Image -->
+                <Image x:Name="LogoImage"
+                       Source="app_logo.png"
+                       WidthRequest="150"
+                       HeightRequest="150"
+                       Opacity="0"
+                       Scale="0.5"
+                       HorizontalOptions="Center"
+                       VerticalOptions="Center" />
+            </Grid>
+
+            <!-- Brand Name (Animated slide up and fade in) -->
+            <Label x:Name="TitleLabel"
+                   Text="AKILLI EV"
+                   TextColor="White"
+                   FontSize="34"
+                   FontAttributes="Bold"
+                   CharacterSpacing="6"
+                   HorizontalOptions="Center"
+                   Opacity="0"
+                   TranslationY="40" />
+
+            <!-- Subtitle -->
+            <Label x:Name="SubtitleLabel"
+                   Text="Geleceğin Akıllı Yaşamı"
+                   TextColor="#38BDF8"
+                   FontSize="15"
+                   CharacterSpacing="2"
+                   HorizontalOptions="Center"
+                   Opacity="0"
+                   TranslationY="30" />
+
+        </VerticalStackLayout>
+
+        <!-- Bottom Loading Status / Credits -->
+        <VerticalStackLayout VerticalOptions="End" 
+                             HorizontalOptions="Center" 
+                             Margin="0,0,0,50" 
+                             Spacing="12">
+            
+            <!-- Loading Indicator -->
+            <ActivityIndicator x:Name="LoadingSpinner"
+                               IsRunning="True"
+                               Color="#38BDF8"
+                               WidthRequest="35"
+                               HeightRequest="35"
+                               Opacity="0" />
+            
+            <!-- Loading status text -->
+            <Label x:Name="StatusLabel"
+                   Text="Sistemler yükleniyor..."
+                   TextColor="White"
+                   FontSize="12"
+                   Opacity="0"
+                   CharacterSpacing="1"
+                   HorizontalOptions="Center" />
+        </VerticalStackLayout>
+    </Grid>
+
+</ContentPage>
