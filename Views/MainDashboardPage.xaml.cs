@@ -54,7 +54,7 @@ namespace AkilliEvMobil.Views
         private async void StartMockDataLoop()
         {
             using var client = new System.Net.Http.HttpClient();
-            client.Timeout = TimeSpan.FromSeconds(5);
+            client.Timeout = TimeSpan.FromSeconds(15);
             string baseUrl = "http://141.98.48.101:3000";
 
             while (_isMockDataRunning)
