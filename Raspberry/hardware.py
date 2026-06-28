@@ -441,7 +441,8 @@ def on_message(client, userdata, msg):
             speed = int(data.get("speed", 50))
             
             target_angle = (opening_percent * 180) / 100
-            set_servo_angle_with_speed(target_angle, speed)
+            import threading
+            threading.Thread(target=set_servo_angle_with_speed, args=(target_angle, speed), daemon=True).start()
             
         elif msg.topic == KONU_AYDINLATMA:
             data = json.loads(payload_str)
