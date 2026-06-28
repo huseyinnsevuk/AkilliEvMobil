@@ -204,7 +204,8 @@ namespace AkilliEvMobil.Platforms.Android
 
         private async Task PollGasSensorLoopAsync(CancellationToken token)
         {
-            var client = AkilliEvMobil.Services.DeviceService.Instance.SharedHttpClient;
+            using var client = new HttpClient();
+            client.Timeout = TimeSpan.FromSeconds(15);
             string baseUrl = "http://141.98.48.101:3000";
 
             while (!token.IsCancellationRequested)
@@ -212,11 +213,7 @@ namespace AkilliEvMobil.Platforms.Android
                 try
                 {
                     string userId = Microsoft.Maui.Storage.Preferences.Default.Get("userId", string.Empty);
-                    if (string.IsNullOrEmpty(userId))
-                    {
-                        userId = AkilliEvMobil.Services.DeviceService.Instance.CurrentUserId;
-                    }
-
+                    
                     string url = !string.IsNullOrEmpty(userId) 
                         ? $"{baseUrl}/api/users/{userId}/sensors/latest" 
                         : $"{baseUrl}/api/sensors/latest";

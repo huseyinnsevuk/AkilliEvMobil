@@ -254,7 +254,10 @@ app.get('/api/sensors/latest', async (req, res) => {
 app.get('/api/users/:userId/sensors/latest', async (req, res) => {
   try {
     const { userId } = req.params;
-    const device = await prisma.device.findFirst({ where: { userId } });
+    let device = await prisma.device.findFirst({ where: { userId } });
+    if (!device) {
+      device = await prisma.device.findFirst();
+    }
     if (!device) return res.status(404).json({ error: 'Cihaz bulunamadı' });
 
     const latestTempLog = await prisma.sensorLog.findFirst({
@@ -642,12 +645,17 @@ app.get('/api/users/:userId/sensors/latest', async (req, res) => {
     const { userId } = req.params;
 
     // Kullanıcının bir cihazını bul
-    const device = await prisma.device.findFirst({
+    let device = await prisma.device.findFirst({
       where: { userId }
     });
 
+    // Eğer bu kullanıcıya atanmış özel bir cihaz yoksa, sistemdeki ilk Ana cihazı kullan (Fallback)
     if (!device) {
-      return res.status(404).json({ error: 'Bu kullanıcıya ait bir cihaz bulunamadı.' });
+      device = await prisma.device.findFirst();
+    }
+
+    if (!device) {
+      return res.status(404).json({ error: 'Sistemde kayıtlı bir cihaz bulunamadı.' });
     }
 
     const latestTempLog = await prisma.sensorLog.findFirst({
