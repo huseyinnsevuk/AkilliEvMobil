@@ -138,6 +138,10 @@ namespace AkilliEvMobil.Services
                     if (currentUser != null && settings != null)
                     {
                         CurrentUserId = currentUser["id"]?.ToString();
+                        if (!string.IsNullOrEmpty(CurrentUserId))
+                        {
+                            Microsoft.Maui.Storage.Preferences.Default.Set("userId", CurrentUserId);
+                        }
                         CurrentUserName = currentUser["fullName"]?.ToString() ?? "Değerli Müşterimiz";
                         string plan = currentUser["subscriptionType"]?.ToString() ?? "Free";
                         CurrentPlan = plan;

@@ -90,6 +90,37 @@ namespace AkilliEvMobil.Platforms.Android
             return StartCommandResult.Sticky;
         }
 
+        public override void OnTaskRemoved(Intent? rootIntent)
+        {
+            base.OnTaskRemoved(rootIntent);
+
+            System.Diagnostics.Debug.WriteLine("🛑 Uygulama kapatıldı (Swipe). Servis AlarmManager ile diriltiliyor...");
+
+            // Android'in uygulamayı kapatmasını hileyle aşmak için: 1 saniye sonrasına Alarm kur
+            var restartServiceIntent = new Intent(ApplicationContext, typeof(EmergencyForegroundService));
+            restartServiceIntent.SetPackage(PackageName);
+
+            var restartServicePendingIntent = PendingIntent.GetService(this, 1, restartServiceIntent, PendingIntentFlags.OneShot | PendingIntentFlags.Immutable);
+            var alarmService = (AlarmManager?)GetSystemService(AlarmService);
+
+            if (alarmService != null)
+            {
+                // 1 saniye sonra servisi tekrar başlat (Kısıtlamaları aşmak için Exact alarm kullan)
+                if (Build.VERSION.SdkInt >= BuildVersionCodes.M)
+                {
+                    alarmService.SetExactAndAllowWhileIdle(AlarmType.ElapsedRealtimeWakeup, SystemClock.ElapsedRealtime() + 1000, restartServicePendingIntent);
+                }
+                else if (Build.VERSION.SdkInt >= BuildVersionCodes.Kitkat)
+                {
+                    alarmService.SetExact(AlarmType.ElapsedRealtimeWakeup, SystemClock.ElapsedRealtime() + 1000, restartServicePendingIntent);
+                }
+                else
+                {
+                    alarmService.Set(AlarmType.ElapsedRealtimeWakeup, SystemClock.ElapsedRealtime() + 1000, restartServicePendingIntent);
+                }
+            }
+        }
+
         private Notification CreateServiceNotification()
         {
             var intent = new Intent(this, typeof(MainActivity));
@@ -170,7 +201,12 @@ namespace AkilliEvMobil.Platforms.Android
             {
                 try
                 {
-                    string userId = AkilliEvMobil.Services.DeviceService.Instance.CurrentUserId;
+                    string userId = Microsoft.Maui.Storage.Preferences.Default.Get("userId", string.Empty);
+                    if (string.IsNullOrEmpty(userId))
+                    {
+                        userId = AkilliEvMobil.Services.DeviceService.Instance.CurrentUserId;
+                    }
+
                     string url = !string.IsNullOrEmpty(userId) 
                         ? $"{baseUrl}/api/users/{userId}/sensors/latest" 
                         : $"{baseUrl}/api/sensors/latest";
