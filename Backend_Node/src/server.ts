@@ -112,68 +112,106 @@ mqttClient.on('connect', () => {
   });
 });
 
-mqttClient.on('message', async (topic, message) => {
-  const payload = message.toString();
+const messageQueue: {topic: string, payload: string}[] = [];
+let isProcessingQueue = false;
 
-  // ACK (Komut Onayı) Yakalama
-  if (topic.startsWith('Nest/home/ack/')) {
-    const deviceType = topic.split('/').pop();
-    ackEmitter.emit(`ack_${deviceType}`);
-    return; // Sensör işlemi yapmadan çık
-  }
-
-  const sensorType = topic.split('/').pop(); // sicaklik, nem, gaz vb.
-
-  try {
-    // 1. Cihazı bul, yoksa otomatik oluştur
-    let device = await prisma.device.findFirst();
-
-    if (!device) {
-      console.log('📝 İlk cihaz bulunamadı, "Ana Kontrol Birimi" oluşturuluyor...');
-      // Rastgele bir kullanıcı bul (cihaz bir kullanıcıya bağlı olmalı)
-      const user = await prisma.user.findFirst();
-      if (!user) {
-        console.error('❌ Cihaz oluşturulamadı: Veritabanında kayıtlı kullanıcı yok!');
-        return;
-      }
-
-      device = await prisma.device.create({
-        data: {
-          name: 'Ana Kontrol Birimi (Raspi)',
-          macAddress: 'AA:BB:CC:DD:EE:FF',
-          type: 'RaspberryPi',
-          userId: user.id
-        }
-      });
-    }
-
-    // 2. En son sensör verilerini tabandan çekip üzerine yazılmayan değerleri koruyoruz (Carry-forward)
-    const lastLog = await prisma.sensorLog.findFirst({
-      where: { deviceId: device.id },
-      orderBy: { createdAt: 'desc' }
-    });
-
-    await prisma.sensorLog.create({
-      data: {
-        deviceId: device.id,
-        temperature: sensorType === 'sicaklik' ? parseFloat(payload) : (lastLog?.temperature ?? 0),
-        humidity: sensorType === 'nem' ? parseFloat(payload) : (lastLog?.humidity ?? 0),
-        isRaining: sensorType === 'yagmur' ? (payload === '1' || payload === 'true') : (lastLog?.isRaining ?? false),
-        gasDetected: sensorType === 'gaz' ? (payload === '1' || payload === 'true') : (lastLog?.gasDetected ?? false),
-        motionDetected: sensorType === 'hareket' ? (payload === '1' || payload === 'true') : (lastLog?.motionDetected ?? false),
-        lightLevel: sensorType === 'isik' ? parseFloat(payload) : (lastLog?.lightLevel ?? 0),
-      }
-    });
-    console.log(`📝 Sensör Kaydı (${device.name}): ${sensorType} -> ${payload}`);
-
-    // Acil durum uyarısını tetikle
-    if (sensorType === 'gaz') {
-      await handleSensorTriggers(payload === '1' || payload === 'true', device.id);
-    }
-  } catch (err) {
-    console.error('❌ Sensör verisi kaydedilemedi:', err);
-  }
+mqttClient.on('message', (topic, message) => {
+  messageQueue.push({ topic, payload: message.toString() });
+  processMqttQueue();
 });
+
+async function processMqttQueue() {
+  if (isProcessingQueue) return;
+  isProcessingQueue = true;
+
+  while (messageQueue.length > 0) {
+    const msg = messageQueue.shift();
+    if (!msg) continue;
+
+    const { topic, payload } = msg;
+
+    // ACK (Komut Onayı) Yakalama
+    if (topic.startsWith('Nest/home/ack/')) {
+      const deviceType = topic.split('/').pop();
+      ackEmitter.emit(`ack_${deviceType}`);
+      continue; // Sensör işlemi yapmadan çık
+    }
+
+    const sensorType = topic.split('/').pop(); // sicaklik, nem, gaz vb.
+
+    try {
+      // 1. Cihazı bul, yoksa otomatik oluştur
+      let device = await prisma.device.findFirst();
+
+      if (!device) {
+        console.log('📝 İlk cihaz bulunamadı, "Ana Kontrol Birimi" oluşturuluyor...');
+        const user = await prisma.user.findFirst();
+        if (!user) {
+          console.error('❌ Cihaz oluşturulamadı: Veritabanında kayıtlı kullanıcı yok!');
+          continue;
+        }
+
+        device = await prisma.device.create({
+          data: {
+            name: 'Ana Kontrol Birimi (Raspi)',
+            macAddress: 'AA:BB:CC:DD:EE:FF',
+            type: 'RaspberryPi',
+            userId: user.id
+          }
+        });
+      }
+
+      // 2. En son sensör verilerini tabandan çekip üzerine yazılmayan değerleri koruyoruz
+      const lastLog = await prisma.sensorLog.findFirst({
+        where: { deviceId: device.id },
+        orderBy: { createdAt: 'desc' }
+      });
+
+      const now = new Date();
+      // Veritabanının şişmesini önlemek ve yarış koşulunu hafifletmek için:
+      // Eğer son log 5 saniyeden yeni ise yeni satır oluşturmak yerine onu güncelliyoruz.
+      if (lastLog && (now.getTime() - lastLog.createdAt.getTime()) < 5000) {
+        await prisma.sensorLog.update({
+          where: { id: lastLog.id },
+          data: {
+            temperature: sensorType === 'sicaklik' ? parseFloat(payload) : lastLog.temperature,
+            humidity: sensorType === 'nem' ? parseFloat(payload) : lastLog.humidity,
+            isRaining: sensorType === 'yagmur' ? (payload === '1' || payload === 'true') : lastLog.isRaining,
+            gasDetected: sensorType === 'gaz' ? (payload === '1' || payload === 'true') : lastLog.gasDetected,
+            motionDetected: sensorType === 'hareket' ? (payload === '1' || payload === 'true') : lastLog.motionDetected,
+            lightLevel: sensorType === 'isik' ? parseFloat(payload) : lastLog.lightLevel,
+          }
+        });
+      } else {
+        await prisma.sensorLog.create({
+          data: {
+            deviceId: device.id,
+            temperature: sensorType === 'sicaklik' ? parseFloat(payload) : (lastLog?.temperature ?? 0),
+            humidity: sensorType === 'nem' ? parseFloat(payload) : (lastLog?.humidity ?? 0),
+            isRaining: sensorType === 'yagmur' ? (payload === '1' || payload === 'true') : (lastLog?.isRaining ?? false),
+            gasDetected: sensorType === 'gaz' ? (payload === '1' || payload === 'true') : (lastLog?.gasDetected ?? false),
+            motionDetected: sensorType === 'hareket' ? (payload === '1' || payload === 'true') : (lastLog?.motionDetected ?? false),
+            lightLevel: sensorType === 'isik' ? parseFloat(payload) : (lastLog?.lightLevel ?? 0),
+          }
+        });
+      }
+      
+      console.log(`📝 Sensör Kaydı (${device.name}): ${sensorType} -> ${payload}`);
+
+      // Acil durum uyarısını tetikle
+      if (sensorType === 'gaz') {
+        const isGas = payload === '1' || payload === 'true';
+        if (isGas && (!lastLog || !lastLog.gasDetected)) {
+            await handleSensorTriggers(true, device.id);
+        }
+      }
+    } catch (err) {
+      console.error('❌ Sensör verisi kaydedilemedi:', err);
+    }
+  }
+
+  isProcessingQueue = false;
+}
 
 app.get('/api/sensors/latest', async (req, res) => {
   try {
